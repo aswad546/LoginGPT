@@ -1,0 +1,33 @@
+[
+    {
+        "recognition_strategy": "LASTPASS_ICON", // following username and password fields were found with the lastpass extension
+        "login_page_url": "https://www.shop.com/login", // the url of the login page
+        "lastpass_icon_frame": "TOPMOST|IFRAME", // the username/password fields are on topmost window or in iframe
+        "lastpass_icon_frame_index": 0, // the index of the frame in the page (0 = topmost window, 1/2/... = iframe)
+        "lastpass_icon_frame_name": "...", // the name of the frame
+        "lastpass_icon_frame_title": "Login | Shop.com", // the title of the frame
+        "lastpass_icon_frame_url": "https://www.shop.com/login", // the url of the frame that contains the username/password fields (if topmost, then this is the login page url, otherwise it is the url of the iframe)
+        "lastpass_icon_frames_length": 1, // the number of frames in the page
+        "lastpass_icon_elements": [ // all identified username and password fields (typically contains 2, one for username, one for password)
+            {
+                "element_coordinates_x": 13.37,  // coordinates and dimensions of the input fields
+                "element_coordinates_y": 13.37,
+                "element_width": 13.37,
+                "element_height": 13.37,
+                "element_inner_text": "", // inner text of the input field
+                "element_outer_html": "&lt;input name=\"username|password|...\" style=\"background-image: url();\"&gt;", // outer html of the input field, the background image is the lastpass icon that is injected into the field by the extension
+                "element_tree": ["INPUT", ..., "BODY", "HTML"], // the tree of the input field
+                "element_tree_markup": { // reference to the markup of the tree of the input field
+                    "type": "reference",
+                    "data": {
+                        "bucket_name": "...",
+                        "object_name": "...",
+                        "extension": "json"
+                    }
+                }
+            },
+            ...
+        ]
+    },
+    ...
+]

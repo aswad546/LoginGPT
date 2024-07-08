@@ -1,0 +1,379 @@
+version: "3"
+
+services:
+
+  traefik:
+    image: traefik:v2.10
+    restart: unless-stopped
+    networks:
+      - sso-monitor-network
+    expose:
+      - 80
+      - 443
+      - 5672
+    ports:
+      - 0.0.0.0:80:80
+      - 0.0.0.0:443:443
+      - 0.0.0.0:5672:5672
+    healthcheck:
+      test: traefik healthcheck
+      interval: 10s
+      timeout: 10s
+      retries: 15
+    labels:
+      - "traefik.enable=true"
+      # routers: traefik
+      - "traefik.http.routers.traefik.entrypoints=web,websecure"
+      - "traefik.http.routers.traefik.rule=Host(`${TRAEFIK_EXTERNAL_DOMAIN:-traefik.docker.localhost}`)"
+      - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.traefik.service=api@internal"
+      - "traefik.http.routers.traefik.middlewares=adminauth"
+      # routers: mock
+      - "traefik.http.routers.mock.entrypoints=web,websecure"
+      - "traefik.http.routers.mock.rule=Host(`${MOCK_EXTERNAL_DOMAIN:-mock.docker.localhost}`)"
+      - "traefik.http.routers.mock.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.mock.service=noop@internal"
+      # middlewares: guestauth
+      - "traefik.http.middlewares.guestauth.basicauth.users=${GUEST_HASH:-guest:$$2y$$05$$1zzyF57XWcRpfz2zvxyz4eAUqeZHnCbFULhaliUjwGcq6DDDvP/XC}" # guest:changeme
+      - "traefik.http.middlewares.guestauth.basicauth.removeheader=true"
+      # middlewares: adminauth
+      - "traefik.http.middlewares.adminauth.basicauth.users=${ADMIN_HASH:-admin:$$2y$$05$$1zzyF57XWcRpfz2zvxyz4eAUqeZHnCbFULhaliUjwGcq6DDDvP/XC}" # admin:changeme
+      - "traefik.http.middlewares.adminauth.basicauth.removeheader=true"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - traefik-logs:/mnt/logs
+      - traefik-acme:/mnt/acme
+    environment:
+      - TRAEFIK_PROVIDERS_DOCKER=true
+      - TRAEFIK_PROVIDERS_DOCKER_EXPOSEDBYDEFAULT=false
+      - TRAEFIK_API=true
+      - TRAEFIK_API_DASHBOARD=true
+      - TRAEFIK_PING=true
+      # logs
+      - TRAEFIK_LOG=true
+      - TRAEFIK_LOG_FILEPATH=/mnt/logs/traefik.log
+      - TRAEFIK_ACCESSLOG=true
+      - TRAEFIK_ACCESSLOG_FILEPATH=/mnt/logs/access.log
+      - TRAEFIK_ACCESSLOG_BUFFERINGSIZE=100
+      - TRAEFIK_ACCESSLOG_FILTERS_STATUSCODES=100-417,419-599
+      # metrics
+      - TRAEFIK_METRICS_PROMETHEUS=true
+      # entrypoints
+      - TRAEFIK_ENTRYPOINTS_WEB=true
+      - TRAEFIK_ENTRYPOINTS_WEB_ADDRESS=:80
+      - TRAEFIK_ENTRYPOINTS_WEB_HTTP_REDIRECTIONS_ENTRYPOINT_TO=websecure
+      - TRAEFIK_ENTRYPOINTS_WEBSECURE=true
+      - TRAEFIK_ENTRYPOINTS_WEBSECURE_ADDRESS=:443
+      - TRAEFIK_ENTRYPOINTS_AMQP=true
+      - TRAEFIK_ENTRYPOINTS_AMQP_ADDRESS=:5672
+      # acme
+      - TRAEFIK_CERTIFICATESRESOLVERS_LETSENCRYPT_ACME_TLSCHALLENGE=true
+      - TRAEFIK_CERTIFICATESRESOLVERS_LETSENCRYPT_ACME_EMAIL=${EMAIL:-john.doe@gmail.com}"
+      - TRAEFIK_CERTIFICATESRESOLVERS_LETSENCRYPT_ACME_STORAGE=/mnt/acme/acme.json
+
+  brain:
+    build:
+      context: ./brain
+      dockerfile: Dockerfile
+    command: pipenv run gunicorn -w 8 -k eventlet -b 0.0.0.0:8080 --timeout 7200 "app:create_app()"
+    restart: unless-stopped
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - sso-monitor-network
+    expose:
+      - 8080
+    ports:
+      - 127.0.0.1:8080:8080
+    healthcheck:
+      test: curl -f http://localhost:8080/api/ping
+      interval: 10s
+      timeout: 10s
+      retries: 15
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.brain.entrypoints=web,websecure"
+      - "traefik.http.routers.brain.rule=Host(`${BRAIN_EXTERNAL_DOMAIN:-brain.docker.localhost}`)"
+      - "traefik.http.routers.brain.tls.certresolver=letsencrypt"
+      - "traefik.http.services.brain.loadbalancer.server.port=8080"
+    environment:
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - FLASK_DEBUG=${FLASK_DEBUG:-0}
+      # auth
+      - GUEST_USER=${GUEST_USER:-guest}
+      - GUEST_PASS=${GUEST_PASS:-changeme}
+      - ADMIN_USER=${ADMIN_USER:-admin}
+      - ADMIN_PASS=${ADMIN_PASS:-changeme}
+      # external domains
+      - BRAIN_EXTERNAL_DOMAIN=${BRAIN_EXTERNAL_DOMAIN:-brain.docker.localhost}
+      - RABBITMQ_EXTERNAL_DOMAIN=${RABBITMQ_EXTERNAL_DOMAIN:-rabbitmq.docker.localhost}
+      - MONGOEXPRESS_EXTERNAL_DOMAIN=${MONGOEXPRESS_EXTERNAL_DOMAIN:-mongoexpress.docker.localhost}
+      - MINIO_EXTERNAL_DOMAIN=${MINIO_EXTERNAL_DOMAIN:-minio.docker.localhost}
+      - JUPYTER_EXTERNAL_DOMAIN=${JUPYTER_EXTERNAL_DOMAIN:-jupyter.docker.localhost}
+      # rabbitmq
+      - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
+      - RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
+      - RABBITMQ_PORT_API=${RABBITMQ_PORT_API:-15672}
+      # mongodb
+      - MONGODB_HOST=${MONGODB_HOST:-mongodb}
+      - MONGODB_PORT=${MONGODB_PORT:-27017}
+      # minio
+      - MINIO_HOST=${MINIO_HOST:-minio}
+      - MINIO_PORT=${MINIO_PORT:-9000}
+      # redis
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+
+  worker:
+    build:
+      context: ./worker
+      dockerfile: Dockerfile
+    command: xvfb-run -a python app.py
+    restart: unless-stopped
+    init: true
+    ipc: host
+    security_opt:
+      - seccomp=./worker/seccomp_profile.json
+    depends_on:
+      searxng:
+        condition: service_healthy
+    networks:
+      - sso-monitor-network
+    dns:
+      - 1.1.1.1
+      - 1.0.0.1
+    volumes:
+      - type: tmpfs
+        target: /tmpfs
+    deploy:
+      mode: replicated
+      replicas: 2
+    environment:
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - TMP_PATH=${TMP_PATH:-/tmpfs}
+      # auth
+      - ADMIN_USER=${ADMIN_USER:-admin}
+      - ADMIN_PASS=${ADMIN_PASS:-changeme}
+      # rabbitmq
+      - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
+      - RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
+      - RABBITMQ_TLS=${RABBITMQ_TLS:-0}
+      - RABBITMQ_QUEUE=${RABBITMQ_QUEUE:-landscape_analysis_treq}
+      # urls
+      - BRAIN_URL=${BRAIN_URL:-http://brain:8080}
+      - SEARXNG_URL=${SEARXNG_URL:-http://searxng:8080}
+
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    restart: unless-stopped
+    networks:
+      - sso-monitor-network
+    expose:
+      - 5672
+      - 15672
+    labels:
+      - "traefik.enable=true"
+      # http router
+      - "traefik.http.routers.rabbitmq.entrypoints=web,websecure"
+      - "traefik.http.routers.rabbitmq.rule=Host(`${RABBITMQ_EXTERNAL_DOMAIN:-rabbitmq.docker.localhost}`)"
+      - "traefik.http.routers.rabbitmq.tls.certresolver=letsencrypt"
+      - "traefik.http.services.rabbitmq.loadbalancer.server.port=15672"
+      # tcp router
+      - "traefik.tcp.routers.rabbitmq.entrypoints=amqp"
+      - "traefik.tcp.routers.rabbitmq.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.rabbitmq.tls.certresolver=letsencrypt"
+      - "traefik.tcp.services.rabbitmq.loadbalancer.server.port=5672"
+    healthcheck:
+      test: >
+        rabbitmq-diagnostics -q check_running
+        && rabbitmq-diagnostics -q check_local_alarms
+        && rabbitmq-diagnostics -q check_port_connectivity
+        && rabbitmq-diagnostics -q check_virtual_hosts
+      interval: 10s
+      timeout: 10s
+      retries: 15
+    volumes:
+      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+      - ./rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
+      - rabbitmq-mnesia:/var/lib/rabbitmq/mnesia
+    environment:
+      - RABBITMQ_DEFAULT_USER=${ADMIN_USER:-admin}
+      - RABBITMQ_DEFAULT_PASS=${ADMIN_PASS:-changeme}
+
+  mongodb:
+    image: mongo:4.4.6
+    restart: unless-stopped
+    networks:
+      - sso-monitor-network
+    expose:
+      - 27017
+    ports:
+      - 127.0.0.1:27017:27017
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo localhost:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 15
+    volumes:
+      - db:/data/db
+
+  mongo-express:
+    image: mongo-express:0.54.0
+    restart: unless-stopped
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - sso-monitor-network
+    expose:
+      - 8081
+    ports:
+      - 127.0.0.1:8081:8081
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mongo-express.entrypoints=web,websecure"
+      - "traefik.http.routers.mongo-express.rule=Host(`${MONGOEXPRESS_EXTERNAL_DOMAIN:-mongoexpress.docker.localhost}`)"
+      - "traefik.http.routers.mongo-express.tls.certresolver=letsencrypt"
+      - "traefik.http.services.mongo-express.loadbalancer.server.port=8081"
+      - "traefik.http.routers.mongo-express.middlewares=adminauth"
+    healthcheck:
+      test: wget -q -O /dev/null 127.0.0.1:8081
+      interval: 10s
+      timeout: 10s
+      retries: 15
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=${ME_CONFIG_MONGODB_SERVER:-mongodb}
+
+  minio:
+    image: minio/minio:RELEASE.2023-12-14T18-51-57Z-cpuv1
+    command: server /data --console-address ":9090"
+    restart: unless-stopped
+    networks:
+      - sso-monitor-network
+    expose:
+      - 9000
+      - 9090
+    ports:
+      - 0.0.0.0:9000:9000
+      - 127.0.0.1:9090:9090
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.minio.entrypoints=web,websecure"
+      - "traefik.http.routers.minio.rule=Host(`${MINIO_EXTERNAL_DOMAIN:-minio.docker.localhost}`)"
+      - "traefik.http.routers.minio.tls.certresolver=letsencrypt"
+      - "traefik.http.services.minio.loadbalancer.server.port=9090"
+    healthcheck:
+      test: timeout 5s bash -c ':> /dev/tcp/127.0.0.1/9000' || exit 1
+      interval: 10s
+      timeout: 10s
+      retries: 15
+    volumes:
+      - minio:/data
+    environment:
+      - MINIO_ROOT_USER=${ADMIN_USER:-admin}
+      - MINIO_ROOT_PASSWORD=${ADMIN_PASS:-changeme}
+      - MINIO_PROMETHEUS_AUTH_TYPE=public
+
+  redis:
+    image: redis:7.2.3
+    command: redis-server --save 60 1 --loglevel warning
+    restart: unless-stopped
+    networks:
+      - sso-monitor-network
+    expose:
+      - 6379
+    ports:
+      - 127.0.0.1:6379:6379
+    healthcheck:
+      test: redis-cli ping | grep PONG
+      interval: 10s
+      timeout: 10s
+      retries: 15
+    volumes:
+      - redis-data:/data
+
+  searxng:
+    image: searxng/searxng:2023.12.11-8a4104b99
+    restart: unless-stopped
+    networks:
+      - sso-monitor-network
+    expose:
+      - 8080
+    ports:
+      - 127.0.0.1:8082:8080
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.searxng.entrypoints=web,websecure"
+      - "traefik.http.routers.searxng.rule=Host(`${SEARXNG_EXTERNAL_DOMAIN:-searxng.docker.localhost}`)"
+      - "traefik.http.routers.searxng.tls.certresolver=letsencrypt"
+      - "traefik.http.services.searxng.loadbalancer.server.port=8080"
+      - "traefik.http.routers.searxng.middlewares=adminauth"
+    healthcheck:
+      test: wget -q -O- 127.0.0.1:8080 &> /dev/null
+      interval: 10s
+      timeout: 10s
+      retries: 15
+    volumes:
+      - ./searxng/settings.yml:/etc/searxng/settings.yml
+      - ./searxng/uwsgi.ini:/etc/searxng/uwsgi.ini
+
+  jupyter:
+    build:
+      context: ./jupyter
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - sso-monitor-network
+    expose:
+      - 8888
+    ports:
+      - 127.0.0.1:8888:8888
+    deploy:
+      resources:
+        limits:
+          memory: 16G
+    healthcheck:
+      test: curl -f localhost:8888
+      interval: 10s
+      timeout: 10s
+      retries: 15
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.jupyter.entrypoints=web,websecure"
+      - "traefik.http.routers.jupyter.rule=Host(`${JUPYTER_EXTERNAL_DOMAIN:-jupyter.docker.localhost}`)"
+      - "traefik.http.routers.jupyter.tls.certresolver=letsencrypt"
+      - "traefik.http.services.jupyter.loadbalancer.server.port=8888"
+    volumes:
+      - jupyter-home:/home/jovyan
+    environment:
+      - ADMIN_USER=${ADMIN_USER:-admin}
+      - ADMIN_PASS=${ADMIN_PASS:-changeme}
+      - MONGODB_HOST=${MONGODB_HOST:-mongodb}
+      - MONGODB_PORT=${MONGODB_PORT:-27017}
+      - MINIO_HOST=${MINIO_HOST:-minio}
+      - MINIO_PORT=${MINIO_PORT:-9000}
+
+networks:
+  sso-monitor-network:
+    name: sso-monitor-network
+
+volumes:
+  db:
+  rabbitmq-mnesia:
+  minio:
+  jupyter-home:
+  redis-data:
+  traefik-logs:
+  traefik-acme:

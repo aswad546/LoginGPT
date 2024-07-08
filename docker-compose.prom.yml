@@ -1,0 +1,50 @@
+version: "3"
+
+services:
+
+  grafana:
+    image: grafana/grafana-oss:9.3.6
+    restart: unless-stopped
+    networks:
+      - sso-monitor-network
+    expose:
+      - 3000 # http
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.entrypoints=web,websecure"
+      - "traefik.http.routers.grafana.rule=Host(`${GRAFANA_EXTERNAL_DOMAIN:-grafana.docker.localhost}`)"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+      - "traefik.http.routers.grafana.middlewares=adminauth"
+    volumes:
+      - ${DATADIR:-/tmp}/grafana-data:/var/lib/grafana
+
+  prometheus:
+    image: prom/prometheus:v2.47.2
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    restart: unless-stopped
+    networks:
+      - sso-monitor-network
+    expose:
+      - 9090
+    volumes:
+      - ./prometheus:/etc/prometheus
+      - ${DATADIR:-/tmp}/prometheus-data:/prometheus
+
+  node-exporter:
+    image: prom/node-exporter:v1.6.1
+    command:
+      - "--path.rootfs=/host"
+    restart: unless-stopped
+    pid: host
+    networks:
+      - sso-monitor-network
+    expose:
+      - 9100
+    volumes:
+      - /:/host:ro,rslave
+
+networks:
+  sso-monitor-network:
+    external:
+      name: sso-monitor-network

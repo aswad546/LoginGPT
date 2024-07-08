@@ -1,0 +1,173 @@
+{
+  "allowAlways": {
+    "message": "Permitir sempre"
+  },
+  "allowButtonLabel": {
+    "message": "Permitir pop-ups"
+  },
+  "contributeButtonLabel": {
+    "message": "Contribuir"
+  },
+  "allowOnce": {
+    "message": "Permitir desta vez"
+  },
+  "badgeToggleLabel": {
+    "message": "Mostrar um sinalizador na barra de ferramentas quando uma pop-up é bloqueada."
+  },
+  "blockButtonLabel": {
+    "message": "Bloquear pop-ups"
+  },
+  "bugLink": {
+    "message": "Reporte um erro"
+  },
+  "disableNotifications": {
+    "message": "Desativar notificações"
+  },
+  "emailLink": {
+    "message": "Mande-nos um e-mail"
+  },
+  "extDescription": {
+    "message": "Bloqueie pop-ups e pop-unders independente de onde você clique na página"
+  },
+  "extName": {
+    "message": "Pop up blocker for Chrome™ - Poper Blocker"
+  },
+  "extName_Edge": { "message": "Pop up blocker for Edge™ - Poper Blocker" },
+  "extName_FF": {
+    "message": "Popup blocker for FF: Poper Blocker"
+  },
+  "linksTitle": {
+    "message": "Links"
+  },
+  "notificationMessage": {
+    "message": "Pop-up Bloqueada"
+  },
+  "NTF_blockPrevSite": {
+    "message": "Pop-up Bloqueada"
+  },
+  "notificationToggleLabel": {
+    "message": "Mostrar uma notificação na página quando uma pop-up é bloqueada."
+  },
+  "options": {
+    "message": "Opções"
+  },
+  "popupsAllowed": {
+    "message": "Pop-ups são permitidas neste site."
+  },
+  "popupsBlocked": {
+    "message": "Pop-ups são bloqueadas neste site."
+  },
+  "rateLink": {
+    "message": "Classifique-nos com 5 estrelas"
+  },
+  "whitelistTip": {
+    "message": "Para permitir pop-ups / pop-unders de um site, adicione-o a esta lista:"
+  },
+  "whitelistTitle": {
+    "message": "Sites Seguros"
+  },
+  "autoDetectionButtonLabel": {
+    "message": "Sim, uma vez"
+  },
+  "undoOnceButtonLabel": {
+    "message": "Desfazer uma vez"
+  },
+  "blockAlwaysButtonLabel": {
+    "message": "Bloquear sempre"
+  },
+  "overlayWasBlocked": {
+    "message": "A sobreposição foi bloqueada"
+  },
+  "blacklistTip": {
+    "message": "Bloquear sempre sobreposições nestes sites:"
+  },
+  "blockDetectedOverlayLabel": {
+    "message": "Foi detetada uma sobreposição. Deseja bloqueá-la?"
+  },
+  "notFoundOverlayLabel": {
+    "message": "Não foi detetada nenhuma sobreposição. Experimentar a deteção automática?"
+  },
+  "notFoundAutoOverlayLabel": {
+    "message": "A deteção automática de sobreposições não encontrou quaisquer sobreposições"
+  },
+  "popupsBlockedLabel": {
+    "message": "X popups bloqueados"
+  },
+  "removeOnceLabel": {
+    "message": "Remover uma vez"
+  },
+  "removeAlwaysLabel": {
+    "message": "Remover sempre"
+  },
+  "ignoreLabel": {
+    "message": "Ignorar"
+  },
+  "undoLabel": {
+    "message": "Desfazer"
+  },
+  "overlaySettingsTitle": {
+    "message": "Opções de Bloqueamento de Sobreposições"
+  },
+  "overlaysToggleLabel": {
+    "message": "Ativar o bloqueio de sobreposições (necessita de uma ligação a uma base de dados remota)."
+  },
+  "notificationSettingsTitle": {
+    "message": "Opções de Notificação"
+  },
+  "blockOverlayButtonLabel": {
+    "message": "Remover Sobreposição"
+  },
+  "removeOverlayQLabel": {
+    "message": "Remover Sobreposição?"
+  },
+  "autoDetectionYesAlwaysButtonLabel": {
+    "message": "Sim, sempre"
+  },
+  "allowOverlaysButtonLabel": {
+    "message": "Permitir Sobreposições"
+  },
+  "autoDetectionReportWebsiteButtonLabel": {
+    "message": "Denunciar website"
+  },
+  "pauseButton": {
+    "message": "Pause"
+  },
+  "resumeButton": {
+    "message": "Start"
+  },
+  "paused": {
+    "message": "Poper Blocker is off"
+  },
+  "needRefresh": {
+    "message": "Refresh open tabs in order for this change to take effect."
+  },
+  "needRefreshGotIt": {
+    "message": "Ok, got it!"
+  },
+  "neverShowRefresh": {
+    "message": "Don't show again"
+  },
+  "PP_Incognito_Step1": {
+    "message": "Go to"
+  },
+  "PP_Incognito_Step2": {
+    "message": "Find Poper Blocker and click \"Details\""
+  },
+  "PP_Incognito_Step3": {
+    "message": "Enable option next to \"Allow in incognito\""
+  },
+  "siteExperience": { "message": "Experiência no site" },
+  "pageExperience": { "message": "A experiência nesta página é" },
+  "badExperience": { "message": "Experiência ruim" },
+  "fairExperience": { "message": "Experiência regular" },
+  "cleanExperience": { "message": "Experiência limpa" },
+  "experienceTooltip": {
+    "message": "As classificações de pop-ups mostram a experiência geral dos usuários do Poperblocker nesta página."
+  },
+  "SettingsExperince": { "message": "Classificação da experiência no site" },
+  "SettingsExperincesub": { "message": "Ativar e mostrar a sinalização da experiência do usuário." },
+  "UserconsentExperinceHeader": { "message": "Permitir experiência do site" },
+  "UserconsentExperinceBody": {
+    "message": "Para ativar este recurso, precisamos de acesso às informações sobre os sites que você visita. Clique em \"Concordo\" para dar acesso a essas informações e permitir o uso delas de acordo com os nossos"
+  }
+}

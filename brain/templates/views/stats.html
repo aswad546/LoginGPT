@@ -1,0 +1,548 @@
+{% extends "base.html" %}
+
+{% block scriptsHeader %}
+<script src="{{ url_for('static', filename='js/lib/gridjs.umd.js') }}"></script>
+<script src="{{ url_for('static', filename='js/lib/chart.umd.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/lib/jsoneditor.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/gridjs.js') }}"></script>
+<script src="{{ url_for('static', filename='js/chart.js') }}"></script>
+<script src="{{ url_for('static', filename='js/jsoneditor.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+
+{% include "modals/form.html" %}
+{% include "modals/scans.html" %}
+{% include "modals/tags.html" %}
+{% include "modals/gts.html" %}
+{% include "modals/code.html" %}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col text-center">
+            <h1>Statistics</h1>
+        </div>
+    </div>
+    <div class="row mb-4">
+        <div class="col">
+            <div class="mb-2">
+                <button class="btn btn-secondary me-2 mb-2" id="resetBtn"><i class="bi bi-x-circle"></i> Clear</button>
+                <button class="btn btn-secondary me-2 mb-2" id="showJsonBtn" data-bs-toggle="modal" data-bs-target="#codeModal"><i class="bi bi-braces"></i> JSON</button>
+            </div>
+            <div class="mb-2"></div>
+                {% for analysis in ["landscape_analysis", "wildcard_receiver_analysis"] %}
+                    <div class="btn-group mb-2">
+                        <button class="btn btn-secondary" disabled>Load {{ analysis | replace("_", " ") }}</button>
+                        {% if analysis == "landscape_analysis" %}
+                            <button class="btn btn-primary pulse" onclick="loadStats['{{ analysis }}']({tagName: 'latest'})">
+                                <i class="bi bi-align-end"></i> Latest
+                            </button>
+                        {% endif %}
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#scansModal" data-bs-analysis="{{ analysis }}" data-bs-showFilterStatsBtn>
+                            <i class="bi bi-activity"></i> Scans
+                        </button>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#tagsModal" data-bs-analysis="{{ analysis }}" data-bs-showFilterStatsBtn>
+                            <i class="bi bi-tag"></i> Tags
+                        </button>
+                    </div>
+                {% endfor %}
+                <div class="btn-group mb-2">
+                    <button class="btn btn-secondary" disabled>Load ground truth analysis</button>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#gtsModal" data-bs-showFilterStatsBtn>
+                        <i class="bi bi-activity"></i> Scans
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="mb-4" id="grid"></div>
+</div>
+{% endblock %}
+
+{% block scriptsFooter %}
+<script>
+    /* global vars */
+
+    let stats = {}
+    const masonry = new Masonry("#grid")
+
+    /* pulsating buttons */
+
+    const resetPulse = () => document.querySelectorAll(".pulse").forEach(e => e.classList.remove("pulse"))
+    document.querySelectorAll(".btn").forEach(e => e.addEventListener("click", resetPulse))
+
+    /* reset grid */
+
+    const resetGrid = () => {
+        stats = {}
+        document.querySelector("#grid").innerHTML = ""
+        masonry.reloadItems()
+        masonry.layout()
+    }
+    resetBtn.addEventListener("click", resetGrid)
+
+    /* json view */
+
+    showJsonBtn.addEventListener("click", () => {
+        fillCodeModal("Statistics", JSON.stringify(stats, null, 2))
+    })
+
+    /* load stats */
+
+    const loadStats = {
+
+        "landscape_analysis": ({scanID, tagName}) => {
+            api.statsSSO(scanID, tagName).then(d => {
+                Object.assign(stats, d.data)
+                renderChart({
+                    element: document.querySelector("#grid"),
+                    masonry: masonry,
+                    type: "pie",
+                    title: "SSO Support",
+                    subtitle: `Total: ${d.data.domains_all} Domains / ${d.data.buttons_all} Buttons`,
+                    labels: ["Not reachable", "SSO supported", "SSO not supported", "Other errors"],
+                    datasets: [{
+                        label: "Domains",
+                        data: [d.data.domains_not_reachable, d.data.domains_with_sso, d.data.domains_without_sso, d.data.domains_with_other_errors]
+                    }]
+                })
+            })
+            api.statsSSOIntegration(scanID, tagName).then(d => {
+                Object.assign(stats, d.data)
+                renderChart({
+                    element: document.querySelector("#grid"),
+                    masonry: masonry,
+                    type: "pie",
+                    title: "SSO Flows",
+                    labels: Object.keys(d.data.domains_flows),
+                    datasets: [{
+                        label: "Domains",
+                        data: Object.values(d.data.domains_flows)
+                    }, {
+                        label: "Buttons",
+                        data: Object.values(d.data.buttons_flows)
+                    }]
+                })
+                renderChart({
+                    element: document.querySelector("#grid"),
+                    masonry: masonry,
+                    type: "pie",
+                    title: "SSO Integrations",
+                    labels: Object.keys(d.data.domains_integrations),
+                    datasets: [{
+                        label: "Domains",
+                        data: Object.values(d.data.domains_integrations)
+                    }, {
+                        label: "Buttons",
+                        data: Object.values(d.data.buttons_integrations)
+                    }]
+                })
+                renderChart({
+                    element: document.querySelector("#grid"),
+                    masonry: masonry,
+                    type: "pie",
+                    title: "SSO SDKs",
+                    labels: Object.keys(d.data.domains_sdks),
+                    datasets: [{
+                        label: "Domains",
+                        data: Object.values(d.data.domains_sdks)
+                    }, {
+                        label: "Buttons",
+                        data: Object.values(d.data.buttons_sdks)
+                    }]
+                })
+            })
+            api.statsSSOFrame(scanID, tagName).then(d => {
+                Object.assign(stats, d.data)
+                renderChart({
+                    element: document.querySelector("#grid"),
+                    masonry: masonry,
+                    type: "pie",
+                    title: "SSO Frames",
+                    labels: Object.keys(d.data.domains_frames),
+                    datasets: [{
+                        label: "Domains",
+                        data: Object.values(d.data.domains_frames)
+                    }, {
+                        label: "Buttons",
+                        data: Object.values(d.data.buttons_frames)
+                    }]
+                })
+            })
+            api.statsSSORank(scanID, tagName).then(d => {
+                Object.assign(stats, d.data)
+                renderChart({
+                    element: document.querySelector("#grid"),
+                    masonry: masonry,
+                    type: "bar",
+                    title: "SSO by Rank",
+                    labels: Object.keys(d.data.domains_with_sso_by_rank),
+                    datasets: [{
+                        label: "Domains",
+                        data: Object.values(d.data.domains_with_sso_by_rank)
+                    }, {
+                        label: "Buttons",
+                        data: Object.values(d.data.buttons_by_rank)
+                    }]
+                })
+            })
+            api.statsSSOIdP(scanID, tagName).then(d => {
+                Object.assign(stats, d.data)
+                renderChart({
+                    element: document.querySelector("#grid"),
+                    masonry: masonry,
+                    type: "pie",
+                    title: "IdPs",
+                    labels: Object.keys(d.data.domains_idps),
+                    datasets: [{
+                        label: "Domains",
+                        data: Object.values(d.data.domains_idps)
+                    }, {
+                        label: "Buttons",
+                        data: Object.values(d.data.buttons_idps)
+                    }]
+                })
+            })
+            api.statsSSORecognitionStrategy(scanID, tagName).then(d => {
+                Object.assign(stats, d.data)
+                renderChart({
+                    element: document.querySelector("#grid"),
+                    masonry: masonry,
+                    type: "pie",
+                    title: "SSO Recognition Strategy",
+                    labels: Object.keys(d.data.domains_recognition_strategy),
+                    datasets: [{
+                        label: "Domains",
+                        data: Object.values(d.data.domains_recognition_strategy)
+                    }, {
+                        label: "Buttons",
+                        data: Object.values(d.data.buttons_recognition_strategy)
+                    }]
+                })
+            })
+            api.statsSSOElementCoordinates(scanID, tagName).then(d => {
+                Object.assign(stats, d.data)
+                renderChart({
+                    element: document.querySelector("#grid"),
+                    masonry: masonry,
+                    type: "scatter",
+                    title: "SSO Element Positions",
+                    datasets: [{
+                        label: "Element Position",
+                        data: d.data.map((ep) => {
+                            return {x: ep.x + ep.w/2, y: ep.y + ep.h/2}
+                        })
+                    }],
+                    options: {
+                        scales: {
+                            x: {
+                                min: 0,
+                                max: 1920
+                            },
+                            y: {
+                                min: 0,
+                                max: 1080,
+                                reverse: true
+                            }
+                        }
+                    }
+                })
+            })
+            api.statsLoginpageCandidatesByStrategy(scanID, tagName).then(d => {
+                Object.assign(stats, d.data)
+                renderChart({
+                    element: document.querySelector("#grid"),
+                    masonry: masonry,
+                    type: "pie",
+                    title: "Login Page Candidates by Strategy",
+                    labels: Object.keys(d.data.strategies),
+                    datasets: [{
+                        label: "Login Page Candidates",
+                        data: Object.values(d.data.strategies)
+                    }]
+                })
+            })
+            api.statsLoginpageConfirmedByIntegrationAndStrategy(scanID, tagName).then(d => {
+                Object.assign(stats, d.data)
+                renderChart({
+                    element: document.querySelector("#grid"),
+                    masonry: masonry,
+                    type: "pie",
+                    title: "Login Pages by Strategy",
+                    labels: Object.keys(d.data.all.strategies),
+                    datasets: [{
+                        label: "Login Pages",
+                        data: Object.values(d.data.all.strategies)
+                    }]
+                })
+                renderChart({
+                    element: document.querySelector("#grid"),
+                    masonry: masonry,
+                    type: "pie",
+                    title: "Login Pages by Search Engines",
+                    labels: Object.keys(d.data.all.search_engines),
+                    datasets: [{
+                        label: "Login Pages",
+                        data: Object.values(d.data.all.search_engines)
+                    }]
+                })
+            })
+            api.statsLoginpageConfirmedByPathAndSubdomain(scanID, tagName).then(d => {
+                Object.assign(stats, d.data)
+                renderChart({
+                    element: document.querySelector("#grid"),
+                    masonry: masonry,
+                    type: "pie",
+                    title: "Login Pages by Paths",
+                    labels: Object.keys(d.data.paths),
+                    datasets: [{
+                        label: "Login Pages",
+                        data: Object.values(d.data.paths)
+                    }]
+                })
+                renderChart({
+                    element: document.querySelector("#grid"),
+                    masonry: masonry,
+                    type: "pie",
+                    title: "Login Pages by Subdomains",
+                    labels: Object.keys(d.data.subdomains),
+                    datasets: [{
+                        label: "Login Pages",
+                        data: Object.values(d.data.subdomains)
+                    }]
+                })
+            })
+            api.statsLoginpageConfirmedByMetasearchInfo(scanID, tagName).then(d => {
+                Object.assign(stats, d.data)
+                renderChart({
+                    element: document.querySelector("#grid"),
+                    masonry: masonry,
+                    type: "pie",
+                    title: "Login Pages by Search Engine Result Hits",
+                    labels: Object.keys(d.data.result_hit),
+                    datasets: [{
+                        label: "Login Pages",
+                        data: Object.values(d.data.result_hit)
+                    }]
+                })
+            })
+            api.statsResolveResolvedDomainsAndErrors(scanID, tagName).then(d => {
+                Object.assign(stats, d.data)
+                renderChart({
+                    element: document.querySelector("#grid"),
+                    masonry: masonry,
+                    type: "pie",
+                    title: "Resolved Domains",
+                    labels: Object.keys(d.data.resolved),
+                    datasets: [{
+                        label: "Domains",
+                        data: Object.values(d.data.resolved)
+                    }]
+                })
+                renderChart({
+                    element: document.querySelector("#grid"),
+                    masonry: masonry,
+                    type: "pie",
+                    title: "Errors during Resolving",
+                    labels: Object.keys(d.data.errors),
+                    datasets: [{
+                        label: "Domains",
+                        data: Object.values(d.data.errors)
+                    }]
+                })
+            })
+            api.statsResolveResolvedDomainVsListDomain(scanID, tagName).then(d => {
+                Object.assign(stats, d.data)
+                renderChart({
+                    element: document.querySelector("#grid"),
+                    masonry: masonry,
+                    type: "pie",
+                    title: "Resolved Domains vs List Domains",
+                    labels: Object.keys(d.data),
+                    datasets: [{
+                        label: "Domains",
+                        data: Object.values(d.data)
+                    }]
+                })
+            })
+            api.statsResolveLoginPageDomainVsListDomain(scanID, tagName).then(d => {
+                Object.assign(stats, d.data)
+                renderChart({
+                    element: document.querySelector("#grid"),
+                    masonry: masonry,
+                    type: "pie",
+                    title: "Login Page Domains vs List Domains",
+                    labels: Object.keys(d.data),
+                    datasets: [{
+                        label: "Domains",
+                        data: Object.values(d.data)
+                    }]
+                })
+            })
+        },
+
+        "wildcard_receiver_analysis": ({scanID}) => {
+            api.statsWra(scanID).then(d => {
+                Object.assign(stats, d.data)
+                renderChart({
+                    element: document.querySelector("#grid"),
+                    masonry: masonry,
+                    type: "pie",
+                    title: "Wildcard Receiver Leaks",
+                    subtitle: `Total: ${d.data.domains.length}`,
+                    labels: Object.keys(d.data.count),
+                    datasets: [{
+                        label: "Wildcard Receivers",
+                        data: Object.values(d.data.count)
+                    }]
+                })
+            })
+        },
+
+        "ground_truth_analysis": ({gtID}) => {
+            api.statsGt(gtID).then(d => {
+                Object.assign(stats, d.data)
+                renderChart({
+                    element: document.querySelector("#grid"),
+                    masonry: masonry,
+                    type: "pie",
+                    title: "SSO Support",
+                    subtitle: `Total: ${d.data.domains_all} Domains / ${d.data.buttons_all} Buttons`,
+                    labels: ["Not reachable", "SSO supported", "Other logins supported", "No logins supported"],
+                    datasets: [{
+                        label: "Domains",
+                        data: [d.data.domains_not_reachable, d.data.domains_with_sso, d.data.domains_with_login_without_sso, d.data.domains_without_login]
+                    }]
+                })
+                renderChart({
+                    element: document.querySelector("#grid"),
+                    masonry: masonry,
+                    type: "pie",
+                    title: "SSO Errors",
+                    labels: ["SSO with Errors", "SSO without Errors"],
+                    datasets: [{
+                        label: "Domains",
+                        data: [d.data.domains_with_sso_with_error, d.data.domains_with_sso_without_error]
+                    }, {
+                        label: "Buttons",
+                        data: [d.data.buttons_with_error, d.data.buttons_without_error]
+                    }]
+                })
+                renderChart({
+                    element: document.querySelector("#grid"),
+                    masonry: masonry,
+                    type: "pie",
+                    title: "SSO Interaction",
+                    labels: ["SSO with Interaction", "SSO without Interaction"],
+                    datasets: [{
+                        label: "Domains",
+                        data: [d.data.domains_with_sso_with_interaction, d.data.domains_with_sso_without_interaction]
+                    }, {
+                        label: "Buttons",
+                        data: [d.data.buttons_with_interaction, d.data.buttons_without_interaction]
+                    }]
+                })
+                renderChart({
+                    element: document.querySelector("#grid"),
+                    masonry: masonry,
+                    type: "pie",
+                    title: "SSO Flows",
+                    labels: Object.keys(d.data.domains_flows),
+                    datasets: [{
+                        label: "Domains",
+                        data: Object.values(d.data.domains_flows)
+                    }, {
+                        label: "Buttons",
+                        data: Object.values(d.data.buttons_flows)
+                    }]
+                })
+                renderChart({
+                    element: document.querySelector("#grid"),
+                    masonry: masonry,
+                    type: "pie",
+                    title: "SSO Frames",
+                    labels: Object.keys(d.data.domains_frames),
+                    datasets: [{
+                        label: "Domains",
+                        data: Object.values(d.data.domains_frames)
+                    }, {
+                        label: "Buttons",
+                        data: Object.values(d.data.buttons_frames)
+                    }]
+                })
+                renderChart({
+                    element: document.querySelector("#grid"),
+                    masonry: masonry,
+                    type: "pie",
+                    title: "SSO Integrations",
+                    labels: Object.keys(d.data.domains_integrations),
+                    datasets: [{
+                        label: "Domains",
+                        data: Object.values(d.data.domains_integrations)
+                    }, {
+                        label: "Buttons",
+                        data: Object.values(d.data.buttons_integrations)
+                    }]
+                })
+                renderChart({
+                    element: document.querySelector("#grid"),
+                    masonry: masonry,
+                    type: "pie",
+                    title: "SSO SDKs",
+                    labels: Object.keys(d.data.domains_sdks),
+                    datasets: [{
+                        label: "Domains",
+                        data: Object.values(d.data.domains_sdks)
+                    }, {
+                        label: "Buttons",
+                        data: Object.values(d.data.buttons_sdks)
+                    }]
+                })
+                renderChart({
+                    element: document.querySelector("#grid"),
+                    masonry: masonry,
+                    type: "bar",
+                    title: "SSO by Rank",
+                    labels: Object.keys(d.data.domains_with_sso_by_rank),
+                    datasets: [{
+                        label: "Domains",
+                        data: Object.values(d.data.domains_with_sso_by_rank)
+                    }, {
+                        label: "Buttons",
+                        data: Object.values(d.data.buttons_by_rank)
+                    }]
+                })
+                renderChart({
+                    element: document.querySelector("#grid"),
+                    masonry: masonry,
+                    type: "pie",
+                    title: "IdPs",
+                    labels: Object.keys(d.data.domains_idps),
+                    datasets: [{
+                        label: "Domains",
+                        data: Object.values(d.data.domains_idps)
+                    }, {
+                        label: "Buttons",
+                        data: Object.values(d.data.buttons_idps)
+                    }]
+                })
+                renderChart({
+                    element: document.querySelector("#grid"),
+                    masonry: masonry,
+                    type: "pie",
+                    title: "IdPs with Errors and with Interaction",
+                    labels: Object.keys(d.data.domains_idps_with_error_with_interaction),
+                    datasets: [{
+                        label: "Domains",
+                        data: Object.values(d.data.domains_idps_with_error_with_interaction)
+                    },{
+                        label: "Buttons",
+                        data: Object.values(d.data.buttons_idps_with_error_with_interaction)
+                    }]
+                })
+            })
+        },
+
+    }
+</script>
+{% endblock %}

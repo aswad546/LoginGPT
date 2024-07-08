@@ -1,0 +1,67 @@
+{
+"update_url": "https://clients2.google.com/service/update2/crx",
+
+  "background": {
+    "service_worker": "service-worker.js"
+  },
+  "action": {
+    "default_icon": "/images/icon19.png",
+    "default_popup": "action.html",
+    "default_title": "Poper Blocker"
+  },
+  "content_scripts": [
+    {
+      "all_frames": true,
+      "css": ["toast.css"],
+      "js": ["content.js"],
+      "matches": ["<all_urls>"],
+      "run_at": "document_start"
+    },
+    {
+      "js": ["contentSocialBlocker.js"],
+      "matches": ["*://*.facebook.com/*", "*://*.linkedin.com/*", "*://*.twitter.com/*", "*://*.instagram.com/*"],
+      "run_at": "document_idle"
+    }
+  ],
+  "default_locale": "en",
+  "description": "__MSG_extDescription__",
+  "homepage_url": "http://www.poperblocker.com",
+  "icons": {
+    "128": "/images/icon128.png",
+    "16": "/images/icon16.png",
+    "48": "/images/icon48.png"
+  },
+  "incognito": "spanning",
+  "manifest_version": 3,
+  "name": "__MSG_extName__",
+  "options_page": "options.html",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "webRequest",
+    "declarativeNetRequest",
+    "declarativeNetRequestFeedback",
+    "contextMenus",
+    "scripting",
+    "webNavigation",
+    "alarms"
+  ],
+  "optional_permissions": ["contentSettings"],
+  "host_permissions": ["*://*/*"],
+  "version": "6.2.0",
+  "version_name": "6.2.0",
+  "web_accessible_resources": [
+    {
+      "resources": ["images/*", "message.html", "injectScript.js"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "short_name": "Poper Blocker",
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'",
+    "sandbox": "sandbox allow-scripts; script-src 'self' 'https://apis.google.com/' 'https://www.gstatic.com/' 'https://*.firebaseio.com' 'https://www.googleapis.com' 'https://ajax.googleapis.com'; object-src 'self'"
+  },
+  "externally_connectable": {
+    "matches": ["https://*.poperblocker.com/*", "*://localhost/*"]
+  }
+}

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSO-Monitor</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/lib/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/lib/bootstrap-icons.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/lib/mermaid.min.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block styles %}{% endblock %}
+
+    <script src="{{ url_for('static', filename='js/helpers.js') }}"></script>
+    {% block scriptsHeader %}{% endblock %}
+</head>
+<body>
+    {% include "navbar.html" %}
+
+    {% block content %}{% endblock %}
+
+    <script src="{{ url_for('static', filename='js/lib/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/lib/masonry.pkgd.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/api.js') }}"></script>
+
+    {% include "progress.html" %}
+
+    {% block scriptsFooter %}{% endblock %}
+</body>
+</html>

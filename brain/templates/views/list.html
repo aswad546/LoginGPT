@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col mb-4 text-center">
+            <h1>Tranco+SSO List</h1>
+        </div>
+    </div>
+    <div class="row mb-4">
+        <div class="col-sm-12 col-lg-6 mb-4">
+            <h4>About this list</h4>
+            <p>We provide a continuously updated list of authentication mechanisms found on millions of websites in the Internet. When configuring this list with a specific date, we retrieve the <a href="https://tranco-list.eu/">Tranco list</a> that contains the 1 million most popular domains for that date. For each domain in the Tranco list, we supplement our latest data up to this date.</p>
+            <h6>Update Cycle</h6>
+            <p>While Tranco provides daily lists, we need about a month to snapshot the authentications on all of the 1 million websites. In the worst case, we can only provide data to an entirely new domain that has been added to the Tranco list one month later. However, most of the Tranco domains remain stable and only move up or down in their ranking.</p>
+            <h4>What data does this list include?</h4>
+            <p>The data in our list provides details about the authentication mechanisms of a website. These include, inter alia, the website's login page URL(s) and support for Single Sign-On, Username / Password, WebAuthn <sup><span class="badge bg-secondary">Experimental</span></sup>, and Passkey <sup><span class="badge bg-secondary">Experimental</span></sup> authentication.</p>
+            {% include "components/datacard.html" %}
+            <h6>File References</h6>
+            <p>Not all of the data is stored in our database. Larger files like screenshots, HTTP traffic recordings, and more are stored in our <a href="https://min.io/">MinIO S3-compatible object storage</a>. In our database, we include references to these files that look like this:</p>
+            <code><p><pre>{% include "examples/reference.json" %}</pre></p></code>
+            <p>We provide an <a href="/docs#/Api.Object/get_api_object_">API endpoint</a> that you can use to download the files with their references.</p>
+        </div>
+        <div class="col-sm-12 col-lg-6 mb-4">
+            <h4>Download this list</h4>
+            <div class="card mb-4">
+                <div class="card-header">
+                    Configuration
+                </div>
+                <div class="card-body">
+                    <p class="card-text">You must configure your list before downloading or keep the default values.</p>
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">Choose a date</span>
+                        <input type="date" class="form-control" id="listDate">
+                        <span class="input-group-text">Tranco List ID</span>
+                        <input type="text" class="form-control" id="listTrancoId" disabled>
+                    </div>
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">First domain rank to include in the list</span>
+                        <input type="number" class="form-control" id="listStartRank" min="1" max="1000000">
+                        <button class="btn btn-secondary"  data-bs-toggle="popover" data-bs-trigger="focus" data-bs-title="Info" data-bs-content="The Tranco rank of the first domain to include. For example, if you choose 1 as first rank and 1000 as last rank, you will download the top 1k domains from the Tranco list enriched with our data."><i class="bi bi-info-circle"></i></button>
+                    </div>
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">Last domain rank to include in the list</span>
+                        <input type="number" class="form-control" id="listEndRank" min="1" max="1000000">
+                        <button class="btn btn-secondary"  data-bs-toggle="popover" data-bs-trigger="focus" data-bs-title="Info" data-bs-content="The Tranco rank of the last domain to include. For example, if you choose 1 as first rank and 1000 as last rank, you will download the top 1k domains from the Tranco list enriched with our data."><i class="bi bi-info-circle"></i></button>
+                    </div>
+                    <a type="button" class="btn btn-success" id="listDownloadBtn" href="">
+                        <i class="bi bi-file-earmark-arrow-down"></i> Download the List
+                    </a>
+                </div>
+                <div class="card-footer text-body-secondary">
+                    Unique Download Link: <a href="" class="listLink">TBD</a>
+                </div>
+            </div>
+            <h4>Reference this list</h4>
+            <p>If you use this list for your research, please cite our publication. Feel free to use other citation styles than BibTeX or IEEE Style. We also encourage to reference this list in your text and include the unique download link of the list in a footnote.</p>
+            <div class="card">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs">
+                        <li class="nav-item">
+                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#text">Text</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#bibtex">BibTeX</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#ieee">IEEE Style</button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body tab-content">
+                    <div class="tab-pane fade show active" id="text">
+                        We use the Tranco+SSO list<sup>&ast;</sup> [1] generated on <span id="listDateDescr"></span> ...<br>
+                        <sup>&ast;</sup> Available at <a href="" class="listLink">TBD</a>.
+                    </div>
+                    <div class="tab-pane fade" id="bibtex">
+                        <code>TBA</code>
+                    </div>
+                    <div class="tab-pane fade" id="ieee">
+                        <code>TBA</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scriptsFooter %}
+<script>
+let listConfig = {
+    date: new Date(Date.now() - 86400000),
+    startRank: 1,
+    endRank: 1000
+}
+
+// update config
+function updateListConfig({
+    date=undefined,
+    startRank=undefined,
+    endRank=undefined
+}) {
+    if (date) listConfig.date = date
+    if (startRank) listConfig.startRank = startRank
+    if (endRank) listConfig.endRank = endRank
+}
+
+// update links
+function updateListLinks() {
+    const date = listConfig.date.toISOString().split("T")[0]
+    const l = `${location.origin}/api/list?date=${date}&start_rank=${listConfig.startRank}&end_rank=${listConfig.endRank}`
+
+    listDownloadBtn.href = l
+
+    const listLinks = document.querySelectorAll(".listLink")
+    for (const a of listLinks) {
+        a.href = l
+        a.textContent = l
+    }
+
+    listDateDescr.textContent = listConfig.date.toLocaleDateString("en-US", {day: "2-digit", month: "long", year: "numeric"})
+
+    api.getTrancoId(date).then((r) => {
+        listTrancoId.value = r.data || "Not Available"
+    })
+}
+
+// apply config
+function applyListConfig() {
+    listDate.valueAsDate = listConfig.date
+    listStartRank.value = listConfig.startRank
+    listEndRank.value = listConfig.endRank
+}
+
+// default
+applyListConfig()
+updateListLinks()
+
+// listeners
+listDate.onchange = () => {
+    updateListConfig({date: listDate.valueAsDate})
+    updateListLinks()
+}
+listStartRank.onchange = () => {
+    updateListConfig({startRank: listStartRank.value})
+    updateListLinks()
+}
+listEndRank.onchange = () => {
+    updateListConfig({endRank: listEndRank.value})
+    updateListLinks()
+}
+
+// popovers
+[...document.querySelectorAll('[data-bs-toggle="popover"]')].map(p => new bootstrap.Popover(p))
+
+</script>
+{% endblock %}

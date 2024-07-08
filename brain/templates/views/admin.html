@@ -1,0 +1,412 @@
+{% extends "base.html" %}
+
+{% block scriptsHeader %}
+<script src="{{ url_for('static', filename='js/lib/jsoneditor.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/lib/gridjs.umd.js') }}"></script>
+<script src="{{ url_for('static', filename='js/jsoneditor.js') }}"></script>
+<script src="{{ url_for('static', filename='js/gridjs.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+
+{% include "modals/scans.html" %}
+{% include "modals/form.html" %}
+{% include "modals/code.html" %}
+{% include "modals/alert.html" %}
+{% include "modals/analysis.html" %}
+
+<div class="container-fluid">
+
+    <div class="row mb-4">
+        <div class="col text-center">
+            <h1>Admin</h1>
+        </div>
+    </div>
+
+    <!-- dashboard with cascading grid layout (masonry.desandro.com) -->
+    <div class="row row-cols-1 row-cols-xl-2 row-cols-xxl-3 g-4" data-masonry='{"percentPosition": true}'>
+
+        <!-- section: notifications -->
+        <div class="col">
+            <div class="bg-light rounded-3 p-2">
+                <h4>
+                    <span class="me-2">Notifications</span>
+                    <button type="button" class="btn btn-sm btn-outline-warning" onclick="msgbox.innerHTML=''">Clear All</button>
+                </h4>
+                <div style="height: 300px; overflow: auto;">
+                    <div id="msgbox"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- section: manage -->
+        <div class="col">
+            <div class="bg-light rounded-3 p-2">
+                <h4>External Docker Services</h4>
+                <div>
+                    <a class="btn btn-primary mb-2" href="//{{ config['RABBITMQ_EXTERNAL_DOMAIN'] }}" target="_blank"><i class="bi bi-chat-left-dots"></i> RabbitMQ</a>
+                    <a class="btn btn-primary mb-2" href="//{{ config['MONGOEXPRESS_EXTERNAL_DOMAIN'] }}/db/sso-monitor" target="_blank"><i class="bi bi-database"></i> MongoDB</a>
+                    <a class="btn btn-primary mb-2" href="//{{ config['MINIO_EXTERNAL_DOMAIN'] }}" target="_blank"><i class="bi bi-database-fill"></i> Minio</a>
+                    <a class="btn btn-primary mb-2" href="//{{ config['JUPYTER_EXTERNAL_DOMAIN'] }}" target="_blank"><i class="bi bi-filetype-py"></i> Jupyter</a>
+                </div>
+                <h4>Manage Scans</h4>
+                <div>
+                    <button class="btn btn-primary mb-2" data-bs-toggle="modal" data-bs-target="#scansModal" data-bs-analysis="landscape_analysis" data-bs-showAdminBtn>Landscape</button>
+                    <button class="btn btn-primary mb-2" data-bs-toggle="modal" data-bs-target="#scansModal" data-bs-analysis="login_trace_analysis" data-bs-showAdminBtn>Login Trace</button>
+                    <button class="btn btn-primary mb-2" data-bs-toggle="modal" data-bs-target="#scansModal" data-bs-analysis="wildcard_receiver_analysis" data-bs-showAdminBtn>Wildcard Receiver</button>
+                </div>
+                <h4>Run New Analyses</h4>
+                <div>
+                    <button class="btn btn-primary mb-2" data-bs-toggle="modal" data-bs-target="#analysisModal" data-bs-analysis="landscape_analysis">Landscape</button>
+                    <button class="btn btn-primary mb-2" data-bs-toggle="modal" data-bs-target="#analysisModal" data-bs-analysis="login_trace_analysis">Login Trace</button>
+                    <button class="btn btn-primary mb-2" data-bs-toggle="modal" data-bs-target="#analysisModal" data-bs-analysis="wildcard_receiver_analysis">Wildcard Receiver</button>
+                </div>
+                <h4>Manage Ground Truth</h4>
+                <div>
+                    <a class="btn btn-primary mb-2" href="https://docs.google.com/spreadsheets/d/1svsi5xOq6Yxb8nhuLxUKkgLyu6vVh5hWWV_-Yx7CPXE/edit?usp=sharing" target="_blank"><i class="bi bi-file-earmark-spreadsheet"></i> Sheet</a>
+                    <button class="btn btn-warning mb-2" id="copyGroundTruthBtn">
+                        <i class="bi bi-clipboard"></i> Copy
+                    </button>
+                    <button class="btn btn-danger mb-2" id="deleteGroundTruthBtn">
+                        <i class="bi bi-trash"></i> Delete
+                    </button>
+                </div>
+                <h4>Manage Database and Caches</h4>
+                <div>
+                    <button class="btn btn-warning mb-2" id="createDBIndexBtn">
+                        <i class="bi bi-database-gear"></i> Index DB
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- section: top sites lists -->
+        <div class="col">
+            <div class="bg-light rounded-3 p-2">
+                <h4>Manage Top Sites Lists</h4>
+                <p>Show all stored top sites lists, upload new lists, or delete existing lists.</p>
+                <p>
+                    <button class="btn btn-primary" id="topSitesListsShowBtn">Show all stored lists</button>
+                </p>
+                <div class="input-group mb-1">
+                    <span class="input-group-text">List ID</span>
+                    <input type="text" class="form-control" id="topSitesListId" required>
+                    <button class="btn btn-primary" id="topSitesListUploadBtn">Upload</button>
+                    <button class="btn btn-danger" id="topSitesListDeleteBtn">Delete</button>
+                </div>
+                <div class="input-group mb-1">
+                    <span class="input-group-text">Index of Rank in List</span>
+                    <input type="number" class="form-control" id="topSitesListRankFileIdx" required value="0">
+                    <span class="input-group-text">Index of Domain in List</span>
+                    <input type="number" class="form-control" id="topSitesListDomainFileIdx" required value="1">
+                </div>
+                <div class="input-group mb-1">
+                    <input type="file" accept=".csv" class="form-control" id="topSitesListFile" required>
+                </div>
+            </div>
+        </div>
+
+        <!-- section: queues -->
+        <div class="col">
+            <div class="bg-light rounded-3 p-2">
+                <h4>Queues</h4>
+                <p>Overview and stats of the message queues.</p>
+                <div id="rabbitQueuesTable"></div>
+            </div>
+        </div>
+
+        <!-- section: db query -->
+        <div class="col">
+            <div class="bg-light rounded-3 p-2">
+                <h4>Query Database</h4>
+                <p>Manually query the MongoDB database.</p>
+                <div class="input-group mb-1">
+                    <span class="input-group-text">Method</span>
+                    <select class="form-control" id="dbQueryMethodInput">
+                        <option value="find_all">Find all entries</option>
+                        <option value="find_one">Find one entry</option>
+                        <option value="count">Count entries</option>
+                        <option value="update_many">Update many entries</option>
+                    </select>
+                </div>
+                <div class="input-group mb-1">
+                    <span class="input-group-text">Collection</span>
+                    <input type="text" class="form-control" id="dbQueryCollectionInput">
+                </div>
+                <div class="input-group mb-1">
+                    <span class="input-group-text">Query</span>
+                    <input type="text" class="form-control" id="dbQueryQueryInput" value="{}">
+                </div>
+                <div class="input-group mb-1">
+                    <span class="input-group-text">Projection</span>
+                    <input type="text" class="form-control" id="dbQueryProjectionInput" value="{}">
+                </div>
+                <button type="button" class="btn btn-primary" id="dbQueryBtn">Query</button>
+            </div>
+        </div>
+
+        <!-- section: stored queries -->
+        <div class="col">
+            <div class="bg-light rounded-3 p-2">
+                <h4>Stored Queries</h4>
+                <p>Stored MongoDB queries for the filter of the archive table.</p>
+                <h6>Show and delete stored queries</h6>
+                <div class="input-group mb-2">
+                    <span class="input-group-text"><i class="bi bi-card-text me-1"></i> Description</span>
+                    <select class="form-control" size="5" id="querySelect">
+                    </select>
+                    <button class="btn btn-danger" id="queryDeleteBtn">Delete</button>
+                </div>
+                <div class="input-group mb-4">
+                    <span class="input-group-text"><i class="bi bi-braces me-1"></i> Query</span>
+                    <textarea class="form-control" id="queryTextarea" rows="5" disabled></textarea>
+                </div>
+                <h6>Add stored queries</h6>
+                <div class="input-group mb-2">
+                    <span class="input-group-text"><i class="bi bi-card-text me-1"></i> Description</span>
+                    <input type="text" class="form-control" id="addQueryDescriptionInput">
+                    <button class="btn btn-primary" id="addQueryBtn">Save</button>
+                </div>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-braces me-1"></i> Query</span>
+                    <textarea class="form-control" id="addQueryTextarea" rows="5"></textarea>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block scriptsFooter %}
+<script>
+    /* section: notifications */
+
+    const msg = (m, color="primary") => {
+        const msginfo = document.createElement("div")
+        msginfo.classList.add("alert", `alert-${color}`, "alert-dismissible", "fade", "show")
+
+        const msgicon = document.createElement("i")
+        msgicon.classList.add("bi", "me-2")
+        if (color == "primary") msgicon.classList.add("bi-info-circle-fill")
+        else if (color == "success") msgicon.classList.add("bi-check-circle-fill")
+        else if (color == "danger") msgicon.classList.add("bi-exclamation-triangle-fill")
+
+        const msgtext = document.createElement("span")
+        msgtext.innerText = m
+
+        const msgclose = document.createElement("button")
+        msgclose.classList.add("btn-close")
+        msgclose.setAttribute("type", "button")
+        msgclose.setAttribute("data-bs-dismiss", "alert")
+
+        msginfo.appendChild(msgicon)
+        msginfo.appendChild(msgtext)
+        msginfo.appendChild(msgclose)
+
+        msgbox.appendChild(msginfo)
+    }
+
+    /* section: manage */
+
+    createDBIndexBtn.onclick = () => {
+        api.createDBIndex().then(_ => {
+            msg("Created database index", color="success")
+        }).catch(e => {
+            msg(`Failed to create database index: ${e["error"]}`, color="danger")
+        })
+    }
+
+    copyGroundTruthBtn.onclick = () => {
+        sourceGtId = prompt("Enter the id of the ground truth to copy")
+        targetGtId = prompt("Enter the id of the new ground truth")
+        if (!sourceGtId || !targetGtId) {
+            msg("Please enter both source and target ground truth ids", "danger")
+            return
+        }
+        api.copyGroundTruth(sourceGtId, targetGtId).then(_ => {
+            msg(`Copied ground truth ${sourceGtId} to ${targetGtId}`, color="success")
+        }).catch(e => {
+            msg(`Failed to copy ground truth ${sourceGtId} to ${targetGtId}: ${e["error"]}`, color="danger")
+        })
+    }
+
+    deleteGroundTruthBtn.onclick = () => {
+        gtId = prompt("Enter the id of the ground truth to delete")
+        if (!gtId) {
+            msg("Please enter a ground truth id", "danger")
+            return
+        }
+        const check = prompt("Type 'yes' to delete this ground truth")
+        if (check === "yes") {
+            api.deleteGroundTruth(gtId).then(_ => {
+                msg(`Deleted ground truth ${gtId}`, color="success")
+            }).catch(e => {
+                msg(`Failed to delete ground truth ${gtId}: ${e["error"]}`, color="danger")
+            })
+        }
+    }
+
+    /* section: top sites lists */
+
+    topSitesListUploadBtn.onclick = () => {
+        const id = topSitesListId.value
+        const file = topSitesListFile.files[0]
+        const rankFileIdx = topSitesListRankFileIdx.value
+        const domainFileIdx = topSitesListDomainFileIdx.value
+        if (!id || !file || !rankFileIdx || !domainFileIdx) {
+            msg("Please enter a list id, the file index of the rank, the file index of the domain, and choose a file", "danger")
+            return
+        }
+        api.uploadTopSitesList(id, file, rankFileIdx, domainFileIdx).then(_ => {
+            msg(`Uploaded top sites list ${id}`, color="success")
+        }).catch(e => {
+            msg(`Failed to upload top sites list ${id}: ${e["error"]}`, color="danger")
+        })
+    }
+
+    topSitesListDeleteBtn.onclick = () => {
+        const id = topSitesListId.value
+        if (!id) {
+            msg("Please enter a list id", "danger")
+            return
+        }
+        const check = prompt("Type 'yes' to delete this list")
+        if (check === "yes") {
+            api.deleteTopSitesList(id).then(_ => {
+                msg(`Deleted top sites list ${id}`, color="success")
+            }).catch(e => {
+                msg(`Failed to delete top sites list ${id}: ${e["error"]}`, color="danger")
+            })
+        }
+    }
+
+    topSitesListsShowBtn.onclick = () => {
+        api.showTopSitesLists().then(r => {
+            msg(`Stored top sites lists: ${r["data"].join(", ")}`, color="success")
+        }).catch(e => {
+            msg(`Failed to retrieve top sites lists: ${e["error"]}`, color="danger")
+        })
+    }
+
+    /* section: queues */
+
+    const rabbitPurgeQueue = (queue) => {
+        const check = prompt("Type 'yes' to purge this queue")
+        if (check === "yes") {
+            api.rabbitPurgeQueue(queue).then(_ => {
+                msg(`Purged all messages on queue ${queue}`, color="success")
+            }).catch(e => {
+                msg(`Failed to purge all messages on queue ${queue}: ${e["error"]}`, color="danger")
+            })
+        }
+    }
+
+    const rabbitQueuesGrid = new gridjs.Grid({
+        sort: true,
+        height: "300px",
+        style: {
+            table: {
+                "white-space": "nowrap"
+            }
+        },
+        columns: [
+            "Queue",
+            "# Messages",
+            "# Workers",
+            "Size (MB)",
+            {
+                name: "Actions",
+                formatter: (_, row) => {
+                    return gridjs.h("button", {
+                        className: "btn btn-sm btn-danger",
+                        onclick: () => rabbitPurgeQueue(row.cells[0].data)
+                    }, "Purge")
+                }
+            }
+        ],
+        server: {
+            url: "/api/rabbit/queues",
+            then: (data) => {
+                return data.data.map(d => {
+                    return [
+                        d.name,
+                        d.messages,
+                        d.consumers,
+                        `${(d.message_bytes/1024/1024).toFixed(2)}`,
+                        null
+                    ]
+                })
+            }
+        }
+    })
+
+    rabbitQueuesGrid.render(rabbitQueuesTable)
+
+    /* section: db query */
+
+    dbQueryBtn.onclick = () => {
+        const method = dbQueryMethodInput.value
+        const collection = dbQueryCollectionInput.value
+        const query = dbQueryQueryInput.value
+        const projection = dbQueryProjectionInput.value
+        api.dbQuery(method, collection, query, projection).then(r => {
+            msg(JSON.stringify(r.data, null, 2), color="success")
+        }).catch(e => {
+            msg(`Failed to query database: ${e["error"]}`, color="danger")
+        })
+    }
+
+    /* section: stored queries */
+
+    api.getQuery().then((r) => {
+        for (let q of r["data"]) {
+            const option = document.createElement("option")
+            option.value = q.query
+            option.text = q.description
+            querySelect.appendChild(option)
+        }
+    }).catch((e) => {
+        msg(`Failed to retrieve queries: ${e["error"]}`, color="danger")
+    })
+
+    querySelect.onchange = () => {
+        queryTextarea.value = querySelect.value
+    }
+
+    queryDeleteBtn.onclick = () => {
+        const query = querySelect.value
+        if (!query) {
+            msg("Please select a query", "danger")
+            return
+        }
+        const check = prompt("Type 'yes' to delete this query")
+        if (check === "yes") {
+            api.deleteQuery(query).then(_ => {
+                msg(`Deleted query ${query}`, color="success")
+            }).catch(e => {
+                msg(`Failed to delete query ${query}: ${e["error"]}`, color="danger")
+            })
+        }
+    }
+
+    addQueryBtn.onclick = () => {
+        const query = addQueryTextarea.value
+        const description = addQueryDescriptionInput.value
+        if (!query) {
+            msg("Please enter a query", "danger")
+            return
+        }
+        if (!description) {
+            msg("Please enter a description", "danger")
+            return
+        }
+        api.addQuery(description, query).then(_ => {
+            msg(`Stored query ${query}`, color="success")
+        }).catch(e => {
+            msg(`Failed to store query ${query}: ${e["error"]}`, color="danger")
+        })
+    }
+
+</script>
+{% endblock %}

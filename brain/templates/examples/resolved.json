@@ -1,0 +1,7 @@
+{
+    "reachable": true, // whether the domain is reachable (no dns error, no timeout, valid status code, ...)
+    "url": "https://www.shop.com/index.html", // fully resolved url, i.e., https://shop.com redirects to https://www.shop.com/index.html
+    "domain": "www.shop.com", // domain of the fully resolved url
+    "error_msg": "...", // short reason why not reachable
+    "error": "..." // detailed reason why not reachable
+}

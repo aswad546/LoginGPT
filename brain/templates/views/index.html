@@ -1,0 +1,302 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+
+    <div class="row mb-4">
+        <div class="col mb-4 bg-light rounded-3 text-center">
+            <h1 class="my-4" style="font-variant: small-caps; font-weight: bold;">SSO-Monitor</h1>
+            <h2 class="my-4">A Reliable, Reproducible, and Research-Oriented<br>Single Sign-On Archive for Landscape and Security Measurements</h2>
+            <div>
+                <a class="btn btn-success btn-lg me-2 mb-4" href="/archive">Explore the <b>Archive</b></a>
+                <a class="btn btn-success btn-lg me-2 mb-4" href="/stats">Generate <b>Statistics</b></a>
+                <a class="btn btn-success btn-lg me-2 mb-4" href="/list">Download the <b>Tranco+SSO List</b></a>
+                <a class="btn btn-success btn-lg me-2 mb-4" href="/paper.pdf">Read the <b>Paper</b></a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col">
+            <h3>Abstract</h3>
+            <p>Single Sign-On (SSO) with OAuth 2.0 and OpenID Connect 1.0 is essential for user authentication and authorization on the Internet. Billions of users worldwide rely on SSO services provided by Google, Facebook, and Apple. In the last decade, researchers provided a plethora of measurements and made significant contributions to the security of SSO.</p>
+            <p>For large-scale measurements on the security of SSO, researchers need to reliably detect SSO implementations in the wild. Unfortunately, we discover gaps in prior work leading to blind spots in the SSO landscape that hinder the community to improve on large-scale research. We also observe insufficient measurements and an overall lack of reproducibility, making comparisons between distinct studies difficult, if not impossible.</p>
+            <p>To fill these gaps, we introduce SSO-Monitor &mdash; our open-source, modular, and highly extensible framework for large-scale SSO landscape and security measurements. SSO-Monitor achieves a high accuracy of 93% and, compared to prior tools, significantly improves the reliability of SSO detection techniques by 19%. It continuously takes snapshots of the SSO landscape for the top 1M websites to compose an SSO archive that is reproducible by design. Therefore, it passively monitors the SSO flows and provides an extensive set of landscape and security insights on <a href="https://sso-monitor.me">sso-monitor.me</a>. Our archive and framework allows researchers to conduct comprehensive measurements over time and even beyond the scope of SSO.</p>
+            <p>We used the data in our SSO archive to measure the security of 89k SSO authentication flows on the top 1M websites. Thereby, we discovered 48 575 violations of the OAuth Security Best Current Practices and 339 security and privacy vulnerabilities, including 30 username and password leaks.</p>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col">
+            <h3>Artifacts</h3>
+            <div class="row">
+                <div class="col-sm-12 col-md-4 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="bi bi-archive me-1"></i>
+                            Archive
+                        </div>
+                        <div class="card-body">
+                            <p>This module lists all archived SSO snapshots in a table. You can filter and search the archive, for instance, only select domains with SSO, only select domains of a specific scan, or select all domains matching a custom MongoDB query for more advanced fine-grained filtering.</p>
+                            <a href="/archive" class="btn btn-outline-secondary btn-sm">Go to the Archive</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-12 col-md-4 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="bi bi-pie-chart me-1"></i>
+                            Statistics
+                        </div>
+                        <div class="card-body">
+                            <p>This module allows you to compute statistics on our SSO archive. You can load the latest scan, a specific scan, or a ground truth to show aggregated statistics of the data, including the number of SSO buttons, login pages, and the position of the SSO buttons on the browser canvas.</p>
+                            <a href="/stats" class="btn btn-outline-secondary btn-sm">Go to the Statistics</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-12 col-md-4 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="bi bi-list-ol me-1"></i>
+                            Tranco+SSO List
+                        </div>
+                        <div class="card-body">
+                            <p>This module allows you to download our SSO archive as a large JSON file. Since our API uses pagination and does not provide all data at once, we provide a large JSON file holding all SSO snapshots instead. The file allwos you to apply own parsing and queries for individual filtering.</p>
+                            <a href="/list" class="btn btn-outline-secondary btn-sm">Go to the Tranco+SSO List</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col mb-4">
+            <h3>FAQs</h3>
+            <div class="accordion" id="accordionFaq">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSSO">
+                            What is Single Sign-On?
+                        </button>
+                    </h2>
+                    <div id="collapseSSO" class="accordion-collapse collapse" data-bs-parent="#accordionFaq">
+                        <div class="accordion-body">
+                            <p>Single Sign-On (SSO) is a user authentication method that involves two parties &mdash; an Identity Provider (IdP) and a Service Provider (SP). IdPs, such as <a href="https://developers.google.com/identity/gsi/web/guides/overview">Google</a>, <a href="https://developers.facebook.com/docs/facebook-login/">Facebook</a>, and <a href="https://developer.apple.com/sign-in-with-apple/">Apple</a>, manage and verify user identities. SPs are the applications or websites that require user authentication. With SSO, users can log in on multiple SPs by authenticating through a single IdP, streamlining the login process and reducing the need to remember multiple credentials. When a user attempts to log in on a website, the SP redirects the user to the chosen IdP. The IdP verifies the user's identity, and if successful, sends an authentication token back to the SP. The SP uses the authentication token to sign in the user. A simple example of Single Sign-On is the "Sign in with Facebook" feature on <a href="https://www.pinterest.de/login/">Pinterest</a>. This feature allows users to log in to Pinterest with their Facebook accounts.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTool">
+                            What is SSO-Monitor?
+                        </button>
+                    </h2>
+                    <div id="collapseTool" class="accordion-collapse collapse" data-bs-parent="#accordionFaq">
+                        <div class="accordion-body">
+                            <p>SSO-Monitor is an open-source tool that continuously iterates over millions of websites to monitor the SSO landscape across the web. Therefore, it regularly visits websites, determines their login pages, and checks whether they support Single Sign-On on their login pages. Currently, it can detect SSO logins with 10 of the most commonly used IdPs, such as Google, Facebook, Apple, Twitter, LinkedIn, and Github.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseArchiveVsMonitor">
+                            What is the SSO archive?
+                        </button>
+                    </h2>
+                    <div id="collapseArchiveVsMonitor" class="accordion-collapse collapse" data-bs-parent="#accordionFaq">
+                        <div class="accordion-body">
+                            <p>The SSO archive is our central collection and long-term storage of artifacts and data, including every component of this website that lets you explore or download our archived data. SSO-Monitor is the tool that generates the data that is fed into our SSO archive. You can think of our SSO archive as the <a href="https://tranco-list.eu/">Tranco Top Sites Ranking</a> and the <a href="https://web.archive.org/">Internet Archive's Wayback Machine</a> but for Single Sign-On research.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseLpDetection">
+                            How do we determine login pages of websites?
+                        </button>
+                    </h2>
+                    <div id="collapseLpDetection" class="accordion-collapse collapse" data-bs-parent="#accordionFaq">
+                        <div class="accordion-body">
+                            <p>SSO-Monitor executes the following steps to determine login pages of websites:</p>
+                            <ol>
+                                <li>It navigates to the website and checks whether it is reachable.</li>
+                                <li>
+                                    It scans the website for login pages using the following techniques:
+                                    <ul>
+                                        <li>it queries the free internet metasearch engine <a href="https://github.com/searxng/searxng">SearXNG</a> that aggregates results from various search services and databases</li>
+                                        <li>it crawls the website for links pointing the login page</li>
+                                        <li>it tests well-known paths like <code>shop.com/login</code> or subdomains like <code>login.shop.com</code></li>
+                                        <li>it scans the website's <a href="https://www.sitemaps.org/">sitemap</a></li>
+                                        <li>it scans the website's homepage</li>
+                                    </ul>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSsoDetection">
+                            How do we detect sso buttons on the login pages?
+                        </button>
+                    </h2>
+                    <div id="collapseSsoDetection" class="accordion-collapse collapse" data-bs-parent="#accordionFaq">
+                        <div class="accordion-body">
+                            <p>SSO-Monitor executes the following steps to detect SSO buttons on login pages:</p>
+                            <ol>
+                                <li>It navigates to the login page and checks whether it is reachable.</li>
+                                <li>
+                                    It scans the login page for SSO buttons using the following techniques:
+                                    <ul>
+                                        <li>it searches for well-known keywords like <code>Sign in with Google</code> or more generic terms like <code>google</code> in the <a href="https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model">DOM</a> and <a href="https://developer.mozilla.org/en-US/docs/Glossary/Accessibility_tree">accessibility tree</a></li>
+                                        <li>it takes a screenshot of the login page and uses visual-based detection by running the <a href="https://docs.opencv.org/4.7.0/d4/dc6/tutorial_py_template_matching.html">OpenCV</a> template matching algorithm on it to detect the logos of the IdPs</li>
+                                        <li>it captures all HTTP requests on the website and applies rules on them to detect SSO SDKs</li>
+                                        <li>it hooks the <code>navigator.credentials</code> <a href="https://developer.mozilla.org/en-US/docs/Web/API/Navigator/credentials">browser API</a> to detect if a website requests a <code>PasswordCredential</code> for password authentication, <code>FederatedCredential</code> or <code>IdentityCredential</code> for SSO authentication, or <code>PublicKeyCredential</code> for WebAuthn or passkey authentication</li>
+                                    </ul>
+                                </li>
+                                <li>It triggers the SSO authentication flows and stores snapshots of them in our <a href="/archive">SSO archive</a>. Our archive includes the recognized IdPs, the login page URLs, the coordinates of the SSO buttons, screenshots, and the intercepted traffic.</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIdps">
+                            Which identity providers do we detect?
+                        </button>
+                    </h2>
+                    <div id="collapseIdps" class="accordion-collapse collapse" data-bs-parent="#accordionFaq">
+                        <div class="accordion-body">
+                            <p>SSO-Monitor currently detects the following IdPs: Apple, Facebook, Google, Twitter, LinkedIn, Microsoft, Baidu, Github, QQ, Sina Weibo, and WeChat. Further IdPs can be easily integrated into SSO-Monitor by extending the regular expressions detecting the login requests that are issued to the IdPs and the IdP logos / icons.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePassword">
+                            Do we detect username and password logins?
+                        </button>
+                    </h2>
+                    <div id="collapsePassword" class="accordion-collapse collapse" data-bs-parent="#accordionFaq">
+                        <div class="accordion-body">
+                            <p>Yes, SSO-Monitor also detects username and password logins by integrating the <a href="https://chrome.google.com/webstore/detail/lastpass-free-password-ma/hdokiejnpimakedhajhdlcegeplioahd">LastPass password manager</a>. Password managers already use sophisticated algorithms to find username and password fields. These algorithms go beyond checking the <code>type</code> attributes of <code>&lt;input&gt;</code> fields. Lastpass is the most downloaded password manager with over 10 million users in the Chrome web store and has been extensively studied in academic research. The extension injects a uniquely identifiable icon into all username and password fields, allowing SSO-Monitor to identify all fields.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseWebauthn">
+                            Do we detect WebAuthn and passkey logins?
+                        </button>
+                    </h2>
+                    <div id="collapseWebauthn" class="accordion-collapse collapse" data-bs-parent="#accordionFaq">
+                        <div class="accordion-body">
+                            <p>SSO-Monitor has limited support for WebAuthn and passkey detection. It hooks the <code>navigator.credentials</code> <a href="https://developer.mozilla.org/en-US/docs/Web/API/Navigator/credentials">browser API</a> to detect if a website requests a <code>PublicKeyCredential</code> for WebAuthn or passkey authentication. Thereby, it can detect if a website starts the WebAuthn or passkey authentication. However, many websites commonly require some sort of user interaction before starting the WebAuthn or passkey authentication. For instance, websites require users to submit their usernames before the authentication process is started. Currently, SSO-Monitor does not explicitly scan for WebAuthn or passkey authentication but we plan to extend SSO-Monitor with full support for WebAuthn and passkey detection in the coming months.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseData">
+                            What data and artifacts do we provide?
+                        </button>
+                    </h2>
+                    <div id="collapseData" class="accordion-collapse collapse" data-bs-parent="#accordionFaq">
+                        <div class="accordion-body">
+                            <p>We provide a wide range of data on this website. In fact, this website is build on our <a href="/docs">API</a>, so everything you can see on this website is fetched from our API. We further provide a <a href="/list">list</a> in JSON format that you can download. In the following, you can see a commented overview of some of the data that we provide.</p>
+                            {% include "components/datacard.html" %}
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseWeb">
+                            How can web security researchers profit from our research?
+                        </button>
+                    </h2>
+                    <div id="collapseWeb" class="accordion-collapse collapse" data-bs-parent="#accordionFaq">
+                        <div class="accordion-body">
+                            <p>A lot of web security research has focused on the unauthenticated web. Large-scale measurements on the authenticated web are hard as account logins and registrations have to be automated. Recent research has already started initial studies of the authenticated web. However, they all implemented closed-source tools or did not provide their artifacts in a reliable and reproducible manner. We see our open-source SSO archive and the SSO-Monitor tool as a baseline for future measurements on the authenticated web. In fact, we already provide the HTTP traffic of login processes, and we extended SSO-Monitor to execute the full SSO login with Google on any website. As a result, post-login security measurements such as security attributes of session cookies and secure storage of tokens in the browser can be already conducted on the data in our SSO archive. We also pave the way for active measurements on the authenticated web with SSO-Monitor's extensible architecture and automatic SSO login support.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTaskScanTag">
+                            What is the difference between tasks, scans, and tags?
+                        </button>
+                    </h2>
+                    <div id="collapseTaskScanTag" class="accordion-collapse collapse" data-bs-parent="#accordionFaq">
+                        <div class="accordion-body">
+                            <p>We create an individual task for each analysis of a domain. For instance, if we analyze the top 500k domains of the Tranco list, we create 500k tasks in total (one for each domain). Tasks are contained in a scan that defines the targeted domains that should be analyzed. For instance, we create a single scan for the Tranco top 500k domains that holds a total of 500k tasks. Scans can be further combined by tagging them. For instance, if we later decide to scan the lower 500k domains of the Tranco list in a new scan, we can add the same tag to both 500k scans. This allows us to gradually execute smaller scans and "combining" them at a later time.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAPI">
+                            Is there a public API?
+                        </button>
+                    </h2>
+                    <div id="collapseAPI" class="accordion-collapse collapse" data-bs-parent="#accordionFaq">
+                        <div class="accordion-body">
+                            <p>Yes, we follow an API-centric approach and provide a publicly accessible API for all our data. In fact, everything you can see on this website is fetched from our API. We also provide an <a href="/openapi.json">OpenAPI file</a> and an <a href="/docs">API documentation</a> to make working with the API more convenient.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOS">
+                            Is the tool and data open-source?
+                        </button>
+                    </h2>
+                    <div id="collapseOS" class="accordion-collapse collapse" data-bs-parent="#accordionFaq">
+                        <div class="accordion-body">
+                            <p>Yes, SSO-Monitor is <a href="/code">open-source</a> (soon on Github) and will be actively maintained for research purposes. Our SSO archive contains all data and is provided throughout this website in various formats, i.e., as downloadable JSON files or via APIs that can be filtered with queries.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col mb-4">
+            <h3>Citation</h3>
+            <p>If you use our data or tooling for your research, please feel free to cite our publication:</p>
+            <div class="card">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs">
+                        <li class="nav-item">
+                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#bibtex">BibTeX</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#ieee">IEEE Style</button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body tab-content">
+                    <div class="tab-pane fade show active" id="bibtex">
+                        <code>TBA</code>
+                    </div>
+                    <div class="tab-pane fade" id="ieee">
+                        <code>TBA</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col">
+            <h3>Contact</h3>
+            <p>Feel free to contact us regarding this research, the artifacts, or the tooling.</p>
+            <ul>
+                <li>TBA</li>
+            </ul>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

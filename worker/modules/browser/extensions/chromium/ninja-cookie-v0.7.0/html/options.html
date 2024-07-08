@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<!--
+  Copyright (c) 2020-present Théo Goudout. All rights reserved.
+
+  This work is dual-licensed under Prorietary license and
+  GPL 3.0 (or any later version). You can choose between
+  one of them if you use this work.
+
+  For details please refer to LICENSE file.
+-->
+<html>
+  <head>
+    <title></title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  </head>
+  <body>
+    <!-- Alert message container - START -->
+    <div id="alert-container" class="w-100 m-2 text-center">
+    </div>
+    <!-- Alert message container - END -->
+
+    <!-- Content container - START -->
+    <div class="container jumbotron my-md-5 py-5 border-md rounded-md">
+
+      <!-- Header - START -->
+      <div id="header" class="row text-center mb-5">
+        <div class="col">
+          <div class="sticker">
+            <div class="logo"></div>
+            <div class="tooltip"></div>
+          </div>
+          <div class="d-inline-block align-text-bottom ml-3">
+            <h1></h1>
+          </div>
+        </div>
+      </div>
+      <!-- Header - END -->
+
+      <!-- Tabs - START -->
+      <ul class="nav nav-tabs mb-3" role="tablist">
+        <li class="nav-item" role="presentation">
+          <a id="general" class="nav-link active" data-toggle="tab" href="#general-tab" role="tab" aria-controls="general-tab" aria-selected="true"></a>
+        </li>
+        <li class="nav-item" role="presentation">
+          <a id="advanced" class="nav-link" data-toggle="tab" href="#advanced-tab" role="tab" aria-controls="advanced-tab" aria-selected="false"></a>
+        </li>
+        <li class="nav-item" role="presentation">
+          <a id="premium" class="nav-link bg-primary text-white" data-toggle="tab" href="#premium-tab" role="tab" aria-controls="premium-tab" aria-selected="false"></a>
+        </li>
+      </ul>
+      <!-- Tabs - END -->
+
+      <!-- Tabs content - START -->
+      <div class="tab-content">
+
+        <!-- General tab content - START -->
+        <div class="tab-pane fade show active" id="general-tab" role="tabpanel" aria-labelledby="general-tab">
+
+          <!-- Display settings - START -->
+          <div id="display" class="row">
+            <div class="col font-weight-bold my-1">
+              <span class="header"></span>
+              <div class="desc" data-toggle="popover" data-html="true"></div>
+            </div>
+          </div>
+          <label id="sticker" class="row">
+            <div class="col col-auto m-auto">
+              <span class="header"></span>
+              <div class="desc" data-toggle="popover" data-html="true"></div>
+            </div>
+            <div class="col">
+              <div class="checkbox-slider float-right">
+                <input type="checkbox" disabled>
+                <div class="bar">
+                  <div class="slider"></div>
+                </div>
+              </div>
+            </div>
+          </label>
+          <label id="sticker-position" class="row">
+            <div class="col my-auto">
+              <span class="header"></span>
+              <div class="desc" data-toggle="popover" data-html="true"></div>
+            </div>
+            <div class="col-8 text-right">
+              <select class="custom-select">
+                <option value="top-left"></option>
+                <option value="top-right"></option>
+                <option value="bottom-left"></option>
+                <option value="bottom-right"></option>
+              </select>
+            </div>
+          </label>
+          <label id="live" class="row">
+            <div class="col col-auto m-auto">
+              <span class="header"></span>
+              <div class="desc" data-toggle="popover" data-html="true"></div>
+            </div>
+            <div class="col">
+              <div class="checkbox-slider float-right">
+                <input type="checkbox" disabled>
+                <div class="bar">
+                  <div class="slider"></div>
+                </div>
+              </div>
+            </div>
+          </label>
+          <!-- Display settings - END -->
+
+          <hr/>
+
+          <!-- Whitelist settings - START -->
+          <div id="whitelist" class="row">
+            <div class="col font-weight-bold my-1">
+              <span class="header"></span>
+              <div class="desc" data-toggle="popover" data-html="true"></div>
+            </div>
+          </div>
+          <label id="whitelist-add" class="row">
+            <div class="col my-auto">
+              <span class="header"></span>
+              <div class="desc" data-toggle="popover" data-html="true"></div>
+            </div>
+            <div class="col-8 text-right">
+              <div class="input-group">
+                <input type="text" class="form-control" placeholder="" aria-label="" size="25">
+                <div class="input-group-append">
+                  <button class="btn btn-outline-secondary" type="button"></button>
+                </div>
+              </div>
+            </div>
+          </label>
+          <div id="whitelist-container" class="settings-container my-3 mx-2">
+            <div class="text-center">
+              <code class="loading"></code>
+            </div>
+          </div>
+          <!-- License settings - END -->
+
+        </div>
+        <!-- General tab content - END -->
+
+        <!-- Advanced tab content - START -->
+        <div class="tab-pane fade" id="advanced-tab" role="tabpanel" aria-labelledby="advanced-tab">
+
+          <!-- Lists settings - START -->
+          <div id="nc-lists" class="row">
+            <div class="col font-weight-bold my-1">
+              <span class="header"></span>
+              <div class="desc" data-toggle="popover" data-html="true"></div>
+            </div>
+          </div>
+          <label id="nc-lists-default" class="row">
+            <div class="col my-auto">
+              <span class="header"></span>
+              <div class="desc" data-toggle="popover" data-html="true"></div>
+            </div>
+            <div class="col-8 text-right">
+              <select class="custom-select">
+                <option value="stable"></option>
+                <option value="rc"></option>
+                <option value="beta"></option>
+                <option value="none"></option>
+              </select>
+            </div>
+          </label>
+          <div id="nc-lists-container" class="settings-container my-3 mx-2">
+            <div class="text-center">
+              <code class="loading"></code>
+            </div>
+          </div>
+          <label id="nc-lists-custom" class="row">
+            <div class="col my-auto">
+              <span class="header"></span>
+              <div class="desc" data-toggle="popover" data-html="true"></div>
+            </div>
+            <div class="col-8 text-right">
+              <div class="input-group">
+                <input type="text" class="form-control" placeholder="" aria-label="" aria-describedby="nc-lists-custom-button" size="25">
+                <div class="input-group-append">
+                  <button class="btn btn-outline-secondary" type="button"></button>
+                </div>
+              </div>
+            </div>
+          </label>
+          <div id="nc-lists-custom-container" class="settings-container my-3 mx-2">
+            <div class="text-center">
+              <code class="loading"></code>
+            </div>
+          </div>
+          <!-- Lists settings - END -->
+
+          <hr/>
+
+          <!-- Alternative lists settings - START -->
+          <div id="ab-lists" class="row">
+            <div class="col font-weight-bold my-1">
+              <span class="header"></span>
+              <div class="desc" data-toggle="popover" data-html="true"></div>
+            </div>
+          </div>
+          <label id="ab-lists-enabled" class="row">
+            <div class="col col-auto m-auto">
+              <span class="header"></span>
+              <div class="desc" data-toggle="popover" data-html="true"></div>
+            </div>
+            <div class="col">
+              <div class="checkbox-slider float-right">
+                <input type="checkbox">
+                <div class="bar">
+                  <div class="slider"></div>
+                </div>
+              </div>
+            </div>
+          </label>
+          <label id="ab-lists-default" class="row">
+            <div class="col m-auto">
+              <span class="header"></span>
+              <div class="desc" data-toggle="popover" data-html="true"></div>
+            </div>
+            <div class="col-8 text-right">
+              <select class="custom-select">
+                <option value="stable"></option>
+                <option value="none"></option>
+              </select>
+            </div>
+          </label>
+          <div id="ab-lists-container" class="settings-container my-3 mx-2">
+            <div class="text-center">
+              <code class="loading"></code>
+            </div>
+          </div>
+          <label id="ab-lists-custom" class="row">
+            <div class="col my-auto">
+              <span class="header"></span>
+              <div class="desc" data-toggle="popover" data-html="true"></div>
+            </div>
+            <div class="col-8 text-right">
+              <div class="input-group">
+                <input type="text" class="form-control" placeholder="" aria-label="" aria-describedby="ab-lists-custom-button" size="25">
+                <div class="input-group-append">
+                  <button class="btn btn-outline-secondary" type="button"></button>
+                </div>
+              </div>
+            </div>
+          </label>
+          <div id="ab-lists-custom-container" class="settings-container my-3 mx-2">
+            <div class="text-center">
+              <code class="loading"></code>
+            </div>
+          </div>
+          <!-- Alternative lists settings - END -->
+
+          <hr/>
+
+          <!-- Debug settings - START -->
+          <div id="debug" class="row">
+            <div class="col font-weight-bold my-1">
+              <span class="header"></span>
+              <div class="desc" data-toggle="popover" data-html="true"></div>
+            </div>
+          </div>
+          <label id="trust-all" class="row">
+            <div class="col col-auto m-auto">
+              <span class="header"></span>
+              <div class="desc" data-toggle="popover" data-html="true"></div>
+            </div>
+            <div class="col">
+              <div class="checkbox-slider float-right">
+                <input type="checkbox">
+                <div class="bar">
+                  <div class="slider"></div>
+                </div>
+              </div>
+            </div>
+          </label>
+          <label id="log" class="row">
+            <div class="col col-auto m-auto">
+              <span class="header"></span>
+              <div class="desc" data-toggle="popover" data-html="true"></div>
+            </div>
+            <div class="col">
+              <div class="checkbox-slider float-right">
+                <input type="checkbox">
+                <div class="bar">
+                  <div class="slider"></div>
+                </div>
+              </div>
+            </div>
+          </label>
+          <!-- Debug settings - END -->
+
+        </div>
+        <!-- Advanced tab content - END -->
+
+        <!-- Premium tab content - START -->
+        <div class="tab-pane fade" id="premium-tab" role="tabpanel" aria-labelledby="premium-tab">
+
+          <!-- License settings - START -->
+          <div id="license" class="row">
+            <div class="col font-weight-bold my-1">
+              <span class="header"></span>
+              <div class="desc" data-toggle="popover" data-html="true"></div>
+            </div>
+          </div>
+          <label id="license-key" class="row">
+            <div class="col my-auto">
+              <span class="header"></span>
+              <div class="desc" data-toggle="popover" data-html="true"></div>
+            </div>
+            <div class="col-8 text-right">
+              <div class="input-group">
+                <input type="text" class="form-control" placeholder="" aria-label="" size="25">
+                <div class="input-group-append">
+                  <button class="btn btn-outline-secondary" type="button"></button>
+                </div>
+              </div>
+            </div>
+          </label>
+          <div id="license-info" class="settings-container my-3 mx-2">
+            <div class="text-center">
+              <code class="loading"></code>
+            </div>
+          </div>
+          <!-- License settings - END -->
+
+          <div class="premium-message">
+            <hr/>
+
+            <!-- Premium button - START -->
+            <div id="subscription" class="row">
+              <div class="col text-center">
+                <a class="btn btn-primary" href="#" target="_blank" role="button"></a>
+                <small id="subscription-subtitle" class="d-block m-1"></small>
+              </div>
+            </div>
+            <!-- Premium button - END -->
+          </div>
+
+        </div>
+        <!-- Premium tab content - END -->
+
+        <hr/>
+
+        <!-- Buttons - START -->
+        <div class="row">
+          <div class="col">
+            <button type="submit" id="save" class="btn btn-primary">Save</button>
+            <button type="submit" id="cancel" class="btn btn-outline-primary">Cancel</button>
+            <button type="submit" id="reset" class="btn btn-outline-secondary">Reset</button>
+          </div>
+        </div>
+        <!-- Buttons - END -->
+
+      </div>
+      <!-- Tabs content - END -->
+
+    </div>
+    <!-- Content container - END -->
+
+    <script src="../options.js"></script>
+  </body>
+</html>

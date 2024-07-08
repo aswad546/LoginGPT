@@ -1,0 +1,27 @@
+{
+    "metadata_available": { // whether metadata is available at the well known endpoints of the domain
+        "apple_app_site_association": false, // https://developer.apple.com/documentation/xcode/supporting-associated-domains#Add-the-associated-domain-file-to-your-website
+        "assetlinks": false, // https://developers.google.com/digital-asset-links/v1/create-statement
+        "browserid": false, // https://mozilla.github.io/id-specs/docs/formats/well-known/
+        "fido2_configuration": false, // not yet standardized
+        "fido_2fa_configuration": false, // not yet standardized
+        "fido_configuration": false, // not yet standardized
+        "jwks": false, // https://auth0.com/docs/secure/tokens/json-web-tokens/json-web-key-sets
+        "oauth_authorization_server": false, // https://datatracker.ietf.org/doc/html/rfc8414#section-3
+        "oauth_client": false, // https://datatracker.ietf.org/doc/html/draft-looker-oauth-client-discovery-01#section-3
+        "openid_configuration": false, // https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderConfig
+        "robots_txt": true, // https://datatracker.ietf.org/doc/html/rfc9309#name-access-method
+        "security_txt": true, // https://datatracker.ietf.org/doc/html/rfc9116#name-location-of-the-securitytxt
+        "uma2_configuration": false, // https://backstage.forgerock.com/docs/am/7/uma-guide/configure-uma-discovery.html
+        "web_identity": false, // https://developer.chrome.com/docs/privacy-sandbox/fedcm/#well-known-file
+        "webfinger": false // https://datatracker.ietf.org/doc/html/rfc7033#section-4
+    },
+    "metadata_data": { // reference to json file containing all metadata
+        "type": "reference",
+        "data": {
+            "bucket_name": "...",
+            "object_name": "...",
+            "extension": "json"
+        }
+    }
+}

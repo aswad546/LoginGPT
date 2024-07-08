@@ -1,0 +1,64 @@
+{
+"update_url": "https://clients2.google.com/service/update2/crx",
+
+  "name": "__MSG_extensionName__",
+  "description": "__MSG_extensionDescription__",
+  "version": "0.7.0",
+  "version_name": "v0.7.0",
+  "homepage_url": "https://ninja-cookie.com/",
+  "manifest_version": 2,
+  "icons": {
+    "16": "icons/pending-16.png",
+    "32": "icons/pending-32.png",
+    "48": "icons/pending-48.png",
+    "128": "icons/pending-128.png"
+  },
+  "permissions": [
+    "*://ninja-cookie.gitlab.io/*",
+    "storage",
+    "tabs",
+    "webNavigation"
+  ],
+  "browser_action": {
+    "default_title": "Ninja Cookie",
+    "default_icon": {
+      "16": "icons/default-16.png",
+      "24": "icons/default-24.png",
+      "32": "icons/default-32.png"
+    },
+    "default_popup": "html/popup.html"
+  },
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  },
+  "options_ui": {
+    "page": "html/options.html",
+    "chrome_style": false,
+    "open_in_tab": true
+  },
+  "content_scripts": [
+    {
+      "run_at": "document_start",
+      "all_frames": true,
+      "match_about_blank": true,
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content_script.js"
+      ]
+    }
+  ],
+  "default_locale": "en",
+  "web_accessible_resources": [
+    "icons/default-32.png",
+    "icons/pending-32.png",
+    "icons/matched-32.png",
+    "icons/done-32.png",
+    "icons/info-32.png",
+    "icons/warning-32.png",
+    "icons/failed-32.png"
+  ]
+}

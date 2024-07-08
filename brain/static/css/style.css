@@ -1,0 +1,24 @@
+body {
+    font-family: Avenir, Helvetica, Arial, sans-serif;
+    color: #2c3e50;
+}
+
+pre {
+    padding-bottom: 0px;
+    margin-bottom: 0px;
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+.pulse {
+    animation: pulse 2s linear infinite
+}
+
+@keyframes pulse {
+    0%   {box-shadow: 0 0 0 0 #0d6efd}
+    40%  {box-shadow: 0 0 0 10px #0d6efd00}
+    80%  {box-shadow: 0 0 0 10px #0d6efd00}
+    100% {box-shadow: 0 0 0 0 #0d6efd00}
+}

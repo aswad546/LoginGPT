@@ -1,0 +1,325 @@
+{
+    "browser_config": {
+        "name": "CHROMIUM",
+        "width": 1920,
+        "height": 1080,
+        "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36",
+        "extensions": [
+            "chromium/isdcac-v1.1.1"
+        ],
+        "scripts": [],
+        "headless": false,
+        "locale": "en-US",
+        "wait_for_networkidle": true,
+        "timeout_default": 30,
+        "timeout_navigation": 30,
+        "timeout_networkidle": 5,
+        "sleep_after_onload": 0,
+        "sleep_after_networkidle": 2
+    },
+    "login_page_config": {
+        "login_page_strategy_scope": [
+            "PATHS",
+            "CRAWLING",
+            "METASEARCH",
+            "SITEMAP",
+            "HOMEPAGE"
+        ],
+        "login_page_url_regexes": [
+            {
+                "regex": "/(show|users?|web|sso)*[_\\-\\s]*(log|sign)[_\\-\\s]*(in|up|on)(/.*|\\?.*|\\#.*|\\s*)$",
+                "priority": 99
+            },
+            {
+                "regex": "/(auth|authn|authenticate|authentication|auth(s|z)|authori(s|z)e|authori(s|z)ation)(/.*|\\?.*|\\#.*|\\s*)$",
+                "priority": 99
+            },
+            {
+                "regex": "/(sso|oauth|openid|identity)(/.*|\\?.*|\\#.*|\\s*)$",
+                "priority": 98
+            },
+            {
+                "regex": "/(accounts?|profiles?|users?)(/.*|\\?.*|\\#.*|\\s*)$",
+                "priority": 98
+            },
+            {
+                "regex": "/(register|registration)(/.*|\\?.*|\\#.*|\\s*)$",
+                "priority": 98
+            },
+            {
+                "regex": "/(manage|managing|anmelden|portal|dashboard)(/.*|\\?.*|\\#.*|\\s*)$",
+                "priority": 97
+            },
+            {
+                "regex": "/connect(ing|ion|ed)?(/.*|\\?.*|\\#.*|\\s*)$",
+                "priority": 97
+            },
+            {
+                "regex": "/(show|users?|web|sso)*[_\\-\\s]*(log|sign)[_\\-\\s]*(in|up|on)",
+                "priority": 89
+            },
+            {
+                "regex": "/(auth|authn|authenticate|authentication|auth(s|z)|authori(s|z)e|authori(s|z)ation)",
+                "priority": 89
+            },
+            {
+                "regex": "/(sso|oauth|openid|identity)",
+                "priority": 88
+            },
+            {
+                "regex": "/(accounts?|profiles?|users?)",
+                "priority": 88
+            },
+            {
+                "regex": "/(register|registration)",
+                "priority": 88
+            },
+            {
+                "regex": "/(manage|managing|anmelden|portal|dashboard)",
+                "priority": 87
+            },
+            {
+                "regex": "/connect(ing|ion|ed)?",
+                "priority": 87
+            },
+            {
+                "regex": "[^a-z](show|users?|web|sso)*[_\\-\\s]*(log|sign)[_\\-\\s]*(in|up|on)[^a-z]",
+                "priority": 79
+            },
+            {
+                "regex": "[^a-z](auth|authn|authenticate|authentication|auth(s|z)|authori(s|z)e|authori(s|z)ation)[^a-z]",
+                "priority": 79
+            },
+            {
+                "regex": "[^a-z](sso|oauth|openid|identity)[^a-z]",
+                "priority": 78
+            },
+            {
+                "regex": "[^a-z](accounts?|profiles?|users?)[^a-z]",
+                "priority": 78
+            },
+            {
+                "regex": "[^a-z](register|registration)[^a-z]",
+                "priority": 78
+            },
+            {
+                "regex": "[^a-z](manage|managing|anmelden|portal|dashboard)[^a-z]",
+                "priority": 77
+            },
+            {
+                "regex": "[^a-z]connect(ing|ion|ed)?[^a-z]",
+                "priority": 77
+            }
+        ],
+        "login_page_element_keywords": [
+            "login",
+            "log in",
+            "log-in",
+            "log_in",
+            "logon",
+            "log on",
+            "log-on",
+            "log_on",
+            "signin",
+            "sign in",
+            "sign-in",
+            "sign_in",
+            "signup",
+            "sign up",
+            "sign-up",
+            "sign_up",
+            "signon",
+            "sign on",
+            "sign-on",
+            "sign_on",
+            "register",
+            "registration",
+            "anmelden",
+            "registrieren"
+        ],
+        "manual_strategy_config": {
+            "login_page_candidates": []
+        },
+        "paths_strategy_config": {
+            "paths": [
+                "/login",
+                "/log-in",
+                "/log_in",
+                "/signin",
+                "/sign-in",
+                "/sign_in",
+                "/account",
+                "/account/login",
+                "/account/log-in",
+                "/account/log_in",
+                "/account/signin",
+                "/account/sign-in",
+                "/account/sign_in",
+                "/accounts",
+                "/accounts/login",
+                "/accounts/signin",
+                "/profile",
+                "/profile/login",
+                "/profile/signin",
+                "/user/login",
+                "/user/signin",
+                "/users/login",
+                "/users/signin",
+                "/users/connect",
+                "/auth",
+                "/auth/login",
+                "/auth/signin",
+                "/m/login",
+                "/m/signin",
+                "/registration",
+                "/registration/login",
+                "/registration/signin",
+                "/.well-known/change-password"
+            ],
+            "subdomains": [
+                "login",
+                "signin",
+                "account",
+                "profile",
+                "auth"
+            ]
+        },
+        "crawling_strategy_config": {
+            "max_anchor_candidates": 1,
+            "max_element_candidates": 1,
+            "max_elements_to_click": 10
+        },
+        "sitemap_strategy_config": {
+            "max_candidates": 1,
+            "max_recursion_level": 0,
+            "max_sitemap_size": 50000000,
+            "timeout_fetch_sitemap": 10
+        },
+        "robots_strategy_config": {
+            "max_candidates": 1,
+            "timeout_fetch_robots": 10
+        },
+        "metasearch_strategy_config": {
+            "search_term": "%s login",
+            "search_engines": [
+                "BING",
+                "BRAVE",
+                "DUCKDUCKGO",
+                "GOOGLE",
+                "MOJEEK",
+                "QWANT",
+                "STARTPAGE",
+                "WIBY",
+                "YAHOO",
+                "SEZNAM",
+                "GOO",
+                "NAVER",
+                "PETALSEARCH",
+                "YEP"
+            ],
+            "search_results_number": 3
+        }
+    },
+    "idp_config": {
+        "idp_scope": [
+            "APPLE",
+            "FACEBOOK",
+            "GOOGLE",
+            "TWITTER_1.0",
+            "LINKEDIN",
+            "MICROSOFT",
+            "BAIDU",
+            "GITHUB",
+            "QQ",
+            "SINA_WEIBO",
+            "WECHAT"
+        ]
+    },
+    "recognition_strategy_config": {
+        "recognition_strategy_scope": [
+            "KEYWORD-CSS",
+            "LOGO",
+            "REQUEST",
+            "NAVIGATOR_CREDENTIALS",
+            "LASTPASS_ICON",
+            "METADATA"
+        ],
+        "recognition_mode": "FAST"
+    },
+    "keyword_recognition_config": {
+        "keywords": [
+            "login with %s",
+            "log in with %s",
+            "logon with %s",
+            "log on with %s",
+            "signin with %s",
+            "sign in with %s",
+            "signup with %s",
+            "sign up with %s",
+            "signon with %s",
+            "sign on with %s",
+            "continue with %s",
+            "connect with %s",
+            "login using %s",
+            "log in using %s",
+            "logon using %s",
+            "log on using %s",
+            "signin using %s",
+            "sign in using %s",
+            "signup using %s",
+            "sign up using %s",
+            "signon using %s",
+            "sign on using %s",
+            "continue using %s",
+            "connect using %s",
+            "use %s",
+            "mit %s anmelden",
+            "mit %s einloggen",
+            "mit %s registrieren",
+            "mit %s fortfahren",
+            "mit %s fortsetzen",
+            "mit %s verbinden",
+            "%s verwenden zum anmelden",
+            "%s verwenden zum einloggen",
+            "%s verwenden zum registrieren",
+            "%s verwenden zum fortfahren",
+            "%s verwenden zum verbinden",
+            "%s verwenden",
+            "weiter mit %s",
+            "anmelden mit %s",
+            "\u00fcber %s fortfahren",
+            "masuk dengan %s",
+            "entrar com %s",
+            "continuar com o %s",
+            "daftar/masuk lewat %s",
+            "\u4f7f\u7528 %s \u767b\u5f55"
+        ],
+        "xpath": [
+            "//*"
+        ],
+        "max_elements_to_click": 3
+    },
+    "logo_recognition_config": {
+        "logo_size": "100x100",
+        "max_matching": 0.9,
+        "upper_bound": 0.8,
+        "lower_bound": 0.7,
+        "scale_upper_bound": 0.5,
+        "scale_lower_bound": 0.12,
+        "scale_method": "scale_template",
+        "scale_space": "linspace",
+        "scale_order": "descending",
+        "match_intensity": 10,
+        "match_algorithm": 5,
+        "max_elements_to_click": 3
+    },
+    "artifacts_config": {
+        "store_login_page_candidate_screenshot": true,
+        "store_sso_button_detection_screenshot": true,
+        "store_idp_screenshot": true,
+        "store_idp_har": true,
+        "store_login_page_analysis_har": false,
+        "store_sitemap": false,
+        "store_robots": false
+    }
+}

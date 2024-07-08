@@ -1,0 +1,39 @@
+<div class="modal modal-xl fade" tabindex="-1" id="screenshotModal">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Screenshot</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <img width="100%">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary"></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    screenshotModal.addEventListener("show.bs.modal", (e) => {
+        const sourceBtn = e.relatedTarget
+        const closeOrBackBtn = screenshotModal.querySelector("button.btn-secondary")
+
+        const bucket_name = sourceBtn.getAttribute("data-bs-bucket_name")
+        const object_name = sourceBtn.getAttribute("data-bs-object_name")
+        screenshotModal.querySelector("img").src = `/api/object?bucket_name=${bucket_name}&object_name=${object_name}`
+
+        if (sourceBtn.hasAttribute("data-bs-back_modal")) {
+            closeOrBackBtn.removeAttribute("data-bs-dismiss")
+            closeOrBackBtn.setAttribute("data-bs-toggle", "modal")
+            closeOrBackBtn.setAttribute("data-bs-target", sourceBtn.getAttribute("data-bs-back_modal"))
+            closeOrBackBtn.textContent = "Back"
+        } else {
+            closeOrBackBtn.removeAttribute("data-bs-toggle")
+            closeOrBackBtn.removeAttribute("data-bs-target")
+            closeOrBackBtn.setAttribute("data-bs-dismiss", "modal")
+            closeOrBackBtn.textContent = "Close"
+        }
+    })
+</script>

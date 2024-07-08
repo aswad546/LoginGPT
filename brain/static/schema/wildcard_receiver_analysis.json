@@ -1,0 +1,137 @@
+{
+    "type": "object",
+    "title": "Wildcard Receiver Analysis",
+    "properties": {
+        "scan_config": {
+            "type": "object",
+            "title": "Scan Configuration",
+            "oneOf": [
+                {
+                    "title": "Scan on a single task",
+                    "properties": {
+                        "scan_id": {
+                            "type": "string",
+                            "required": true,
+                            "default": "",
+                            "options": {
+                                "hidden": true
+                            }
+                        },
+                        "scan_type": {
+                            "type": "string",
+                            "required": true,
+                            "enum": [
+                                "task"
+                            ],
+                            "options": {
+                                "hidden": true
+                            }
+                        },
+                        "target_task_id": {
+                            "type": "string",
+                            "required": true,
+                            "title": "Target Task ID"
+                        }
+                    }
+                },
+                {
+                    "title": "Scan on multiple tasks in a scan",
+                    "properties": {
+                        "scan_id": {
+                            "type": "string",
+                            "required": true,
+                            "default": "",
+                            "options": {
+                                "hidden": true
+                            }
+                        },
+                        "scan_type": {
+                            "type": "string",
+                            "required": true,
+                            "enum": [
+                                "scan"
+                            ],
+                            "options": {
+                                "hidden": true
+                            }
+                        },
+                        "target_scan_id": {
+                            "type": "string",
+                            "required": true,
+                            "title": "Target Scan ID"
+                        }
+                    }
+                },
+                {
+                    "title": "Scan on multiple scans in a tag",
+                    "properties": {
+                        "scan_id": {
+                            "type": "string",
+                            "required": true,
+                            "default": "",
+                            "options": {
+                                "hidden": true
+                            }
+                        },
+                        "scan_type": {
+                            "type": "string",
+                            "required": true,
+                            "enum": [
+                                "tag"
+                            ],
+                            "options": {
+                                "hidden": true
+                            }
+                        },
+                        "target_tag_name": {
+                            "type": "string",
+                            "required": true,
+                            "title": "Target Tag Name"
+                        }
+                    }
+                }
+            ]
+        },
+        "wildcard_receiver_analysis_config": {
+            "type": "object",
+            "title": "Wildcard Receiver Analysis Configuration",
+            "properties": {
+                "idp_credentials": {
+                    "type": "array",
+                    "required": true,
+                    "title": "IdP Credentials",
+                    "items": {
+                        "type": "object",
+                        "required": true,
+                        "properties": {
+                            "idp_name": {
+                                "type": "string",
+                                "required": true,
+                                "title": "IdP Name",
+                                "enum": [
+                                    "GOOGLE"
+                                ]
+                            },
+                            "idp_username": {
+                                "type": "string",
+                                "required": true,
+                                "title": "IdP Username"
+                            },
+                            "idp_password": {
+                                "type": "string",
+                                "required": true,
+                                "title": "IdP Password"
+                            },
+                            "idp_cookie_store": {
+                                "type": "string",
+                                "required": true,
+                                "title": "IdP Cookie Store",
+                                "default": "[]"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

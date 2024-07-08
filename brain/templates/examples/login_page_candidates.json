@@ -1,0 +1,63 @@
+[
+    {
+        "login_page_candidate": "https://www.shop.com/login", // url of the login page
+        "login_page_strategy": "PATHS|CRAWLING|METASEARCH|SITEMAP|HOMEPAGE|ROBOTS|MANUAL", // strategy used to find this login page
+        "login_page_locator_mode": "ANCHOR|ELEMENT", // only for CRAWLING, ANCHOR is &lt;a&gt; element, ELEMENT is any element
+        "login_page_priority": { // priority of this login page
+            "regex": "/(show|users?|web|sso)*[_\-\s]*(log|sign)[_\-\s]*(in|up|on)(/.*|\?.*|\#.*|\s*)$", // highest prioritized regex matching this login page
+            "priority": 99 // priority of regex / login page
+        },
+        "resolved": { // see "Resolved" section
+            "reachable": true, // whether the login page is reachable
+            "url": "https://www.shop.com/login.html", // fully resolved url of login page
+            "domain": "www.shop.com", // domain of fully resolved url
+            "title": "Login | Shop.com" // title of login page
+        },
+        "content_type": "text/html", // content type of the login page
+        "content_analyzable": { // whether the login page is analyzable (valid status code, content type, etc.)
+            "valid": true, // whether the login page is analyzable
+            "error": "..." // reason why not valid
+        },
+        "login_page_candidate_screenshot": { // reference to screenshot of login page candidate
+            "type": "reference",
+            "data": {
+                "bucket_name": "...",
+                "object_name": "...",
+                "extension": "png" // screenshot is png file
+            }
+        },
+        "login_page_info": { // only for some strategies
+            "x": 13.37, // only for CRAWLING, x coordinate of element that leads to login page
+            "y": 13.37, // only for CRAWLING, y coordinate of element that leads to login page
+            "width": 13.37, // only for CRAWLING, width of element that leads to login page
+            "height": 13.37, // only for CRAWLING, height of element that leads to login page
+            "inner_text": "Login", // only for CRAWLING, inner text of element that leads to login page
+            "outer_html": "&lt;a href=\"/login\"&gt;Login&lt;/a&gt;", // only for CRAWLING, outer html of element that leads to login page
+            "href_attribute": "/login", // only for CRAWLING+ANCHOR, href attribute of &lt;a%gt; element that leads to login page
+            "href_absolute": "https://www.shop.com/login", // only for CRAWLING+ANCHOR, absolute href of &lt;a%gt; element that leads to login page
+            "login_page_frame": "TOPMOST|POPUP", // only for CRAWLING+ELEMENT, clicking the element may open the login page in a new popup or overwrite the topmost window
+            "element_tree": ["SPAN", "A", ..., "BODY", "HTML"], // only for CRAWLING+ELEMENT, element tree of element that leads to login page
+            "result_hit": 1, // only for METASEARCH, index of search result that leads to login page
+            "result_engines": ["GOOGLE", "BING", "YAHOO"], // only for METASEARCH, engines that returned this search result
+            "result_raw": { // only for METASEARCH, raw result from SearXNG API, see https://docs.searxng.org/
+                "url": "https://www.shop.com/login",
+                "title": "Login | Shop.com",
+                "content": "...",
+                "engine": "bing",
+                "parsed_url": ["https", "www.shop.com", "/login", "", "", ""],
+                "template": "default.html",
+                "engines": ["google", "bing", "yahoo"],
+                "positions": [2, 1, 2],
+                "score": 6,
+                "category": "general",
+                "pretty_url": "https://www.shop.com/login",
+                "open_group": true
+            },
+            "change_frequency": "monthly", // only for SITEMAP, see https://www.sitemaps.org/protocol.html
+            "last_modified": "2005-01-01", // only for SITEMAP, see https://www.sitemaps.org/protocol.html
+            "news_story": {...}, // only for SITEMAP, see https://developers.google.com/search/docs/crawling-indexing/sitemaps/news-sitemap
+            "priority": 0.5 // only for SITEMAP, see https://www.sitemaps.org/protocol.html
+        }
+    },
+    ...
+]

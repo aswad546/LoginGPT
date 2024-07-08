@@ -1,0 +1,816 @@
+{% extends "base.html" %}
+
+{% block scriptsHeader %}
+<script src="{{ url_for('static', filename='js/lib/gridjs.umd.js') }}"></script>
+<script src="{{ url_for('static', filename='js/lib/jsoneditor.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/gridjs.js') }}"></script>
+<script src="{{ url_for('static', filename='js/jsoneditor.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+
+{% include "modals/alert.html" %}
+{% include "modals/code.html" %}
+{% include "modals/form.html" %}
+{% include "modals/screenshot.html" %}
+
+<!-- filter modal -->
+<div class="modal modal-lg fade" tabindex="-1" id="filterModal">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Filter</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <span class="input-group mb-2">
+                    <span class="input-group-text"><i class="bi bi-card-list me-1"></i> Top Sites List</span>
+                    <select class="form-control" id="topSitesListInput">
+                        <option value=""></option>
+                        {% for list in lists %}
+                        <option value="{{ list }}">{{ list }}</option>
+                        {% endfor %}
+                    </select>
+                </span>
+                <span class="input-group mb-2">
+                    <span class="input-group-text"><i class="bi bi-hand-index me-1"></i> Ground Truth</span>
+                    <select class="form-control" id="groundTruthIdInput">
+                        <option value=""></option>
+                        {% for gt in gts %}
+                        <option value="{{ gt }}">{{ gt }}</option>
+                        {% endfor %}
+                    </select>
+                </span>
+                <span class="input-group mb-2">
+                    <span class="input-group-text"><i class="bi bi-file-break me-1"></i> Results per page</span>
+                    <input type="number" class="form-control" id="numberResultsInput" value="20" min="1" max="100">
+                </span>
+                <span class="input-group mb-2">
+                    <span class="input-group-text"><i class="bi bi-graph-up me-1"></i> Scan ID</span>
+                    <input type="text" class="form-control" id="scanIdInput" placeholder="abcdefff-...">
+                </span>
+                <span class="input-group mb-2">
+                    <span class="input-group-text"><i class="bi bi-tag me-1"></i> Scan Tag</span>
+                    <input type="text" class="form-control" id="tagInput" placeholder="example-tag">
+                </span>
+                <span class="input-group mb-2">
+                    <span class="input-group-text"><i class="bi bi-shop me-1"></i> Search for SPs</span>
+                    <input type="text" class="form-control" id="searchSPInput" placeholder="^example.(com|org)$">
+                </span>
+                <span class="input-group mb-2">
+                    <span class="input-group-text"><i class="bi bi-building me-1"></i> Search for IdPs</span>
+                    <select class="form-control" multiple id="searchIdPInput">
+                        {% for idp in idps %}
+                        <option value="{{ idp }}">{{ idp }}</option>
+                        {% endfor %}
+                    </select>
+                </span>
+                <span class="input-group mb-2">
+                    <span class="input-group-text"><i class="bi bi-database me-1"></i> Stored Queries</span>
+                    <select class="form-control" size="5" id="queryInput">
+                        {% for q in queries %}
+                        <option value="{{ q.query }}">{{ q.description }}</option>
+                        {% endfor %}
+                    </select>
+                </span>
+                <span class="input-group mb-2">
+                    <span class="input-group-text"><i class="bi bi-braces me-1"></i> Custom Query</span>
+                    <textarea class="form-control" id="customQueryInput" rows="5" placeholder='{"landscape_analysis_result.recognized_idps.idp_frame": {"$eq": "POPUP"}}'></textarea>
+                </span>
+                <div class="mb-2">
+                    <div class="form-check form-switch">
+                        <i class="bi bi-indent"></i>
+                        <input class="form-check-input" type="checkbox" checked id="filterLatestIdPsInput">
+                        <label class="form-check-label">Include IdPs of latest / scan analyses</label>
+                    </div>
+                    <div class="form-check form-switch">
+                        <i class="bi bi-archive"></i>
+                        <input class="form-check-input" type="checkbox" checked id="filterArchivedIdPsInput">
+                        <label class="form-check-label">Include IdPs of archived analyses</label>
+                    </div>
+                    <div class="form-check form-switch">
+                        <i class="bi bi-hand-index"></i>
+                        <input class="form-check-input" type="checkbox" checked id="filterGroundTruthIdPsIdPsInput">
+                        <label class="form-check-label">Include IdPs of ground truth analyses</label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="filterBtn">Update Filter</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- timings modal -->
+<div class="modal modal-lg fade" tabindex="-1" id="timingsModal">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Timing Measurements</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="timingsTable"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- lpc modal -->
+<div class="modal modal-xl fade" tabindex="-1" id="lpcModal">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Login Page Candidates</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="lpcTable"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- idp modal -->
+<div class="modal modal-xl fade" tabindex="-1" id="idpModal">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="idpModalTitle">
+                    <i id="idpModalIdpIcon"></i>
+                    <span id="idpModalIdpName"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <ul class="nav nav-tabs mb-4" id="idpModalTab">
+                    <li class="nav-item">
+                        <button class="nav-link active" id="idpModalOverviewTab" data-bs-toggle="tab" data-bs-target="#idpModalOverviewPane" type="button">Overview</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" id="idpModalKeywordTab" data-bs-toggle="tab" data-bs-target="#idpModalKeywordPane" type="button">Keyword Recognition</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" id="idpModalLogoTab" data-bs-toggle="tab" data-bs-target="#idpModalLogoPane" type="button" role="tab">Logo Recognition</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" id="idpModalScreenshotTab" data-bs-toggle="tab" data-bs-target="#idpModalScreenshotPane" type="button" role="tab">Screenshots</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" id="idpModalElementTreeTab" data-bs-toggle="tab" data-bs-target="#idpModalElementTreePane" type="button" role="tab">HTML Element Tree</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" id="idpModalHarTab" data-bs-toggle="tab" data-bs-target="#idpModalHarPane" type="button" role="tab">HTTP Archive Format (HAR)</button>
+                    </li>
+                </ul>
+                <div class="tab-content" id="myTabContent">
+                    <div class="tab-pane fade show active" id="idpModalOverviewPane" tabindex="0">
+                        <div id="idpModalOverviewTable"></div>
+                    </div>
+                    <div class="tab-pane fade" id="idpModalKeywordPane" tabindex="0">
+                        <div id="idpModalKeywordTable"></div>
+                    </div>
+                    <div class="tab-pane fade" id="idpModalLogoPane" tabindex="0">
+                        <div id="idpModalLogoTable"></div>
+                    </div>
+                    <div class="tab-pane fade" id="idpModalScreenshotPane" tabindex="0">
+                        <div class="mb-4" id="idpModalIdpScreenshotContainer">
+                            <h5>IdP Screenshot</h5>
+                            <img class="figure-img img-fluid rounded border border-1 border-dark" id="idpModalIdpScreenshot">
+                        </div>
+                        <div class="mb-4" id="idpModalKeywordRecognitionScreenshotContainer">
+                            <h5>Keyword Recognition Screenshot</h5>
+                            <img class="figure-img img-fluid rounded border border-1 border-dark" id="idpModalKeywordRecognitionScreenshot">
+                        </div>
+                        <div id="idpModalLogoRecognitionScreenshotContainer">
+                            <h5>Logo Recognition Screenshot</h5>
+                            <img class="figure-img img-fluid rounded border border-1 border-dark" id="idpModalLogoRecognitionScreenshot">
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="idpModalElementTreePane" tabindex="0">
+                        <p>
+                            <button type="button" class="btn btn-primary" onclick="navigator.clipboard.writeText(idpModalElementTreeCode.textContent)">
+                                <i class="bi bi-clipboard"></i> Copy to Clipboard
+                            </button>
+                            <a class="btn btn-primary" id="idpModalElementTreeExportLink" target="_blank">
+                                <i class="bi bi-download"></i> Export JSON
+                            </a>
+                        </p>
+                        <pre><code id="idpModalElementTreeCode"></code></pre>
+                    </div>
+                    <div class="tab-pane fade" id="idpModalHarPane" tabindex="0">
+                        <p>
+                            <button type="button" class="btn btn-primary" onclick="navigator.clipboard.writeText(idpModalHarCode.textContent)">
+                                <i class="bi bi-clipboard"></i> Copy to Clipboard
+                            </button>
+                            <a class="btn btn-primary" id="idpModalHarExportLink" target="_blank">
+                                <i class="bi bi-download"></i> Export JSON
+                            </a>
+                        </p>
+                        <pre><code id="idpModalHarCode"></code></pre>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col text-center">
+            <h1>Archive</h1>
+        </div>
+    </div>
+    <div class="row mb-4">
+        <div class="col">
+            <div>
+                <button class="btn btn-primary mb-2" data-bs-toggle="modal" data-bs-target="#filterModal">
+                    <i class="bi bi-funnel-fill"></i> Filter
+                </button>
+                <button class="btn btn-secondary mb-2" data-bs-toggle="modal" data-bs-target="#codeModal" id="showJSONBtn">
+                    <i class="bi bi-braces"></i> JSON
+                </button>
+            </div>
+            <div id="archiveTable"></div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scriptsFooter %}
+<script>
+    /* idp modal overview grid */
+
+    const idpModalOverviewGrid = new gridjs.Grid({
+        style: {
+            table: {
+                "white-space": "nowrap"
+            },
+            td: {
+                "overflow": "auto"
+            }
+        },
+        columns: ["Key", "Value"],
+        data: []
+    })
+    idpModalOverviewGrid.render(idpModalOverviewTable)
+
+    const updateIdPModalOverviewGrid = (d) => {
+        idpModalOverviewGrid.updateConfig({
+            data: [
+                ["IdP Name", d.idp_name],
+                ["Login Page URL", d.login_page_url],
+                ["Recognition Strategy", d.recognition_strategy],
+                ["IdP Login Request", d.idp_login_request],
+                ["IdP Frame", d.idp_frame],
+                ["IdP Integration", d.idp_integration],
+                ["IdP Verified", d.idp_verified ? "True" : "False"],
+                ["Element Coordinates X", d.element_coordinates_x],
+                ["Element Coordinates Y", d.element_coordinates_y],
+                ["Element Width", d.element_width],
+                ["Element Height", d.element_height],
+                ["Element Tree", (d.element_tree || []).join(" > ")],
+            ]
+        })
+        idpModalOverviewGrid.forceRender()
+    }
+
+    /* idp modal keyword grid */
+
+    const idpModalKeywordGrid = new gridjs.Grid({
+        style: {
+            table: {
+                "white-space": "nowrap"
+            },
+            td: {
+                "overflow": "auto"
+            }
+        },
+        columns: ["Key", "Value"],
+        data: [],
+    })
+    idpModalKeywordGrid.render(idpModalKeywordTable)
+
+    const updateIdPModalKeywordGrid = (d) => {
+        idpModalKeywordGrid.updateConfig({
+            data: [
+                ["Locator Mode", d.keyword_recognition_locator_mode],
+                ["Candidates", d.keyword_recognition_candidates],
+                ["Hit Keyword", d.keyword_recognition_hit_keyword],
+                ["Hit Number Clicks", d.keyword_recognition_hit_number_clicks],
+                ["Element Validity", d.element_validity],
+                ["Duration", `${d.keyword_recognition_duration_seconds || "N/A"} seconds`],
+            ]
+        })
+        idpModalKeywordGrid.forceRender()
+    }
+
+    /* idp modal logo grid */
+
+    const idpModalLogoGrid = new gridjs.Grid({
+        style: {
+            table: {
+                "white-space": "nowrap"
+            },
+            td: {
+                "overflow": "auto"
+            }
+        },
+        columns: ["Key", "Value"],
+        data: []
+    })
+    idpModalLogoGrid.render(idpModalLogoTable)
+
+    const updateIdPModalLogoGrid = (d) => {
+        idpModalLogoGrid.updateConfig({
+            data: [
+                ["Logo Match", d.logo_recognition_logo_match],
+                ["Logo Scale", d.logo_recognition_scale],
+                ["Matching Score", d.logo_recognition_matching_score],
+                ["Pattern Matching Duration", `${d.logo_recognition_pattern_matching_duration_seconds || "N/A"} seconds`],
+                ["Duration", `${d.logo_recognition_duration_seconds || "N/A"} seconds`]
+            ]
+        })
+        idpModalLogoGrid.forceRender()
+    }
+
+    /* idp modal screenshot tab */
+
+    const updateIdPModalScreenshots = (d) => {
+        idpModalIdpScreenshot.src = ""
+        idpModalIdpScreenshotContainer.style.display = "none"
+        idpModalKeywordRecognitionScreenshot.src = ""
+        idpModalKeywordRecognitionScreenshotContainer.style.display = "none"
+        idpModalLogoRecognitionScreenshot.src = ""
+        idpModalLogoRecognitionScreenshotContainer.style.display = "none"
+
+        const idpBucket = d.idp_screenshot?.data?.bucket_name
+        const idpObject = d.idp_screenshot?.data?.object_name
+        const keywordBucket = d.keyword_recognition_screenshot?.data?.bucket_name
+        const keywordObject = d.keyword_recognition_screenshot?.data?.object_name
+        const logoBucket = d.logo_recognition_screenshot?.data?.bucket_name
+        const logoObject = d.logo_recognition_screenshot?.data?.object_name
+
+        if (idpBucket && idpObject) {
+            idpModalIdpScreenshot.src = `/api/object?bucket_name=${idpBucket}&object_name=${idpObject}`
+            idpModalIdpScreenshotContainer.style.display = "block"
+        }
+        if (keywordBucket && keywordObject) {
+            idpModalKeywordRecognitionScreenshot.src = `/api/object?bucket_name=${keywordBucket}&object_name=${keywordObject}`
+            idpModalKeywordRecognitionScreenshotContainer.style.display = "block"
+        }
+        if (logoBucket && logoObject) {
+            idpModalLogoRecognitionScreenshot.src = `/api/object?bucket_name=${logoBucket}&object_name=${logoObject}`
+            idpModalLogoRecognitionScreenshotContainer.style.display = "block"
+        }
+    }
+
+    /* idp modal element tree tab */
+
+    const updateIdPModalElementTree = (d) => {
+        idpModalElementTreeCode.textContent = ""
+        idpModalElementTreeExportLink.href = ""
+
+        const bucket_name = d.element_tree_markup?.data?.bucket_name
+        const object_name = d.element_tree_markup?.data?.object_name
+        if (bucket_name && object_name) {
+            idpModalElementTreeExportLink.href = `/api/object?bucket_name=${bucket_name}&object_name=${object_name}&export`
+            fetch(`/api/object?bucket_name=${bucket_name}&object_name=${object_name}`).then(r => r.text()).then(r => {
+                idpModalElementTreeCode.textContent = JSON.stringify(JSON.parse(r), null, 2)
+            })
+        }
+    }
+
+    /* idp modal har tab */
+
+    const updateIdPModalHar = (d) => {
+        idpModalHarCode.textContent = ""
+        idpModalHarExportLink.href = ""
+
+        const bucket_name = d.idp_har?.data?.bucket_name
+        const object_name = d.idp_har?.data?.object_name
+        if (bucket_name && object_name) {
+            idpModalHarExportLink.href = `/api/object?bucket_name=${bucket_name}&object_name=${object_name}&export`
+            fetch(`/api/object?bucket_name=${bucket_name}&object_name=${object_name}`).then(r => r.text()).then(r => {
+                idpModalHarCode.textContent = r
+            })
+        }
+    }
+
+    /* timings modal grid */
+
+    const timingsGrid = new gridjs.Grid({
+        style: {
+            table: {
+                "white-space": "nowrap"
+            },
+            td: {
+                "overflow": "auto"
+            }
+        },
+        columns: ["Measurement", "Time"],
+        data: []
+    })
+    timingsGrid.render(timingsTable)
+
+    const updateTimingsGrid = (d) => {
+        timingsGrid.updateConfig({
+            data: [
+                ["Task Request Sent on Brain", timestampToString(d.landscape_analysis_tres?.task_config?.task_timestamp_request_sent)],
+                ["Task Request Received on Worker", timestampToString(d.landscape_analysis_tres?.task_config?.task_timestamp_request_received)],
+                ["Task Response Sent on Worker", timestampToString(d.landscape_analysis_tres?.task_config?.task_timestamp_response_sent)],
+                ["Task Response Received on Brain", timestampToString(d.landscape_analysis_tres?.task_config?.task_timestamp_response_received)],
+
+                ["Duration for Login Page Detection", `${d.landscape_analysis_tres?.landscape_analysis_result?.timings?.login_page_candidates_duration_seconds || "N/A"} seconds`],
+                ["Duration for SSO Detection", `${d.landscape_analysis_tres?.landscape_analysis_result?.timings?.sso_recognition_duration_seconds || "N/A"} seconds`],
+
+                ["Duration for Keyword Recognition", `${d.landscape_analysis_tres?.landscape_analysis_result?.timings?.keyword_recognition_duration_seconds || "N/A"} seconds`],
+                ["Duration for Keyword CSS Recognition", `${d.landscape_analysis_tres?.landscape_analysis_result?.timings?.keyword_css_recognition_duration_seconds || "N/A"} seconds`],
+                ["Duration for Keyword XPath Recognition", `${d.landscape_analysis_tres?.landscape_analysis_result?.timings?.keyword_xpath_recognition_duration_seconds || "N/A"} seconds`],
+                ["Duration for Keyword Accessibility Recognition", `${d.landscape_analysis_tres?.landscape_analysis_result?.timings?.keyword_accessibility_recognition_duration_seconds || "N/A"} seconds`],
+
+                ["Duration for Logo Recognition", `${d.landscape_analysis_tres?.landscape_analysis_result?.timings?.logo_recognition_duration_seconds || "N/A"} seconds`],
+                ["Duration for Passive Request Detection", `${d.landscape_analysis_tres?.landscape_analysis_result?.timings?.passive_request_detection_duration_seconds || "N/A"} seconds`],
+
+                ["Total Duration", `${d.landscape_analysis_tres?.landscape_analysis_result?.timings?.total_duration_seconds || "N/A"} seconds`]
+            ]
+        })
+        timingsGrid.forceRender()
+    }
+
+    /* login page candidates modal grid */
+
+    const lpcGrid = new gridjs.Grid({
+        style: {
+            table: {
+                "white-space": "nowrap"
+            },
+            td: {
+                "overflow": "auto"
+            }
+        },
+        columns: [],
+        data: []
+    })
+    lpcGrid.render(lpcTable)
+
+    const updateLpcGrid = (lpcStrategy, lpcData) => {
+        let columns = ["URL", "Priority", "Resolved", "Title", "Screenshot"]
+        if (lpcStrategy == "METASEARCH") columns = [...columns, "Engines", "Hit"]
+        if (lpcStrategy == "CRAWLING") columns = [...columns, "Locator"]
+
+        let data = lpcData.map(p => {
+            const screenshotBtn = gridjs.h("button", {
+                className: "btn btn-primary btn-sm",
+                "data-bs-toggle": "modal",
+                "data-bs-target": "#screenshotModal",
+                "data-bs-bucket_name": p.login_page_candidate_screenshot?.data?.bucket_name,
+                "data-bs-object_name": p.login_page_candidate_screenshot?.data?.object_name,
+                "data-bs-back_modal": "#lpcModal"
+            }, "Show Screenshot")
+            let row = [
+                p.login_page_candidate,
+                p.login_page_priority?.priority,
+                p.resolved?.url,
+                p.resolved?.title,
+                screenshotBtn
+            ]
+            if (lpcStrategy == "METASEARCH") row = [...row, `${p.login_page_info?.result_engines}`, p.login_page_info?.result_hit]
+            if (lpcStrategy == "CRAWLING") row = [...row, p.login_page_locator_mode]
+            return row
+        })
+
+        lpcGrid.updateConfig({
+            columns: columns,
+            data: data
+        })
+        lpcGrid.forceRender()
+    }
+
+    /* archive table */
+
+    let archiveTableData = {}
+
+    const archiveGrid = new gridjs.Grid({
+        style: gridjsDefaultStyle,
+        pagination: gridjsDefaultServerPagination,
+        columns: ["Rank", "Domain", "Time", "Resolved", "Login Page Candidates", "Identity Providers", "More"],
+        server: {
+            url: `/api/tasks?list_id=${topSitesListInput.value}`,
+            total: (data) => data.data.total,
+            then: (data) => {
+                archiveTableData = data.data.result
+                return data.data.result.map(d => {
+
+                    // resolved
+                    let resolvedCell = gridjs.h("div", {}, "")
+                    resolvedCell.props.children = []
+                    if (d.landscape_analysis_tres?.landscape_analysis_result?.resolved?.reachable === true) {
+                        resolvedCell.props.children.push(gridjs.h("span", {
+                            className: "badge text-bg-success clickable",
+                            onClick: () => {showAlertModal("Resolved URL", d.landscape_analysis_tres?.landscape_analysis_result?.resolved?.url)},
+                        }, d.landscape_analysis_tres?.landscape_analysis_result?.resolved?.domain))
+                    } else if (d.landscape_analysis_tres?.landscape_analysis_result?.resolved?.reachable === false) {
+                        resolvedCell.props.children.push(gridjs.h("span", {
+                            className: "badge text-bg-warning clickable",
+                            onClick: () => {showAlertModal(
+                                d.landscape_analysis_tres?.landscape_analysis_result?.resolved?.error_msg,
+                                d.landscape_analysis_tres?.landscape_analysis_result?.resolved?.error
+                            )}
+                        }, "Unreachable"))
+                    } else if (d.landscape_analysis_tres?.landscape_analysis_result?.error) {
+                        resolvedCell.props.children.push(gridjs.h("span", {
+                            className: "badge text-bg-danger clickable",
+                            onClick: () => {showAlertModal("Exception", d.landscape_analysis_tres?.landscape_analysis_result?.error)}
+                        }, "Exception"))
+                    }
+
+                    // login page candidates
+                    let lpcCell = gridjs.h("div", {}, "")
+                    lpcCell.props.children = []
+                    if (d.landscape_analysis_tres?.landscape_analysis_result?.login_page_candidates) {
+                        let map = {}
+                        d.landscape_analysis_tres?.landscape_analysis_result?.login_page_candidates.forEach((p) => {
+                            map[p.login_page_strategy] ? map[p.login_page_strategy].push(p) : map[p.login_page_strategy] = [p]
+                        })
+                        Object.keys(map).forEach((k) => {
+                            const lpcBadge = gridjs.h("span", {
+                                className: "badge text-bg-primary me-2 clickable",
+                                "data-bs-toggle": "modal",
+                                "data-bs-target": "#lpcModal",
+                                onClick: () => {
+                                    updateLpcGrid(k, map[k])
+                                },
+                            }, "")
+                            lpcBadge.props.children = [
+                                gridjs.h("i", {className: `bi ${iconClassFromLpcStrategy(k)} me-1`}),
+                                gridjs.h("span", {}, `${k} (${map[k].length}x)`),
+                            ]
+                            lpcCell.props.children.push(lpcBadge)
+                        })
+                    }
+
+                    // identity providers
+                    let idpCell = gridjs.h("div", {}, "")
+                    idpCell.props.children = []
+                    if (d.landscape_analysis_tres?.landscape_analysis_result?.recognized_idps) {
+                        d.landscape_analysis_tres.landscape_analysis_result.recognized_idps.forEach(idp => {
+                            const idpBadge = gridjs.h("span", {
+                                className: "badge text-bg-primary me-2 clickable",
+                                "data-bs-toggle": "modal",
+                                "data-bs-target": "#idpModal",
+                                onClick: () => {
+                                    idpModalIdpIcon.className = `bi ${iconClassFromIdp(idp.idp_name)} me-2`
+                                    idpModalIdpName.innerText = idp.idp_name
+                                    updateIdPModalOverviewGrid(idp)
+                                    updateIdPModalKeywordGrid(idp)
+                                    updateIdPModalLogoGrid(idp)
+                                    updateIdPModalScreenshots(idp)
+                                    updateIdPModalElementTree(idp)
+                                    updateIdPModalHar(idp)
+                                }
+                            }, "")
+                            idpBadge.props.children = [
+                                gridjs.h("i", {className: `bi ${iconClassFromIdp(idp.idp_name)} me-1`}),
+                                gridjs.h("span", {}, idp.idp_name)
+                            ]
+                            idpCell.props.children.push(idpBadge)
+                        })
+                    }
+                    if (d.archived_idps) {
+                        d.archived_idps.forEach(idp => {
+                            const idpBadge = gridjs.h("span", {
+                                className: "badge text-bg-secondary me-2 clickable",
+                                "data-bs-toggle": "modal",
+                                "data-bs-target": "#idpModal",
+                                onClick: () => {
+                                    idpModalIdpIcon.className = `bi ${iconClassFromIdp(idp.idp_name)} me-2`
+                                    idpModalIdpName.innerText = idp.idp_name
+                                    updateIdPModalOverviewGrid(idp)
+                                    updateIdPModalKeywordGrid(idp)
+                                    updateIdPModalLogoGrid(idp)
+                                    updateIdPModalScreenshots(idp)
+                                    updateIdPModalElementTree(idp)
+                                    updateIdPModalHar(idp)
+                                }
+                            }, "")
+                            idpBadge.props.children = [
+                                gridjs.h("i", {className: `bi ${iconClassFromIdp(idp.idp_name)} me-1`}),
+                                gridjs.h("span", {}, idp.idp_name)
+                            ]
+                            idpCell.props.children.push(idpBadge)
+                        })
+                    }
+                    if (d.ground_truth) {
+                        d.ground_truth.forEach(gt => {
+                            if (!gt.idp_name) return
+                            const idpBadge = gridjs.h("span", {
+                                className: "badge text-bg-info me-2 clickable",
+                                "data-bs-toggle": "modal",
+                                "data-bs-target": "#idpModal",
+                                onClick: () => {
+                                    idpModalIdpIcon.className = `bi ${iconClassFromIdp(gt.idp_name)} me-2`
+                                    idpModalIdpName.innerText = gt.idp_name
+                                    updateIdPModalOverviewGrid(gt)
+                                    updateIdPModalKeywordGrid({})
+                                    updateIdPModalLogoGrid({})
+                                    updateIdPModalScreenshots({})
+                                    updateIdPModalElementTree({})
+                                    updateIdPModalHar({})
+                                }
+                            }, "")
+                            idpBadge.props.children = [
+                                gridjs.h("i", {className: `bi ${iconClassFromIdp(gt.idp_name)} me-1`}),
+                                gridjs.h("span", {}, gt.idp_name)
+                            ]
+                            idpCell.props.children.push(idpBadge)
+                        })
+                    }
+
+                    // more
+                    let moreCell = gridjs.h("div", {}, "")
+                    const showConfigBtn = gridjs.h("button", {
+                        type: "button",
+                        className: "btn btn-outline-secondary btn-sm me-1",
+                        title: "Show landscape analysis configuration",
+                        "data-bs-toggle": "modal",
+                        "data-bs-target": "#formModal",
+                        onClick: () => {
+                            initFormModal("landscape_analysis", {
+                                landscape_analysis_config: d?.landscape_analysis_tres?.landscape_analysis_config,
+                                scan_config: d?.landscape_analysis_tres?.scan_config
+                            })
+                        },
+                        disabled: d?.landscape_analysis_tres?.landscape_analysis_config ? false : true
+                    }, "")
+                    showConfigBtn.props.children = [gridjs.h("i", {className: "bi bi-sliders"})]
+                    const showHistoryBtn = gridjs.h("button", {
+                        type: "button",
+                        className: "btn btn-outline-secondary btn-sm me-1",
+                        title: "Show previous analyses for this domain",
+                        onClick: () => {
+                            const prevURL = new URL(archiveGrid.config.server.url)
+                            prevURL.searchParams.delete("list_id")
+                            prevURL.searchParams.set("filter_sp", d.domain)
+                            archiveGrid.config.server.url = prevURL.toString()
+                            archiveGrid.forceRender()
+                        }
+                    }, "")
+                    showHistoryBtn.props.children = [gridjs.h("i", {className: "bi bi-clock-history"})]
+                    const timingsBtn = gridjs.h("button", {
+                        type: "button",
+                        className: "btn btn-outline-secondary btn-sm me-1",
+                        title: "Show all timing measurements",
+                        "data-bs-toggle": "modal",
+                        "data-bs-target": "#timingsModal",
+                        onClick: () => {
+                            updateTimingsGrid(d)
+                        }
+                    }, "")
+                    timingsBtn.props.children = [gridjs.h("i", {className: "bi bi-stopwatch"})]
+                    const jsonBtn = gridjs.h("button", {
+                        type: "button",
+                        className: "btn btn-outline-secondary btn-sm me-1",
+                        title: "Show JSON for this domain",
+                        "data-bs-toggle": "modal",
+                        "data-bs-target": "#codeModal",
+                        onClick: () => {
+                            fillCodeModal("JSON", JSON.stringify(d, null, 2))
+                        }
+                    }, "")
+                    jsonBtn.props.children = [gridjs.h("i", {className: "bi bi-braces"})]
+                    moreCell.props.children = [showConfigBtn, showHistoryBtn, timingsBtn, jsonBtn]
+
+                    return [
+                        d.rank,
+                        d.domain,
+                        timestampToString(d.landscape_analysis_tres?.task_config?.task_timestamp_response_received),
+                        resolvedCell,
+                        lpcCell,
+                        idpCell,
+                        moreCell
+                    ]
+                })
+            }
+        }
+    })
+
+    /* filter modal */
+
+    const getFilterFromForm = () => {
+        return {
+            topSitesList: topSitesListInput.value,
+            scanId: scanIdInput.value,
+            tag: tagInput.value,
+            gtId: groundTruthIdInput.value,
+            resultsPerPage: numberResultsInput.value,
+            searchSPs: searchSPInput.value,
+            searchIdPs: [...searchIdPInput.options].filter(o => o.selected).map(o => o.value),
+            customQuery: customQueryInput.value,
+            filterLatestIdPs: filterLatestIdPsInput.checked,
+            filterArchivedIdPs: filterArchivedIdPsInput.checked,
+            filterGroundTruthIdPs: filterGroundTruthIdPsIdPsInput.checked,
+        }
+    }
+
+    const setFilterToForm = (filter) => {
+        topSitesListInput.value = filter.topSitesList || "tranco_6Z2X"
+        scanIdInput.value = filter.scanId || ""
+        tagInput.value = filter.tag || ""
+        groundTruthIdInput.value = filter.gtId || "02_2023"
+        numberResultsInput.value = filter.resultsPerPage || "20"
+        searchSPInput.value = filter.searchSPs || ""
+        if (filter.searchIdPs) {
+            [...searchIdPInput.options].forEach(o => {
+                if (filter.searchIdPs.includes(o.value)) o.selected = true
+                else o.selected = false
+            })
+        } else {
+            [...searchIdPInput.options].forEach(o => {o.selected = false})
+        }
+        customQueryInput.value = filter.customQuery || ""
+        filterLatestIdPsInput.checked = filter.filterLatestIdPs !== undefined ? filter.filterLatestIdPs : true
+        filterArchivedIdPsInput.checked = filter.filterArchivedIdPs !== undefined ? filter.filterArchivedIdPs : false
+        filterGroundTruthIdPsIdPsInput.checked = filter.filterGroundTruthIdPs !== undefined ? filter.filterGroundTruthIdPs : false
+    }
+
+    const getFilterFromLocalStorage = () => {
+        return JSON.parse(localStorage.getItem("filter") || "{}")
+    }
+
+    const setFilterToLocalStorage = (filter) => {
+        localStorage.setItem("filter", JSON.stringify(filter))
+    }
+
+    const filterUpdateGridConfig = (filter) => {
+        const url = new URL(`${location.origin}/api/tasks`)
+        // top sites list
+        if (filter.topSitesList) url.searchParams.set("list_id", filter.topSitesList)
+        // scan id
+        if (filter.scanId) url.searchParams.set("scan_id", filter.scanId)
+        // tag
+        if (filter.tag) url.searchParams.set("tag", filter.tag)
+        // ground truth id
+        if (filter.gtId) url.searchParams.set("gt_id", filter.gtId)
+        // search for sps
+        if (filter.searchSPs) url.searchParams.set("filter_sp", filter.searchSPs)
+        // search for idps
+        filter.searchIdPs.forEach(idp => {
+            url.searchParams.append("filter_idp", idp)
+        })
+        // custom query
+        if (filter.customQuery) url.searchParams.set("filter_query", filter.customQuery)
+        // include latest idps
+        if (filter.filterLatestIdPs) url.searchParams.set("filter_latest_idps", "1")
+        else url.searchParams.set("filter_latest_idps", "0")
+        // include archived idps
+        if (filter.filterArchivedIdPs) url.searchParams.set("filter_archived_idps", "1")
+        else url.searchParams.set("filter_archived_idps", "0")
+        // include ground truth idps
+        if (filter.filterGroundTruthIdPs) url.searchParams.set("filter_ground_truth_idps", "1")
+        else url.searchParams.set("filter_ground_truth_idps", "0")
+
+        // update pagination
+        archiveGrid.config.pagination.limit = parseInt(filter.resultsPerPage)
+        // update url
+        archiveGrid.config.server.url = url.toString()
+    }
+
+    setFilterToForm(getFilterFromLocalStorage())
+    filterUpdateGridConfig(getFilterFromForm())
+    archiveGrid.render(archiveTable)
+
+    filterBtn.onclick = () => {
+        const filter = getFilterFromForm()
+        setFilterToLocalStorage(filter)
+        filterUpdateGridConfig(filter)
+        archiveGrid.forceRender()
+    }
+
+    queryInput.onchange = () => {
+        customQueryInput.value = queryInput.value
+    }
+
+    customQueryInput.oninput = () => {
+        queryInput.options.forEach((o) => {o.selected = false})
+    }
+
+    /* code modal (archive table in json) */
+
+    showJSONBtn.onclick = () => {
+        fillCodeModal("JSON", JSON.stringify(archiveTableData, null, 2))
+    }
+</script>
+{% endblock %}

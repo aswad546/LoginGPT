@@ -1,0 +1,521 @@
+{% extends "base.html" %}
+
+{% block styles %}
+<link href="{{ url_for('static', filename='css/lib/jsondiffpatch-html.css') }}" rel="stylesheet" />
+<link href="{{ url_for('static', filename='css/lib/jsondiffpatch-annotated.css') }}" rel="stylesheet" />
+{% endblock %}
+
+{% block scriptsHeader %}
+<script src="{{ url_for('static', filename='js/lib/gridjs.umd.js') }}"></script>
+<script src="{{ url_for('static', filename='js/lib/chart.umd.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/lib/jsoneditor.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/lib/jsondiffpatch.umd.js') }}"></script>
+<script src="{{ url_for('static', filename='js/chart.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+
+{% include "modals/scans.html" %}
+{% include "modals/gts.html" %}
+{% include "modals/diff.html" %}
+{% include "modals/form.html" %}
+{% include "modals/code.html" %}
+{% include "modals/configeval.html" %}
+
+<div class="container-fluid">
+
+    <div class="row mb-4">
+        <div class="col text-center">
+            <h1>Diff</h1>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col text-center">
+            <button class="btn btn-primary mb-2" data-bs-toggle="modal" data-bs-target="#configEvalModal">
+                <i class="bi bi-sliders"></i> Config
+            </button>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+
+        <!-- scan 1 -->
+        <div class="col-5 bg-light rounded-2">
+            <div class="row">
+                <h2>Scan 1</h2>
+                <div>
+                    <button class="btn btn-primary mb-2" onclick="stats1 = api.landscapeStats; load1('latest');">
+                        <i class="bi bi-indent"></i> Latest
+                    </button>
+                    <button class="btn btn-primary mb-2" data-bs-toggle="modal" data-bs-target="#scansModal" data-bs-analysis="landscape_analysis" data-bs-showLoadDiff1Btn>
+                        <i class="bi bi-graph-up"></i> Scan
+                    </button>
+                    <button class="btn btn-primary mb-2" data-bs-toggle="modal" data-bs-target="#gtsModal" data-bs-showLoadDiff1Btn>
+                        <i class="bi bi-hand-index"></i> Ground Truth
+                    </button>
+                    <!-- <button class="btn btn-primary mb-2">
+                        <i class="bi bi-clock-history"></i> Time
+                    </button> -->
+                    <button id="showJson1Btn" class="btn btn-secondary mb-2" data-bs-toggle="modal" data-bs-target="#codeModal">
+                        <i class="bi bi-braces"></i> JSON
+                    </button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-4">
+                    <canvas id="chart1Support"></canvas>
+                </div>
+                <div class="col-4">
+                    <canvas id="chart1Flows"></canvas>
+                </div>
+                <div class="col-4">
+                    <canvas id="chart1Frames"></canvas>
+                </div>
+                <div class="col-4">
+                    <canvas id="chart1Integrations"></canvas>
+                </div>
+                <div class="col-4">
+                    <canvas id="chart1SDKs"></canvas>
+                </div>
+                <div class="col-4">
+                    <canvas id="chart1IdPs"></canvas>
+                </div>
+                <div class="col-6">
+                    <canvas id="chart1SSOByRank"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- diff button -->
+        <div class="col-1 align-self-center text-center">
+            <button id="diffBtn" class="btn btn-primary mb-2" data-bs-toggle="modal" data-bs-target="#diffModal">
+                <i class="bi bi-file-diff"></i> Diff
+            </button>
+        </div>
+
+        <!-- scan 2 -->
+        <div class="col-5 bg-light rounded-2">
+            <div class="row">
+                <h2>Scan 2</h2>
+                <div>
+                    <button class="btn btn-primary mb-2" onclick="stats2 = api.landscapeStats; load2('latest');">
+                        <i class="bi bi-indent"></i> Latest
+                    </button>
+                    <button class="btn btn-primary mb-2" data-bs-toggle="modal" data-bs-target="#scansModal" data-bs-analysis="landscape_analysis" data-bs-showLoadDiff2Btn>
+                        <i class="bi bi-graph-up"></i> Scan
+                    </button>
+                    <button class="btn btn-primary mb-2" data-bs-toggle="modal" data-bs-target="#gtsModal" data-bs-showLoadDiff2Btn>
+                        <i class="bi bi-hand-index"></i> Ground Truth
+                    </button>
+                    <!-- <button class="btn btn-primary mb-2">
+                        <i class="bi bi-clock-history"></i> Time
+                    </button> -->
+                    <button id="showJson2Btn" class="btn btn-secondary mb-2" data-bs-toggle="modal" data-bs-target="#codeModal">
+                        <i class="bi bi-braces"></i> JSON
+                    </button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-4">
+                    <canvas id="chart2Support"></canvas>
+                </div>
+                <div class="col-4">
+                    <canvas id="chart2Flows"></canvas>
+                </div>
+                <div class="col-4">
+                    <canvas id="chart2Frames"></canvas>
+                </div>
+                <div class="col-4">
+                    <canvas id="chart2Integrations"></canvas>
+                </div>
+                <div class="col-4">
+                    <canvas id="chart2SDKs"></canvas>
+                </div>
+                <div class="col-4">
+                    <canvas id="chart2IdPs"></canvas>
+                </div>
+                <div class="col-6">
+                    <canvas id="chart2SSOByRank"></canvas>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scriptsFooter %}
+<script>
+    let id1 = "279960a7-b27a-47ea-98dc-c702103e2a64"
+    let stats1 = api.landscapeStats
+    let charts1 = []
+    let data1 = {}
+
+    let id2 = "02_2023"
+    let stats2 = api.statsGt
+    let charts2 = []
+    let data2 = {}
+
+    /* 1 */
+
+    showJson1Btn.addEventListener("click", () => {
+        fillCodeModal("Scan 1", JSON.stringify(data1, null, 2))
+    })
+
+    const load1 = (id1) => {
+        stats1(id1).then(d => {
+
+            charts1.forEach(c => c.destroy())
+            charts1 = []
+            data1 = d.data
+
+            charts1.push(new Chart(chart1Support, {
+                type: "pie",
+                data: {
+                    labels: ["Not reachable", "SSO supported", "SSO not supported", "Other errors"],
+                    datasets: [{
+                        label: "# of Domains",
+                        data: [d.data.domains_not_reachable, d.data.domains_with_sso, d.data.domains_without_sso, d.data.domains_with_other_errors],
+                        backgroundColor: Object.values(COLORS)
+                    }]
+                },
+                options: {
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: "SSO Support"
+                        },
+                        subtitle: {
+                            display: true,
+                            text: `Total: ${d.data.domains_all} Domains / ${d.data.buttons_all} Buttons`
+                        }
+                    }
+                }
+            }))
+            charts1.push(new Chart(chart1Flows, {
+                type: "pie",
+                data: {
+                    labels: Object.keys(d.data.domains_flows),
+                    datasets: [{
+                        label: "# of Domains",
+                        data: Object.values(d.data.domains_flows),
+                        backgroundColor: Object.values(COLORS)
+                    }, {
+                        label: "# of Buttons",
+                        data: Object.values(d.data.buttons_flows),
+                        backgroundColor: Object.values(COLORS)
+                    }]
+                },
+                options: {
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: "SSO Flows"
+                        }
+                    }
+                }
+            }))
+            charts1.push(new Chart(chart1Frames, {
+                type: "pie",
+                data: {
+                    labels: Object.keys(d.data.domains_frames),
+                    datasets: [{
+                        label: "# of Domains",
+                        data: Object.values(d.data.domains_frames),
+                        backgroundColor: Object.values(COLORS)
+                    }, {
+                        label: "# of Buttons",
+                        data: Object.values(d.data.buttons_frames),
+                        backgroundColor: Object.values(COLORS)
+                    }]
+                },
+                options: {
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: "SSO Frames"
+                        }
+                    }
+                }
+            }))
+            charts1.push(new Chart(chart1Integrations, {
+                type: "pie",
+                data: {
+                    labels: Object.keys(d.data.domains_integrations),
+                    datasets: [{
+                        label: "# of Domains",
+                        data: Object.values(d.data.domains_integrations),
+                        backgroundColor: Object.values(COLORS)
+                    }, {
+                        label: "# of Buttons",
+                        data: Object.values(d.data.buttons_integrations),
+                        backgroundColor: Object.values(COLORS)
+                    }]
+                },
+                options: {
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: "SSO Integrations"
+                        }
+                    }
+                }
+            }))
+            charts1.push(new Chart(chart1SDKs, {
+                type: "pie",
+                data: {
+                    labels: Object.keys(d.data.domains_sdks),
+                    datasets: [{
+                        label: "# of Domains",
+                        data: Object.values(d.data.domains_sdks),
+                        backgroundColor: Object.values(COLORS)
+                    }, {
+                        label: "# of Buttons",
+                        data: Object.values(d.data.buttons_sdks),
+                        backgroundColor: Object.values(COLORS)
+                    }]
+                },
+                options: {
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: "SSO SDKs"
+                        }
+                    }
+                }
+            }))
+            charts1.push(new Chart(chart1IdPs, {
+                type: "pie",
+                data: {
+                    labels: Object.keys(d.data.domains_idps),
+                    datasets: [{
+                        label: "# of Domains",
+                        data: Object.values(d.data.domains_idps),
+                        backgroundColor: Object.values(COLORS)
+                    }, {
+                        label: "# of Buttons",
+                        data: Object.values(d.data.buttons_idps),
+                        backgroundColor: Object.values(COLORS)
+                    }]
+                },
+                options: {
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: "SSO IdPs"
+                        }
+                    }
+                }
+            }))
+            charts1.push(new Chart(chart1SSOByRank, {
+                type: "bar",
+                data: {
+                    labels: Object.keys(d.data.domains_with_sso_by_rank),
+                    datasets: [{
+                        label: "# of Domains",
+                        data: Object.values(d.data.domains_with_sso_by_rank),
+                        backgroundColor: Object.values(COLORS)
+                    },{
+                        label: "# of Buttons",
+                        data: Object.values(d.data.buttons_by_rank),
+                        backgroundColor: Object.values(COLORS)
+                    }]
+                },
+                options: {
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: "SSO by Rank"
+                        },
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            }))
+        })
+    }
+
+    /* 2 */
+
+    showJson2Btn.addEventListener("click", () => {
+        fillCodeModal("Scan 2", JSON.stringify(data2, null, 2))
+    })
+
+    const load2 = (id2) => {
+        stats2(id2).then(d => {
+
+            charts2.forEach(c => c.destroy())
+            charts2 = []
+            data2 = d.data
+
+            charts2.push(new Chart(chart2Support, {
+                type: "pie",
+                data: {
+                    labels: ["Not reachable", "SSO supported", "SSO not supported", "Other errors"],
+                    datasets: [{
+                        label: "# of Domains",
+                        data: [d.data.domains_not_reachable, d.data.domains_with_sso, d.data.domains_without_sso, d.data.domains_with_other_errors],
+                        backgroundColor: Object.values(COLORS)
+                    }]
+                },
+                options: {
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: "SSO Support"
+                        },
+                        subtitle: {
+                            display: true,
+                            text: `Total: ${d.data.domains_all} Domains / ${d.data.buttons_all} Buttons`
+                        }
+                    }
+                }
+            }))
+            charts2.push(new Chart(chart2Flows, {
+                type: "pie",
+                data: {
+                    labels: Object.keys(d.data.domains_flows),
+                    datasets: [{
+                        label: "# of Domains",
+                        data: Object.values(d.data.domains_flows),
+                        backgroundColor: Object.values(COLORS)
+                    },{
+                        label: "# of Buttons",
+                        data: Object.values(d.data.buttons_flows),
+                        backgroundColor: Object.values(COLORS)
+                    }]
+                },
+                options: {
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: "SSO Flows"
+                        }
+                    }
+                }
+            }))
+            charts2.push(new Chart(chart2Frames, {
+                type: "pie",
+                data: {
+                    labels: Object.keys(d.data.domains_frames),
+                    datasets: [{
+                        label: "# of Domains",
+                        data: Object.values(d.data.domains_frames),
+                        backgroundColor: Object.values(COLORS)
+                    },{
+                        label: "# of Buttons",
+                        data: Object.values(d.data.buttons_frames),
+                        backgroundColor: Object.values(COLORS)
+                    }]
+                },
+                options: {
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: "SSO Frames"
+                        }
+                    }
+                }
+            }))
+            charts2.push(new Chart(chart2Integrations, {
+                type: "pie",
+                data: {
+                    labels: Object.keys(d.data.domains_integrations),
+                    datasets: [{
+                        label: "# of Domains",
+                        data: Object.values(d.data.domains_integrations),
+                        backgroundColor: Object.values(COLORS)
+                    },{
+                        label: "# of Buttons",
+                        data: Object.values(d.data.buttons_integrations),
+                        backgroundColor: Object.values(COLORS)
+                    }]
+                },
+                options: {
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: "SSO Integrations"
+                        }
+                    }
+                }
+            }))
+            charts2.push(new Chart(chart2SDKs, {
+                type: "pie",
+                data: {
+                    labels: Object.keys(d.data.domains_sdks),
+                    datasets: [{
+                        label: "# of Domains",
+                        data: Object.values(d.data.domains_sdks),
+                        backgroundColor: Object.values(COLORS)
+                    },{
+                        label: "# of Buttons",
+                        data: Object.values(d.data.buttons_sdks),
+                        backgroundColor: Object.values(COLORS)
+                    }]
+                },
+                options: {
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: "SSO SDKs"
+                        }
+                    }
+                }
+            }))
+            charts2.push(new Chart(chart2IdPs, {
+                type: "pie",
+                data: {
+                    labels: Object.keys(d.data.domains_idps),
+                    datasets: [{
+                        label: "# of Domains",
+                        data: Object.values(d.data.domains_idps),
+                        backgroundColor: Object.values(COLORS)
+                    },{
+                        label: "# of Buttons",
+                        data: Object.values(d.data.buttons_idps),
+                        backgroundColor: Object.values(COLORS)
+                    }]
+                },
+                options: {
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: "SSO IdPs"
+                        }
+                    }
+                }
+            }))
+            charts2.push(new Chart(chart2SSOByRank, {
+                type: "bar",
+                data: {
+                    labels: Object.keys(d.data.domains_with_sso_by_rank),
+                    datasets: [{
+                        label: "# of Domains",
+                        data: Object.values(d.data.domains_with_sso_by_rank),
+                        backgroundColor: Object.values(COLORS)
+                    },{
+                        label: "# of Buttons",
+                        data: Object.values(d.data.buttons_by_rank),
+                        backgroundColor: Object.values(COLORS)
+                    }]
+                },
+                options: {
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: "SSO by Rank"
+                        },
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            }))
+        })
+    }
+</script>
+{% endblock %}

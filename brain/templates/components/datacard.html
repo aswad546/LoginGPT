@@ -1,0 +1,40 @@
+<div class="card mb-4">
+    <div class="card-header">
+        <ul class="nav nav-tabs card-header-tabs">
+            <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#dataOverview">Overview</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#dataResolved">Resolved</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#dataTimings">Timings</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#dataLoginPageCandidates">Login Pages</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#dataRecognizedIdps">Idps</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#dataRecognizedLastpassIcons">Lastpass Icons</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#dataRecognizedNavigatorCredentials">Navigator Credentials</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#dataMetadata">Metadata</button></li>
+        </ul>
+    </div>
+    <div class="card-body tab-content">
+        <div class="tab-pane fade show active" id="dataOverview">
+            <code><pre>{% include "examples/overview.json" %}</pre></code>
+        </div>
+        <div class="tab-pane fade" id="dataResolved">
+            <code><pre>{% include "examples/resolved.json" %}</pre></code>
+        </div>
+        <div class="tab-pane fade" id="dataTimings">
+            <code><pre>{% include "examples/timings.json" %}</pre></code>
+        </div>
+        <div class="tab-pane fade" id="dataLoginPageCandidates">
+            <code><pre>{% include "examples/login_page_candidates.json" %}</pre></code>
+        </div>
+        <div class="tab-pane fade" id="dataRecognizedIdps">
+            <code><pre>{% include "examples/recognized_idps.json" %}</pre></code>
+        </div>
+        <div class="tab-pane fade" id="dataRecognizedLastpassIcons">
+            <code><pre>{% include "examples/recognized_lastpass_icons.json" %}</pre></code>
+        </div>
+        <div class="tab-pane fade" id="dataRecognizedNavigatorCredentials">
+            <code><pre>{% include "examples/recognized_navigator_credentials.json" %}</pre></code>
+        </div>
+        <div class="tab-pane fade" id="dataMetadata">
+            <code><pre>{% include "examples/metadata.json" %}</pre></code>
+        </div>
+    </div>
+</div>

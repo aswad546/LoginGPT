@@ -1,0 +1,167 @@
+{
+  "allowAlways": { "message": "Αποδοχή Πάντα" },
+  "allowButtonLabel": { "message": "Αποδοχή Αναδυόμενων Παραθύρων" },
+  "contributeButtonLabel": { "message": "Συνεισφέρουν" },
+  "allowOnce": { "message": "Αποδοχή Μια Φορά" },
+  "badgeToggleLabel": {
+    "message": "Εμφάνιση ένδειξης στο πλήκτρο γραμμής εργαλείων όταν ένα αναδυόμενο παράθυρο έχει αποκλειστεί."
+  },
+  "blockButtonLabel": { "message": "Ενεργοποίηση Αποκλεισμού Αναδυόμενων Παραθύρων" },
+  "bugLink": { "message": "Report a bug" },
+  "disableNotifications": { "message": "Disable Notifications" },
+  "emailLink": { "message": "Στείλτε μας μήνυμα ηλεκτρονικού ταχυδρομείου" },
+  "extDescription": {
+    "message": "#1 επέκταση αποκλεισμού ενοχλητικών αναδυόμενων παραθύρων, popunders & επιστρώσεων με εύκολο και αποτελεσματικό τρόπο. Κάντε περιήγηση χωρίς παρεμβάσεις σε όλους τους ιστότοπους."
+  },
+  "extName": { "message": "Pop up blocker for Chrome™ - Poper Blocker" },
+  "extName_Edge": { "message": "Pop up blocker for Edge™ - Poper Blocker" },
+  "extName_FF": { "message": "Popup blocker for FF: Poper Blocker" },
+  "linksTitle": { "message": "Links" },
+  "notificationMessage": { "message": "Αποκλεισμένα Παράθυρα στην" },
+  "NTF_blockPrevSite": { "message": "Popup Blocked on this Site" },
+  "notificationToggleLabel": {
+    "message": "Εμφάνιση γνωστοποίησης στη σελίδα όταν ένα αναδυόμενο παράθυρο έχει αποκλειστεί"
+  },
+  "options": { "message": "Options" },
+  "popupsAllowed": { "message": "Popups are allowed on this website." },
+  "popupsBlocked": { "message": "Popups are blocked on this website." },
+  "rateLink": { "message": "Βαθμολογήστε μας με 5 άστρα" },
+  "whitelistTip": {
+    "message": "Για να επιτρέψετε αναδυόμενα παράθυρα/popunders από έναν ιστότοπο, προσθέστε τον σε αυτήν τη λίστα:"
+  },
+  "whitelistTitle": { "message": "Λίστα Επιτρεπόμενων Ιστότοπων" },
+  "websiteInWhitelistOverlayMessage": { "message": "This website is whitelisted. No overlay detection made." },
+  "autoDetectionButtonLabel": { "message": "Yes, once" },
+  "undoOnceButtonLabel": { "message": "Undo once" },
+  "blockAlwaysButtonLabel": { "message": "Block always" },
+  "overlayWasBlocked": { "message": "Η επίστρωση αποκλείστηκε εδώ " },
+  "blacklistTip": { "message": "Πάντα να αποκλείονται επιστρώσεις από αυτούς τους ιστότοπους:" },
+  "blockDetectedOverlayLabel": { "message": "Overlay was detected. Block it ?" },
+  "notFoundOverlayLabel": { "message": "An overlay wasn't found. Try auto detection?" },
+  "notFoundAutoOverlayLabel": { "message": "Overlay auto detection did not find any overlays" },
+  "popupsBlockedLabel": { "message": "# αναδυόμενα παράθυρα έχουν αποκλειστεί" },
+  "removeOnceLabel": { "message": "Remove Once" },
+  "removeAlwaysLabel": { "message": "Αφαίρεση Πάντα" },
+  "ignoreLabel": { "message": "Ignore" },
+  "undoLabel": { "message": "Προβολή επίστρωσης" },
+  "overlaySettingsTitle": { "message": "Ρυθμίσεις Αποκλεισμού Επιστρώσεων" },
+  "overlaysToggleLabel": {
+    "message": "Ενεργοποίηση αποκλεισμού επίστρωσης (στέλνει ανώνυμα δεδομένα στην Poper Blocker)"
+  },
+  "notificationSettingsTitle": { "message": "Ρυθμίσεις Γνωστοποίησης" },
+  "blockOverlayButtonLabel": { "message": "Remove Overlay" },
+  "removeOverlayQLabel": { "message": "Remove Overlay?" },
+  "autoDetectionYesAlwaysButtonLabel": { "message": "Yes, always" },
+  "allowOverlaysButtonLabel": { "message": "Allow Overlays" },
+  "autoDetectionReportWebsiteButtonLabel": { "message": "Report website" },
+  "pauseButton": { "message": "Pause" },
+  "resumeButton": { "message": "Start" },
+  "paused": { "message": "Poper Blocker is off" },
+  "needRefresh": { "message": "Refresh open tabs in order for this change to take effect." },
+  "needRefreshGotIt": { "message": "Ok, got it!" },
+  "neverShowRefresh": { "message": "Don't show again" },
+  "overlayContextMenuToggleLabel": { "message": "Ενεργοποίηση της \"Αφαίρεσης Επίστρωσης\" στο μενού συναφειών" },
+  "disablePB": { "message": "Απενεργοποίηση Poper Blocker" },
+  "enablePB": { "message": "Ενεργοποίηση Poper Blocker" },
+  "allowOnceTip": {
+    "message": "Αποδεχτείτε το αναδυόμενο παράθυρο μόνο αυτή τη φορά. Την επόμενη φορά που θα δείτε αυτό το αναδυόμενο παράθυρο, θα σας ξαναρωτήσουμε."
+  },
+  "allowAlwaysTip": {
+    "message": "Πάντα να γίνονται αποδεκτά τα αναδυόμενα παράθυρα σε αυτόν τον ιστότοπο. Αυτός ο ιστότοπος θα προστεθεί στη λίστα επιτρεπόμενων ιστότοπων."
+  },
+  "doNotShowTips": {
+    "message": "Να μην εμφανίζεται αυτή η γνωστοποίηση όταν τα αναδυόμενα παράθυρα είναι αποκλεισμένα σε αυτόν τον ιστότοπο. "
+  },
+  "doNotShow": { "message": "Να μην εμφανίζεται. " },
+  "undoTips": { "message": "Αφαιρέσατε αυτή την επίστρωση από μόνος σας, κάντε κλικ για Εμφάνιση Επίστρωσης " },
+  "removeAlwaysText": {
+    "message": "Πάντα να αφαιρείται αυτή η επίστρωση και να μην εμφανιστεί αυτή η γνωστοποίηση πάλι. Μπορείτε να αλλάξετε αυτήν την επιλογή στη σελίδα δυνατοτήτων. "
+  },
+  "PP_ExtName": { "message": "Poper Blocker" },
+  "PP_DidWeMiss": { "message": "Μήπως ξεχάσαμε ένα;" },
+  "PP_Popup": { "message": "Αναδυόμενο παράθυρο" },
+  "PP_Overlay": { "message": "Επίστρωση" },
+  "PP_PopupsFound": { "message": "Τα αναδυόμενα παράθυρα επιτρέπονται στο " },
+  "PP_PopupsAllowed": { "message": "Αναδυόμενα Παράθυρα στη " },
+  "PP_WhiteListed": { "message": "στην άσπρη λίστα\r\nτου poper blocker" },
+  "PP_PopupsEssential": { "message": "Τα αναδυόμενα παράθυρα είναι απαραίτητα για τη λειτουργία αυτού του ιστότοπου" },
+  "PP_SwitchedOff": { "message": "Το πρόγραμμα Αποκλεισμού Αναδυόμενων Παραθύρων είναι απενεργοποιημένο." },
+  "PP_NoPopupsBlocked": { "message": "Όλα καλά!" },
+  "PP_XPopupsBlocked_1": { "message": "Έτσι μπράβο!" },
+  "PP_XPopupsBlocked_2": { "message": "Όμορφα!" },
+  "PP_XPopupsBlocked_3": { "message": "Ωραία!" },
+  "PP_XPopupsBlocked_4": { "message": "Πανεύκολο!" },
+  "PP_XPopupsBlocked_5": { "message": "Σαν παιχνιδάκι!" },
+  "PP_TooltipReportPop": {
+    "message": "Κάντε κλικ εδώ για να μας ενημερώσετε για αναδυόμενο παράθυρο που ξέφυγε σε νέα καρτέλα ή παράθυρο"
+  },
+  "PP_TooltipReportOver": {
+    "message": "Κάντε κλικ εδώ για να αφαιρέσετε μια επίστρωση που αναδύθηκε στην παρούσα σελίδα"
+  },
+  "PP_TooltipAllowPops": {
+    "message": "Κάντε κλικ εδώ για να γίνουν αποδεκτά τα αναδυόμενα παράθυρα σε αυτόν τον ιστότοπο. Θα προστεθεί στην προσωπική σας λίστα επιτρεπόμενων ιστότοπων."
+  },
+  "PP_TooltipBlockPops": { "message": "Έτσι μπράβο!\r\nΩραία!\r\nΌμορφα!" },
+  "add": { "message": "Προσθήκη" },
+  "rateus": { "message": "Ευχαριστημένος με το Poper Blocker; Βαθμολογήστε μας!" },
+  "urlNotValid": { "message": "Πληκτρολογήστε ένα έγκυρο URL." },
+  "urlExamplePlaceholder": { "message": "Παράδειγμα: twitter.com" },
+  "urlExistsInPB": {
+    "message": "Αυτός ο ιστότοπος έχει εισαχτεί στη λίστα επιτρεπόμενων ιστότοπων από το Poper Blocker"
+  },
+  "urlExistsInList": { "message": "This site is already in list" },
+  "PP_PopupsNotFound": { "message": "Δεν έχουν εντοπιστεί\r\nΑναδυόμενα Παράθυρα στο" },
+  "PP_BlockAnyway": { "message": "Να γίνει Αποκλεισμός" },
+  "PP_Stats_TotalTimeSaved": { "message": "Εξοικονόμηση Χρόνου" },
+  "PP_Stats_TotalPopsBlocked": { "message": "Αποκλεισμένα Παράθυρα" },
+  "PP_Stats_Tabs": { "message": "Καρτέλες" },
+  "PP_Stats_Windows": { "message": "Παράθυρα" },
+  "PP_Stats_Overlays": { "message": "Επιστρ." },
+  "NTF_shareUs": { "message": "We like you too! Don't you think it's time to tell your friends about us?" },
+  "NTF_LinkCopied": { "message": "Link Copied" },
+  "PP_PopupsFound_X1": { "message": "Τα αναδυόμενα παράθυρα επιτρέπονται στο " },
+  "PP_TooltipWhitelistBlockPops": {
+    "message": "We verified that popups are essential functionalities on this site, but feel free to block anyway."
+  },
+  "PP_Menu_Stats": { "message": "Stats" },
+  "PP_Menu_Options": { "message": "Options" },
+  "PP_Menu_Rate": { "message": "Rate Us" },
+  "PP_Menu_Share": { "message": "Share" },
+  "PP_Menu_Incognito": { "message": "Incognito" },
+  "PP_Stats_HowItWorks": { "message": "See how it really works" },
+  "PP_Share_Friends": { "message": "Share Poper Blocker<br />with friends" },
+  "PP_Share_TT_Facebook": { "message": "Share on Facebook" },
+  "PP_Share_TT_Twitter": { "message": "Share on Twitter" },
+  "PP_Share_TT_Copy": { "message": "Copy Link" },
+  "PP_Share_LinkCopied": { "message": "Link Copied" },
+  "PP_Rate": { "message": "Rate Poper Blocker" },
+  "PP_Incognito_Title": {
+    "message": "In order to enable Poper Blocker in Chrome's Incognito Mode, follow the next steps:"
+  },
+  "PP_Incognito_Step1": { "message": "Go to" },
+  "PP_Incognito_Step2": { "message": "Find Poper Blocker and click \"Details\"" },
+  "PP_Incognito_Step3": { "message": "Enable option next to \"Allow in incognito\"" },
+  "PP_Incognito_GotIt": { "message": "OK, Got it" },
+  "TS_NoOverlay": { "message": "No overlay found" },
+  "OP_urlExistsInDefaultList": { "message": "This site is already %s by Poper Blocker" },
+  "OP_urlExistsInList": { "message": "This site is already in %s" },
+  "OP_whitelist": { "message": "Whitelist" },
+  "OP_overlayList": { "message": "always block overlay list" },
+  "OP_whitelisted": { "message": "whitelisted" },
+  "siteExperience": {
+    "message": "Site Experience"
+  },
+  "pageExperience": { "message": "This page experience is" },
+  "badExperience": { "message": "Bad Experience" },
+  "fairExperience": { "message": "Fair Experience" },
+  "cleanExperience": { "message": "Clean Experience" },
+  "experienceTooltip": {
+    "message": "Popup rankings will show you the overall experience of Poperblocker users on this page."
+  },
+  "SettingsExperince": { "message": "Site Experience Ranking" },
+  "SettingsExperincesub": { "message": "Enable and show user experience traffic light." },
+  "UserconsentExperinceHeader": { "message": "Allow Site Experience" },
+  "UserconsentExperinceBody": {
+    "message": "To enable this feature, we need access to information regarding the websites you visit. Click 'I Agree' to allow access to this information and for use according to our"
+  }
+}

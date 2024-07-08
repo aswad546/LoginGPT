@@ -1,0 +1,17 @@
+[
+    {
+        "domain": "shop.com", // domain in the tranco list
+        "rank": 1337, // ranking of the domain in the tranco list
+        "task_id": "1f8083d1-6d38-4de3-98f3-b1d2987a6555", // unique id of the snapshot task
+        "task_timestamp_response_received": 1689367754.3676727, // timestamp of the snapshot task
+        "resolved": {...}, // see "Resolved" section
+        "timings": {...}, // see "Timings" section
+        "login_page_candidates": [...], // see "Login Pages" section
+        "recognized_idps": [...], // see "Idps" section
+        "recognized_lastpass_icons": [...], // see "Lastpass Icons" section
+        "recognized_navcreds": [...], // see "Navigator Credentials" section
+        "metadata_available": {...}, // see "Metadata" section
+        "metadata_data": {...} // see "Metadata" section
+    },
+    ...
+]

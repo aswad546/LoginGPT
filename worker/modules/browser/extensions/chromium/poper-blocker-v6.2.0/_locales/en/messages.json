@@ -1,0 +1,721 @@
+{
+  "Login": {
+    "message": "Log in"
+  },
+  "Logout": {
+    "message": "Log out"
+  },
+  "TurnOn": {
+    "message": "Turn on"
+  },
+  "TurnOff": {
+    "message": "Turn off"
+  },
+  "allowAlways": {
+    "message": "Enable site pop-ups"
+  },
+  "allowAlways_min": {
+    "message": "Whitelist"
+  },
+  "allowAlways_TT": {
+    "message": "Always allow popups on this site. Choose this option if you trust this site."
+  },
+  "allowButtonLabel": {
+    "message": "Allow Popups"
+  },
+  "contributeButtonLabel": {
+    "message": "Contribute"
+  },
+  "feedbackButtonLabel": {
+    "message": "Help Us Improve"
+  },
+  "allowOnce": {
+    "message": "Allow this pop-up"
+  },
+  "allowOnce_min": {
+    "message": "Show popup"
+  },
+  "badgeToggleLabel": {
+    "message": "Show a badge on extension’s icon notifications when a popup is blocked"
+  },
+  "blockButtonLabel": {
+    "message": "Block Popups"
+  },
+  "bugLink": {
+    "message": "Report a bug"
+  },
+  "disableNotifications": {
+    "message": "Disable Notifications"
+  },
+  "emailLink": {
+    "message": "Email us"
+  },
+  "extDescription": {
+    "message": "Block popups, ads, cookie requests, trackers, notifications, ads on social media & more. A clean browsing experience starts today."
+  },
+  "extName": {
+    "message": "Pop up blocker for Chrome™ - Poper Blocker"
+  },
+  "extName_Edge": { "message": "Pop up blocker for Edge™ - Poper Blocker" },
+  "extName_FF": {
+    "message": "Popup blocker for FF: Poper Blocker"
+  },
+  "linksTitle": {
+    "message": "Links"
+  },
+  "notificationMessage": {
+    "message": "Pop-up blocked"
+  },
+  "NTF_allowOverlayOnce": {
+    "message": "Allow overlay once"
+  },
+  "NTF_allowOverlayOnce_min": {
+    "message": "Allow overlay"
+  },
+  "NTF_whitelistOverlay": {
+    "message": "Whitelist this overlay"
+  },
+  "NTF_whitelistOverlay_min": {
+    "message": "Whitelist"
+  },
+  "NTF_hideNotification": {
+    "message": "Hide this notification?"
+  },
+  "NTF_blockPrevSite": {
+    "message": "Popup Blocked on previous Site"
+  },
+  "NTF_shareUs": {
+    "message": "We like you too"
+  },
+  "NTF_shareUsSub": {
+    "message": "Don't you think it's time to tell your friends about us?"
+  },
+  "NTF_LinkCopied": {
+    "message": "Link Copied"
+  },
+  "NTF_ON_SITE": {
+    "message": "on"
+  },
+  "NTF_DSA_Yes": {
+    "message": "Hide for 30 days"
+  },
+  "NTF_DSA_No": {
+    "message": "Keep notifying me"
+  },
+  "NTF_Stars_1": {
+    "message": "I love popups, there's no other explanation"
+  },
+  "NTF_Stars_2": {
+    "message": "Your hard work means nothing to me"
+  },
+  "NTF_Stars_3": {
+    "message": "Meh.."
+  },
+  "NTF_Stars_4": {
+    "message": "It's ok"
+  },
+  "NTF_Stars_5": {
+    "message": "OMG, I love it!"
+  },
+  "NTF_QUICK_TIP": {
+    "message": "Poper Blocker Quick Tip"
+  },
+  "NTF_TIP_OVERLAY_MENU": {
+    "message": "You can also remove overlays by right clicking anywhere on the page and choosing “Remove Overlay”"
+  },
+  "NTF_DONT_SHOW_AGAIN_TT": {
+    "message": "Hide these notifications for the next 30 days"
+  },
+  "NTF_OVERLAY_INACTIVE_TITLE": {
+    "message": "Overlay can't be blocked"
+  },
+  "NTF_OVERLAY_INACTIVE_MESSAGE_CH": {
+    "message": "To enable overlay blocking, we need access to information on the websites you visit. Click 'Agree' to allow access to this information and for use according to our <a href='%s' target='_blank'>Privacy Policy.</a>"
+  },
+  "NTF_OVERLAY_INACTIVE_MESSAGE_FF": {
+    "message": "To enable overlay blocking, we need access to your visited URLs, IP address, operating system, and browser information. Click “Agree” to allow access to this information and for use according to our <a href='%s' target='_blank'>Privacy Policy.</a>"
+  },
+  "NTF_OVERLAY_UNAVAILABLE_MESSAGE": {
+    "message": "Overlay blocking isn't supported in Firefox private mode"
+  },
+  "NTF_OVERLAY_AGREE": {
+    "message": "Agree"
+  },
+  "notificationToggleLabel": {
+    "message": "Show an on-page notification when a popup is blocked."
+  },
+  "options": {
+    "message": "Options"
+  },
+  "popupsAllowed": {
+    "message": "Popups are allowed on this website."
+  },
+  "popupsBlocked": {
+    "message": "Popups are blocked on this website."
+  },
+  "rateLink": {
+    "message": "Rate us 5 stars"
+  },
+  "whitelistTip": {
+    "message": "To allow popups/popunders from a website, add it to this list:"
+  },
+  "whitelistTitle": {
+    "message": "Whitelisted Sites"
+  },
+  "websiteInWhitelistOverlayMessage": {
+    "message": "This website is whitelisted. No overlay detection made."
+  },
+  "autoDetectionButtonLabel": {
+    "message": "Yes, once"
+  },
+  "undoOnceButtonLabel": {
+    "message": "Undo once"
+  },
+  "blockAlwaysButtonLabel": {
+    "message": "Block always"
+  },
+  "overlayWasRemoved": {
+    "message": "Overlay removed"
+  },
+  "overlayWasBlocked": {
+    "message": "Overlay blocked"
+  },
+  "blacklistTip": {
+    "message": "Always block overlays on these sites:"
+  },
+  "blockDetectedOverlayLabel": {
+    "message": "Overlay was detected. Block it ?"
+  },
+  "notFoundOverlayLabel": {
+    "message": "An overlay wasn't found. Try auto detection?"
+  },
+  "notFoundAutoOverlayLabel": {
+    "message": "Overlay auto detection did not find any overlays"
+  },
+  "popupsBlockedLabel": {
+    "message": "X popups blocked"
+  },
+  "removeOnceLabel": {
+    "message": "Remove Once"
+  },
+  "removeAlwaysLabel": {
+    "message": "Remove indefinitely"
+  },
+  "ignoreLabel": {
+    "message": "Ignore"
+  },
+  "undoLabel": {
+    "message": "Retrieve this overlay"
+  },
+  "overlaySettingsTitle": {
+    "message": "Overlay Blocking Settings"
+  },
+  "overlaysEnableLabel": {
+    "message": "Enable overlay blocking "
+  },
+  "overlaysEnableMessage": {
+    "message": "Allows Poper Blocker access to information on the websites you visit, for use as stated in our"
+  },
+  "overlaysToggleLabel": {
+    "message": "Enable overlay blocking (sends anonymous data to Poper Blocker developers)"
+  },
+  "notificationSettingsTitle": {
+    "message": "Notification Settings"
+  },
+  "blockOverlayButtonLabel": {
+    "message": "Remove advanced popup (overlay)"
+  },
+  "hideDistractionManualy": {
+    "message": "Hide distractions manually"
+  },
+  "hideMoreDistraction": {
+    "message": "Hide more distractions on this site"
+  },
+  "distractionsFree": {
+    "message": "You are 100%\n distractions-free"
+  },
+  "unblockedDistractions": {
+    "message": "of distractions weren't blocked"
+  },
+  "blockAllDistructions": {
+    "message": "Block all distractions"
+  },
+  "hideElement": {
+    "message": "Hide element"
+  },
+  "infoModalTitle": {
+    "message": "Unblocked Distractions:"
+  },
+  "infoListTitle": {
+    "message": "6 blocked distraction"
+  },
+  "removeOverlayQLabel": {
+    "message": "Remove Overlay?"
+  },
+  "autoDetectionYesAlwaysButtonLabel": {
+    "message": "Yes, always"
+  },
+  "allowOverlaysButtonLabel": {
+    "message": "Allow Overlays"
+  },
+  "autoDetectionReportWebsiteButtonLabel": {
+    "message": "Report website"
+  },
+  "pauseButton": {
+    "message": "Pause"
+  },
+  "resumeButton": {
+    "message": "Start"
+  },
+  "paused": {
+    "message": "Poper Blocker is off"
+  },
+  "needRefresh": {
+    "message": "Refresh open tabs in order for this change to take effect."
+  },
+  "needRefreshGotIt": {
+    "message": "Ok, got it!"
+  },
+  "neverShowRefresh": {
+    "message": "Don't show again"
+  },
+  "overlayContextMenuToggleLabel": {
+    "message": "Enable \"Remove Overlay\" option in the context menu."
+  },
+  "disablePB": {
+    "message": "Disable Poper Blocker"
+  },
+  "enablePB": {
+    "message": "Enable Poper Blocker"
+  },
+  "allowOnceTip": {
+    "message": "Allows popup just this one time. The next time you see this popup we will ask you again."
+  },
+  "allowAlwaysTip": {
+    "message": "Always allow popups on this site. This site will be added to your whitelist."
+  },
+  "doNotShowTips": {
+    "message": "Don't show this notification when popups are blocked on this site."
+  },
+  "doNotShow": {
+    "message": "Don't Show"
+  },
+  "undoTips": {
+    "message": "You manually removed this overlay, click it to Show overlay"
+  },
+  "removeAlwaysText": {
+    "message": "Always remove this overlay and don't show this notification again. You can change this in the options page."
+  },
+  "PP_ExtName": {
+    "message": "Poper Blocker"
+  },
+  "PP_DidWeMiss": {
+    "message": "Did we miss one?"
+  },
+  "PP_Popup": {
+    "message": "Popup"
+  },
+  "PP_Overlay": {
+    "message": "Overlay"
+  },
+  "PP_PopupsFound": {
+    "message": "Popups blocked on"
+  },
+  "PP_PopupsFound_X1": {
+    "message": "Popup blocked on"
+  },
+  "PP_PopupsNotFound": {
+    "message": "So far no popups<br />were found on"
+  },
+  "PP_PopupsAllowed": {
+    "message": "Popups are allowed on"
+  },
+  "PP_WhiteListed": {
+    "message": "Whitelisted by Poper Blocker"
+  },
+  "PP_BlockAnyway": {
+    "message": "Block Anyway"
+  },
+  "PP_PopupsEssential": {
+    "message": "Popups are essential functionalities on this site."
+  },
+  "PP_SwitchedOff": {
+    "message": "is switched off."
+  },
+  "PP_NoPopupsBlocked": {
+    "message": "Looking good!"
+  },
+  "PP_XPopupsBlocked_1": {
+    "message": "No sweat!"
+  },
+  "PP_XPopupsBlocked_2": {
+    "message": "Nice!"
+  },
+  "PP_XPopupsBlocked_3": {
+    "message": "Easy!"
+  },
+  "PP_XPopupsBlocked_4": {
+    "message": "Piece of Cake!"
+  },
+  "PP_XPopupsBlocked_5": {
+    "message": "Easy Peasy!"
+  },
+  "PP_TooltipReportPop": {
+    "message": "Click here to update us on a missed popup in a new tab or window"
+  },
+  "PP_TooltipReportOver": {
+    "message": "Click here to remove an overlay that has popped up on the current page"
+  },
+  "PP_TooltipAllowPops": {
+    "message": "Click here to allow popups on this site. It will be added to your personal whitelist."
+  },
+  "PP_TooltipBlockPops": {
+    "message": "Click here to block popups on this site. It will be removed from your personal whitelist."
+  },
+  "PP_TooltipContributeButton": {
+    "message": "Click here to contribute to the PoperBlocker Team."
+  },
+  "PP_TooltipFeedbackButton": {
+    "message": "Click here to fill the form and help us to improve."
+  },
+  "PP_TooltipWhitelistBlockPops": {
+    "message": "We verified that popups are essential functionalities on this site, but feel free to block anyway."
+  },
+  "PP_Menu_Stats": {
+    "message": "Stats"
+  },
+  "PP_Menu_Options": {
+    "message": "Advanced settings"
+  },
+  "PP_Menu_Rate": {
+    "message": "Rate Us"
+  },
+  "PP_Menu_Share": {
+    "message": "Share"
+  },
+  "PP_Menu_Incognito": {
+    "message": "Incognito"
+  },
+  "PP_Stats_TotalTimeSaved": {
+    "message": "Total Time Saved"
+  },
+  "PP_Stats_TotalPopsBlocked": {
+    "message": "Total Popups Blocked"
+  },
+  "PP_Stats_Tabs": {
+    "message": "Tabs"
+  },
+  "PP_Stats_Windows": {
+    "message": "Windows"
+  },
+  "PP_Stats_Overlays": {
+    "message": "Overlays"
+  },
+  "PP_Stats_HowItWorks": {
+    "message": "See how it really works"
+  },
+  "PP_Share_Friends": {
+    "message": "Share Poper Blocker"
+  },
+  "PP_Share_TT_Facebook": {
+    "message": "Share on Facebook"
+  },
+  "PP_Share_TT_Twitter": {
+    "message": "Share on Twitter"
+  },
+  "PP_Share_TT_Copy": {
+    "message": "Copy Link"
+  },
+  "PP_Share_LinkCopied": {
+    "message": "Link Copied"
+  },
+  "PP_Rate": {
+    "message": "Rate Poper Blocker"
+  },
+  "PP_Incognito_Title": {
+    "message": "In order to enable Poper Blocker in Chrome's Incognito Mode, follow the next steps:"
+  },
+  "PP_Incognito_Step1": {
+    "message": "Go to"
+  },
+  "PP_Incognito_Step2": {
+    "message": "Find Poper Blocker and click \"Details\""
+  },
+  "PP_Incognito_Step3": {
+    "message": "Enable option next to \"Allow in incognito\""
+  },
+  "PP_Incognito_GotIt": {
+    "message": "OK, got it"
+  },
+  "TS_NoOverlay": {
+    "message": "No overlay was found"
+  },
+  "TS_Report": {
+    "message": "Report a Problem"
+  },
+  "TS_Rate_ShowLove": {
+    "message": "Show us some love."
+  },
+  "add": {
+    "message": "Add"
+  },
+  "rateus": {
+    "message": "Happy with Poper Blocker?"
+  },
+  "urlNotValid": {
+    "message": "Please enter a valid URL."
+  },
+  "urlExamplePlaceholder": {
+    "message": "Example: twitter.com"
+  },
+  "OP_urlExistsInDefaultList": {
+    "message": "This site is already %s by Poper Blocker"
+  },
+  "OP_urlExistsInList": {
+    "message": "This site is already in %s"
+  },
+  "OP_whitelist": {
+    "message": "Whitelist"
+  },
+  "OP_overlayList": {
+    "message": "always block overlay list"
+  },
+  "OP_whitelisted": {
+    "message": "whitelisted"
+  },
+  "urlExistsInList": {
+    "message": "This site is already in list"
+  },
+  "urlExistsInPB": {
+    "message": "This site is already whitelisted by Poper Blocker"
+  },
+  "siteExperience": {
+    "message": "Site Experience"
+  },
+  "pageExperience": { "message": "This page experience is" },
+  "badExperience": { "message": "Bad Experience" },
+  "fairExperience": { "message": "Fair Experience" },
+  "cleanExperience": { "message": "Clean Experience" },
+  "experienceTooltip": {
+    "message": "Popup rankings are determined by the overall popups and overlays that appear for Poperblcoker users on this page."
+  },
+  "SettingsExperince": { "message": "Enable Experience Settings" },
+  "SettingsExperincesub": { "message": "Enable and show user experience traffic light." },
+  "UserconsentExperinceHeader": { "message": "Allow Site Experience" },
+  "UserconsentExperinceBody": {
+    "message": "To enable this feature, we need access to information regarding the websites you visit. Click 'I Agree' to allow access to this information and for use according to our"
+  },
+  "PrivacyPolicy": { "message": "Privacy Policy" },
+  "BlockedElementsPromoJoin": { "message": "Join " },
+  "BlockedElementsPromoTitle": { "message": " other users enjoying no clutter on this site" },
+  "BlockedElementsPromoText": { "message": "You can now hide any element" },
+  "BlockedElementsPromoTryItNowBtn": { "message": "Try it now for free" },
+  "BlockedElementsStartHidingNow": { "message": "Start hiding now" },
+  "ThisIsHow": { "message": "This is how" },
+  "DontShowThisAgain": { "message": "Don’t show this again" },
+  "BlockElement": { "message": "Block Element" },
+  "BlockElementUsageText": {
+    "message": "Right click anywhere\nand select “Hide Element”"
+  },
+  "BlockElementUsageHint": {
+    "message": "Click on the elements you wish to hide"
+  },
+  "BlockElementLimitHint": {
+    "message": "You are out of free blocks. Click Undo or Finish to hide elements"
+  },
+  "GetProCTA": { "message": "Get Poper Blocker Pro" },
+  "ManageSubscription": { "message": "Manage Subscription" },
+
+  "OptionsPageModalHeader": {
+    "message": "In order to enable Poper Blocker in Chrome's Incognito Mode, follow the next steps:"
+  },
+  "OptionsPageModalItem1": { "message": "Find Poper Blocker and click \"Details\" " },
+  "OptionsPageModalItem2": { "message": "Enable option next to \"Allow in incognito\"." },
+  "Preferences": { "message": "Preferences" },
+  "OptionsPageIncognitoLbl": { "message": "Enable Incognito" },
+  "WhitelistSettingsTitle": { "message": "Whitelist sites" },
+  "BlockedElementSettingsTitle": { "message": "Blocked Element Sites" },
+  "CookieCrumblerSettingsTitle": { "message": "Cookie Crumbler" },
+  "CookieCrumblerSettingsText": { "message": "Enable hiding all the cookie message notifications" },
+  "InsitePushNotificationSettingsTitle": { "message": "Hide website notifications" },
+  "InsitePusherSettingsText": { "message": "Remove all in-site requests to allow push notifications" },
+  "ChromeExtentionLinkModal": { "message": "chrome://extensions" },
+  "WhitelistBtnLbl": { "message": "Remove from whitelist" },
+  "BlockedElementBtnLbl": { "message": "Unblock All Elements" },
+  "reportMessage": { "message": "We received your report\nand our team is looking into it." },
+  "onIt": { "message": "We’re on it" },
+  "receiveStatus": { "message": "Receive status update" },
+  "close": { "message": "Close" },
+  "thisSiteIs": { "message": "This site is" },
+  "thisSiteHas": { "message": "This site has" },
+  "clearOfPopups": { "message": "clear of pop-ups" },
+  "blockedPopups": { "message": "blocked pop-ups" },
+  "popupsEnabled": { "message": "pop-ups enabled" },
+  "enablePopupsLabel": { "message": "Enable site pop-ups" },
+  "restoreBlocking": { "message": "Restore blocking" },
+  "reportMissingPopupLabel": { "message": "Report a missed popup" },
+  "removeElement": { "message": "Remove any part of a website" },
+  "BlockedElementsFinishBtn": { "message": "Finish" },
+  "BlockedElementsUndoBtn": { "message": "Undo" },
+  "BlockedElementsUITitle": { "message": "Hide any Element" },
+  "BlockedElementsUISubtitle": { "message": "Click with the magic wand to" },
+  "BlockElementLimitNotification": { "message": "hidings left" },
+  "BlockElementLimitNotificationCTA": { "message": "Get unlimited hidings" },
+  "LimitNotificationMessage": { "message": "You have" },
+  "CookieCrumblerPromoTitle": { "message": "Where the cookies at?" },
+  "CookieCrumblerPromoSubtitle": { "message": "They’re not gone,\nbut the pesky message is" },
+  "CookieCrumblerCTA": { "message": "Remove cookie messages" },
+  "WelcomePageHeader": { "message": "Are we allowed to block popups for you?" },
+  "aPopupBlocked": { "message": "A pop-up has been" },
+  "blocked": { "message": "blocked" },
+  "allowThisPopup": { "message": "Allow this pop-up" },
+  "anOverlayBeen": { "message": "An overlay has been" },
+  "removed": { "message": "removed" },
+  "keepThisOverlay": { "message": "Retrieve this overlay" },
+  "moreDaysleft": { "message": "more days left" },
+  "moreDayleft": { "message": "more day left" },
+  "hideCookieMsgForGood": { "message": "Hide cookie messages for good" },
+  "hideCookiesForGoodSubTitle": { "message": "Wouldn’t that be just great?" },
+  "tryForFree": { "message": "Try it now for free" },
+  "hideThemNow": { "message": "Hide them now" },
+  "hideThemForGood": { "message": "Hide them for good" },
+  "startTrialTitle": { "message": "They’re all gone now" },
+  "startTrialSubTitle1": { "message": "No cookie messages for the next" },
+  "startTrialSubTitle2": { "message": "days" },
+  "hideForGood": { "message": "Hide them for good" },
+  "hideCookiesForGood": { "message": "Hide cookies for good" },
+  "youNowHave": { "message": "You now have" },
+  "cookiesAreBackTitle": { "message": "Cookie messages\nare back again" },
+  "cookiesAreBackSubTitle": { "message": "Why not get rid of them for good?" },
+  "cookiePromoBannerMessage": { "message": "Stop seeing\ncookie messages" },
+  "cookieTrailOverMessage": { "message": "Cookie crumbler trial\nis over" },
+  "cookiePromoBannerTrailMessageEnjoy": { "message": "Enjoy your free trial" },
+  "pathFacebookImg": { "message": "./assets/facebook.svg" },
+  "pathTwitterImg": { "message": "./assets/twitter.svg" },
+  "pathLinkImg": { "message": "./assets/link.svg" },
+  "FacebookAddsSettingsTitle": { "message": "Facebook ad hider" },
+  "FacebookAddsSettingsText": { "message": "Remove all sponsored facebook ads" },
+  "facebookFreeTrialTitle": { "message": "Feed all sponsored?" },
+  "facebookFreeTrialSubTitle1": { "message": "Free your feed from" },
+  "facebookFreeTrialSubTitle2": { "message": "sponsored ads" },
+  "adRemoved": { "message": "Ad removed" },
+  "stopSeeAdds": { "message": "Stop seeing ads" },
+  "startTrialFacebookTitle": { "message": "They're all gone now" },
+  "startTrialFacebookSubTitle": { "message": "You now have 3 ad-free days" },
+  "startTrialFacebookBtn": { "message": "Remove ads for good" },
+  "startTrialcookiesBtn": { "message": "Remove cookies for good" },
+  "removeAdsFromFeed": { "message": "Remove ads from feed" },
+  "facebookDayLeft": { "message": " ad-free day left" },
+  "facebookDaysLeft": { "message": " ad-free days left" },
+  "endTrialTitle1": { "message": " Sponsored ads are" },
+  "endTrialTitle2": { "message": " back on your feed" },
+  "endTrialSubTitle": { "message": "Why not get rid of them for good?" },
+  "removeForGood": { "message": "Remove for good" },
+  "startTrialFacebookSubTitleInfeed": { "message": "enjoy 3 ad-free days" },
+  "Dismiss": { "message": "Dismiss" },
+  "infoCookieTitle": { "message": "Cookie message" },
+  "infoNotificationTitle": { "message": "In-site notification" },
+  "infoSocialAdTitle": { "message": "Social ad" },
+  "infoAdsTitle": { "message": "Display ads" },
+  "popupTitle": { "message": "pop-ups & overlays" },
+  "rateUsModalTitle": { "message": "Rate us" },
+  "rateUsModalSubTitle1": { "message": "How is your experience with" },
+  "rateUsModalSubTitle2": { "message": "Poper Blocker so far?" },
+  "submit": { "message": "Submit" },
+  "addReview": { "message": "Add a review" },
+  "maybeLater": { "message": "Maybe later" },
+  "thankYou": { "message": "Thank you" },
+  "thankYouSubUp3": { "message": "We like you too!" },
+  "thankYouSub1Min3": { "message": "Please let us know how we" },
+  "thankYouSub2Min3": { "message": "can improve" },
+  "writeUs": { "message": "Write us" },
+  "contactUsTitleOptionsPage": { "message": "We're here to help." },
+  "contactUs": { "message": "Contact us" },
+  "contactUsSubTitleOptionsPage": { "message": " and we'll get back to you right away." },
+  "rateUsTitleOptionsPage": { "message": "Are you enjoying Poper Blocker?" },
+  "rateUsSubTitleOptionsPage": { "message": "Rate us in the " },
+  "chromeStore": { "message": "Chrome store" },
+  "elementIs": { "message": "element is" },
+  "elementsIs": { "message": "elements are" },
+  "successfullyHidenElements": { "message": "successfully hiden" },
+  "tryHidingManually": { "message": "Try hiding manually" },
+  "restoreAllElements": { "message": "Restore blocked elements" },
+  "couponPromoDescriptionStart": { "message": "Heres a " },
+  "couponPromoDescriptionHighlighted": { "message": " discount" },
+  "couponPromoDescriptionEnd": { "message": " to block even\nmore distractions. Apply the below\ncode at checkout." },
+  "couponPromoTitle": { "message": "Upgrade Unlocked!" },
+  "couponPromoButtonText": { "message": "Go pro now" },
+  "removeAdds": { "message": "Ready to remove all ads?" },
+  "addsGone": { "message": "All ads are gone now" },
+  "removeAdsForGood": { "message": "Remove ad for good" },
+  "yes": { "message": "Yes!" },
+  "muchMoreBlock": { "message": "much more to block" },
+  "firstPopupBannerSubTitle": { "message": "But there is still" },
+  "firstPopupBlock": { "message": "First pop-up blocked!" },
+  "removeAdsForAllGood": { "message": "Remove all feed ads for good!" },
+  "leftYourTrial": { "message": "left in your free trial" },
+  "inMeanwhile": { "message": "in the meanwhile, there have been" },
+  "inMeanwhileEndTrial": { "message": "During the free trial, we blocked more than" },
+  "endTrialTrialBtn": { "message": "Remove them for good" },
+  "distractionsEndTrial": { "message": "100+ distractions" },
+  "facebookadsBlocked": { "message": "ads blocked" },
+  "cookiesBlocked": { "message": "cookie messages blocked" },
+  "timeLbl": { "message": "free trial ends in: " },
+  "endTrialLblTimeStrong": { "message": "All ads are back!" },
+  "endTrialLblTime": { "message": "free trial has ended" },
+  "specialOffer": { "message": "Special offer! " },
+  "forUpgrade": { "message": "for upgrade" },
+  "day": { "message": "day" },
+  "days": { "message": "days" },
+  "removeCookieForAllGood": { "message": "Remove all\ncookie messages" },
+  "settingsPopup": { "message": "Block basic popups" },
+  "settingsOverlay": { "message": "Block advanced popups (overlays)" },
+  "settingsCookie": { "message": "Hide cookie requests" },
+  "settingsSocialAd": { "message": "Block ads on social media" },
+  "settingTrailLeftDays": { "message": "d left on Trial" },
+  "quickSettingsTitle": { "message": "All sites settings" },
+  "quickSettingsSubtitle": { "message": "Manage all sites blockings" },
+  "allSettings": { "message": "Advanced settings" },
+  "trialMessage": { "message": "Your 3-day trial\n starts... now!\n Enjoy 😁" },
+  "trialActionText": { "message": "Skip trial and go pro" },
+  "trialLeftDays": { "message": "%s days left on free trial" },
+  "trialLastDay": { "message": "Last day of free trial" },
+  "pbDisabledTitle": { "message": "Poper Blocker is Disabled" },
+  "pbDisabledSubTitle1": { "message": "Activate Poper Blocker to get rid of" },
+  "pbDisabledSubTitle2": { "message": "annoying popups and other distractions." },
+  "activateNow": { "message": "Activate Now!" },
+  "lblPinTaskbar": { "message": "Last step! Pin Poper Blocker\n for quick and easy access" },
+  "gotIt": { "message": "Got it!" },
+  "whatsNewHeadline": { "message": "New feature!\nBlock ads on any site" },
+  "whatsNewDescription": {
+    "message": "\nEnjoy browsing the internet by automatically hiding endless ads on any website (not including video ads)."
+  },
+  "whatsNewCta": { "message": "Let’s go!" },
+  "enabledPB": { "message": "Activate Poper Blocker" },
+  "settingsAdsBlocker": { "message": "Block ads on any site" },
+  "adsBlockerSettingsText": { "message": "Enable ad blocking" },
+  "adsBlockerTitle": { "message": "ads blocked" },
+  "specialOfferHeader": { "message": "How about a better deal?" },
+  "specialOfferSubHeader": { "message": "Enjoy the internet, without endless\n distracting ads and pop-ups." },
+  "specialOfferDiscountPrice": { "message": "1.59" },
+  "specialOfferDiscount": { "message": "Save 30%" },
+  "specialOfferPrice": { "message": "1.11" },
+  "monthPeriod": { "message": "/ mo" },
+  "remindMeLater": { "message": "Remind me later" },
+  "settingsTabTitle": { "message": "Settings" },
+  "statisticsTabTitle": { "message": "Statistics" },
+  "statisticsEmptyStateDescription": { "message": "This is where you’ll see\nour magic in numbers" },
+  "statisticsGoProButtonText": { "message": "Go Pro to block them all" },
+  "statisticsPremiumUserMessage": { "message": "Blocked distractions since you started\nusing Poper Blocker" },
+  "statisticsFreeUserMessage": {
+    "message": "Distractions could have been blocked\nsince you started using Poper Blocker"
+  },
+  "blockedDistractions": { "message": "%s Distractions blocked on this website" },
+  "statisticsCookieTitle": { "message": "Cookie requests" },
+  "statisticsAdsTitle": { "message": "Ads on websites" },
+  "statisticsTotalAdsTitle": { "message": "Ads" },
+  "statisticsTotalPopupsTitle": { "message": "Popups" },
+  "statisticsSocialAdsTitle": { "message": "Ads on social media" },
+  "statisticsTrackerTitle": { "message": "Online trackers" },
+  "statisticsPopupsTitle": { "message": "Popups (basic and advanced)" }
+}

@@ -1,0 +1,73 @@
+[
+    {
+        "recognition_strategy": "KEYWORD|LOGO", // strategy used to detect this sso button
+        "element_coordinates_x": 13.37, // coordinates and dimensions of the element
+        "element_coordinates_y": 13.37,
+        "element_width": 13.37,
+        "element_height": 13.37,
+        "element_validity": "HIGH|LOW", // only KEYWORD, high ^= "Sign in with Apple", low ^= "apple"
+        "element_inner_text": "Continue with Google", // text content of the element
+        "element_outer_html": "&lt;button&gt;....&lt;button&gt;", // html markup of the element
+        "element_tree": ["BUTTON", ..., "BODY", "HTML"], // list of tag names from the element to the root
+        "element_tree_markup": { // reference to file containing entire html markup of the element tree
+            "type": "reference",
+            "data": {
+                "bucket_name": "...",
+                "object_name": "...",
+                "extension": "json"
+            }
+        },
+        "login_page_url": "https://www.shop.com/login", // url of the login page that contains this sso button
+        "idp_name": "GOOGLE", // name of the idp
+        "idp_integration": "CUSTOM|SIGN_IN_WITH_APPLE|GOOGLE_ONE_TAP|FACEBOOK_LOGIN|...", // api or sdk integration
+        "idp_frame": "TOPMOST|POPUP|IFRAME", // frame in which the idp is called
+        "idp_login_request": "https://accounts.google.com/o/oauth2/v2/auth?client_id=...", // url of the login request
+        "idp_har": { // reference to HAR file containing http traffic of sso flow, see https://en.wikipedia.org/wiki/HAR_(file_format)
+            "type": "reference",
+            "data": {
+                "bucket_name": "...",
+                "object_name": "...",
+                "extension": "har"
+            }
+        },
+        "idp_screenshot": { // reference to screenshot of the idp
+            "type": "reference",
+            "data": {
+                "bucket_name": "...",
+                "object_name": "...",
+                "extension": "png"
+            }
+        },
+        "keyword_recognition_candidates": 3, // only KEYWORD, number of candidates that were found with the keywords
+        "keyword_recognition_hit_number_clicks": 1, // only KEYWORD, number of clicks on the candidates until sso was started
+        "keyword_recognition_hit_keyword": "Continue with Google", // only KEYWORD, keyword in the element that started sso
+        "keyword_recognition_duration_seconds": 13.37, // only KEYWORD, total time between page load and sso start
+        "keyword_recognition_locator_mode": "CSS|XPATH|ACCESSIBILITY", // only KEYWORD, locator mode that was used to find the element
+        "keyword_recognition_screenshot": { // only KEYWORD, reference to screenshot of the element that started sso
+            "type": "reference",
+            "data": {
+                "bucket_name": "...",
+                "object_name": "...",
+                "extension": "png"
+            }
+        },
+        "logo_recognition_candidates": 3, // only LOGO, number of candidates that were found with the logo
+        "logo_recognition_hit_number_clicks": 1, // only LOGO, number of clicks on the candidates until sso was started
+        "logo_recognition_duration_seconds": 13.37, // only LOGO, total time between page load and sso start
+        "logo_recognition_matching_score": 0.80, // only LOGO, score of the best matching logo (0-1)
+        "logo_recognition_pattern_matching_duration_seconds": 13.37, // only LOGO, time it took to match the logo on the screenshot
+        "logo_recognition_pattern_checking_duration_seconds": 13.37, // only LOGO, time it took to verify if clicking the logo starts sso
+        "logo_recognition_screenshot_scale": 1, // only LOGO, scale of the screenshot (0-1, 1 = not scaled)
+        "logo_recognition_template_filename": "apple.png", // only LOGO, filename of the logo template
+        "logo_recognition_template_scale": 0.12, // only LOGO, scale of the logo template (0-1, 1 = not scaled)
+        "logo_recognition_screenshot": { // only LOGO, reference to screenshot of the element that started sso
+            "type": "reference",
+            "data": {
+                "bucket_name": "...",
+                "object_name": "...",
+                "extension": "png"
+            }
+        }
+    },
+    ...
+]

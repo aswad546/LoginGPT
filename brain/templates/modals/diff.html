@@ -1,0 +1,57 @@
+<div class="modal modal-xl fade" tabindex="-1" id="diffModal">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Diff: Scan 1 vs. Scan 2</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="visualDiff"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#codeModal" id="showDataLandscapeDiffBtn"><i class="bi bi-braces"></i> JSON</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const diff = (data1, data2) => {
+        const differ = jsondiffpatch.create({
+            arrays: {
+                detectMove: true,
+                includeValueOnMove: false
+            },
+            objectHash: (obj, index) => {
+                return `$$index:${index}`
+            }
+        })
+        const delta = differ.diff(data1, data2)
+        console.log(delta)
+
+        // filter delta
+        const filterDelta = (obj) => {
+            for (const key in obj) {
+                if (Array.isArray(obj[key]) && obj[key][2] === 3) {
+                    delete obj[key] // filter move operation
+                } else if (typeof obj[key] === "object" && obj[key] !== null) {
+                    filterDelta(obj[key])
+                }
+            }
+        }
+        filterDelta(delta)
+
+        // format delta
+        jsondiffpatch.formatters.html.hideUnchanged()
+        visualDiff.innerHTML = jsondiffpatch.formatters.html.format(delta, data1)
+    }
+
+    diffModal.addEventListener("show.bs.modal", (e) => {
+        const modalBtn = e.relatedTarget
+        diff(data1, data2)
+    })
+
+    diffModal.addEventListener("hide.bs.modal", (e) => {
+    })
+</script>

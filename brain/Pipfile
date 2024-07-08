@@ -1,0 +1,29 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+pika = "*"
+flask = "*"
+minio = "*"
+requests = "*"
+pymongo = "*"
+nested-lookup = "*"
+tldextract = "*"
+numpy = "*"
+matplotlib = "*"
+flask-cors = "*"
+apiflask = "*"
+tranco = "*"
+gunicorn = {extras = ["eventlet"], version = "*"}
+flask-caching = "*"
+redis = "*"
+celery = "*"
+flask-pymongo = "*"
+haralyzer = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.10"

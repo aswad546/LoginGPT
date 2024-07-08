@@ -1,0 +1,53 @@
+<div class="modal fade" tabindex="-1" id="codeModal">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <pre><code></code></pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="copyCodeModalToClipboard()">
+                    <i class="bi bi-clipboard"></i> Copy to Clipboard
+                </button>
+                <button type="button" class="btn btn-secondary"></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    codeModal.addEventListener("show.bs.modal", (e) => {
+        const sourceBtn = e.relatedTarget
+        const closeOrBackBtn = codeModal.querySelector("button.btn-secondary")
+        if (sourceBtn.hasAttribute("data-bs-back_modal")) {
+            closeOrBackBtn.removeAttribute("data-bs-dismiss")
+            closeOrBackBtn.setAttribute("data-bs-toggle", "modal")
+            closeOrBackBtn.setAttribute("data-bs-target", sourceBtn.getAttribute("data-bs-back_modal"))
+            closeOrBackBtn.textContent = "Back"
+            if (sourceBtn.hasAttribute("data-bs-back_modal-props")) {
+                const props = JSON.parse(sourceBtn.getAttribute("data-bs-back_modal-props"))
+                for (const prop in props) {
+                    if (props[prop]) closeOrBackBtn.setAttribute(`data-bs-${prop}`, props[prop])
+                }
+            }
+        } else {
+            closeOrBackBtn.removeAttribute("data-bs-toggle")
+            closeOrBackBtn.removeAttribute("data-bs-target")
+            closeOrBackBtn.setAttribute("data-bs-dismiss", "modal")
+            closeOrBackBtn.textContent = "Close"
+        }
+    })
+
+    const fillCodeModal = (title, code) => {
+        codeModal.querySelector(".modal-title").textContent = title
+        codeModal.querySelector("code").textContent = code
+    }
+
+    const copyCodeModalToClipboard = () => {
+        const code = codeModal.querySelector("code").textContent
+        navigator.clipboard.writeText(code)
+    }
+</script>

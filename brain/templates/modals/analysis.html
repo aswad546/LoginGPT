@@ -1,0 +1,52 @@
+<div class="modal fade" id="analysisModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Analysis</h3>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>
+                    <button type="button" class="btn btn-primary" id="runAnalysisBtn">
+                        <i class="bi bi-play"></i> Run Analysis
+                    </button>
+                </p>
+                <form class="mb-2" id="analysisForm"></form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let analysis, analysisEditor
+
+    analysisModal.addEventListener("show.bs.modal", (e) => {
+        const sourceBtn = e.relatedTarget
+        analysis = sourceBtn.getAttribute("data-bs-analysis")
+        analysisForm.innerHTML = ""
+        analysisEditor = new JSONEditor(analysisForm, {
+            ...JSONEditorDefaultsEdit,
+            schema: {
+                "$ref": `${analysis}.json`,
+                "required": true
+            }
+        })
+    })
+
+    runAnalysisBtn.onclick = () => {
+        const errors = analysisEditor.validate()
+        if (errors.length) {
+            msg(`Failed to run ${analysis} analysis: ${errors.map(e => JSON.stringify(e)).join(", ")}`, color="danger")
+            return
+        }
+        const data = analysisEditor.getValue()
+        api.runAnalysis(analysis, data).then(_ => {
+            msg(`Running ${analysis} analysis`, color="success")
+        }).catch(e => {
+            msg(`Failed to run ${analysis} analysis: ${e["error"]}`, color="danger")
+        })
+    }
+</script>

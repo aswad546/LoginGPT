@@ -1,0 +1,253 @@
+<div class="modal fade" tabindex="-1" id="scansModal">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Scans</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <button class="btn btn-primary mb-2" id="scansRefreshBtn">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                    </button>
+                </div>
+                <div id="scansTable"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let scansGrid
+
+    scansModal.addEventListener("show.bs.modal", (e) => {
+        const modalButton = e.relatedTarget
+        scansGrid = createScansGrid({
+            analysis: modalButton.getAttribute("data-bs-analysis"),
+            showFilterStatsBtn: modalButton.hasAttribute("data-bs-showFilterStatsBtn"),
+            showAdminBtn: modalButton.hasAttribute("data-bs-showAdminBtn")
+        })
+        setTimeout(() => {scansGrid.render(scansTable)}, 250)
+    })
+
+    scansModal.addEventListener("hide.bs.modal", (e) => {
+        scansGrid.destroy()
+    })
+
+    scansRefreshBtn.onclick = () => {
+        scansGrid.forceRender()
+    }
+
+    const createScansGrid = ({
+        analysis = "landscape_analysis",
+        showFilterStatsBtn = false,
+        showAdminBtn = false
+    } = {}) => {
+
+        const columns = []
+        if (showFilterStatsBtn) columns.push({id: "filter stats"})
+        columns.push("Scan ID")
+        columns.push("Scan Date")
+        columns.push("Scan Type")
+        columns.push("Scan Target")
+        columns.push("Scan Tags")
+        columns.push("Response Received")
+        columns.push("More")
+        if (showAdminBtn) columns.push("Admin")
+
+        return new gridjs.Grid({
+            style: gridjsDefaultStyle,
+            pagination: gridjsDefaultServerPagination,
+            columns: columns,
+            search: {
+                server: {
+                    url: (prev, keyword) => `${prev}?search=${keyword}`
+                }
+            },
+            server: {
+                url: `/api/scans/${analysis}`,
+                total: (data) => data.data.total,
+                then: (data) => {
+                    return data.data.result.map(d => {
+
+                        // filter stats button
+                        const filterStatsCell = gridjs.h("div", {}, "")
+                        const filterStatsBtn = gridjs.h("button", {
+                            type: "button",
+                            className: "btn btn-outline-secondary btn-sm",
+                            title: "Filter stats with this scan",
+                            onClick: () => loadStats[analysis]({scanID: d._id})
+                        }, "")
+                        filterStatsBtn.props.children = [gridjs.h("i", {className: "bi bi-funnel-fill"})]
+                        filterStatsCell.props.children = [filterStatsBtn]
+
+                        // types
+                        const typesCell = gridjs.h("div", {}, "")
+                        const taskTypeBadge = gridjs.h("span", {className: "badge text-bg-primary me-2"}, d.task_type)
+                        const scanTypeBadge = gridjs.h("span", {className: "badge text-bg-primary me-2"}, d.first_scan_config.scan_type)
+                        typesCell.props.children = [taskTypeBadge, scanTypeBadge]
+
+                        // tags
+                        const tagsCell = gridjs.h("div", {}, "")
+                        tagsCell.props.children = []
+                        for (const tag of d.scan_tags) {
+                            const tagBadge = gridjs.h("span", {className: "badge text-bg-primary me-2"}, "")
+                            tagBadge.props.children = [
+                                gridjs.h("i", {className: `bi bi-tag me-1`}),
+                                gridjs.h("span", {}, tag)
+                            ]
+                            tagsCell.props.children.push(tagBadge)
+                        }
+
+                        // more buttons
+                        let moreCell = gridjs.h("div", {}, "")
+                        const scanID2ClipboardBtn = gridjs.h("button", {
+                            type: "button",
+                            className: "btn btn-outline-secondary btn-sm me-1 mb-1",
+                            title: `Copy scan id to clipboard`,
+                            onClick: () => navigator.clipboard.writeText(d._id)
+                        }, "")
+                        scanID2ClipboardBtn.props.children = [gridjs.h("i", {className: "bi bi-123"})]
+                        const showConfigBtn = gridjs.h("button", {
+                            type: "button",
+                            className: "btn btn-outline-secondary btn-sm me-1 mb-1",
+                            title: "Show scan configuration",
+                            "data-bs-toggle": "modal",
+                            "data-bs-target": "#formModal",
+                            onClick: () => {
+                                const taskType = d?.task_type
+                                const configName = `${taskType}_config`
+                                const firstConfigName = `first_${configName}`
+                                initFormModal(taskType, {configName: firstConfigName, scan_config: d?.first_scan_config})
+                            }
+                        }, "")
+                        showConfigBtn.props.children = [gridjs.h("i", {className: "bi bi-sliders"})]
+                        const jsonBtn = gridjs.h("button", {
+                            type: "button",
+                            className: "btn btn-outline-secondary btn-sm me-1 mb-1",
+                            title: "Show JSON",
+                            "data-bs-toggle": "modal",
+                            "data-bs-target": "#codeModal",
+                            onClick: () => fillCodeModal("JSON", JSON.stringify(d, null, 2))
+                        }, "")
+                        jsonBtn.props.children = [gridjs.h("i", {className: "bi bi-braces"})]
+                        moreCell.props.children = [scanID2ClipboardBtn, showConfigBtn, jsonBtn]
+
+                        // admin buttons
+                        let adminCell = gridjs.h("div", {}, "")
+                        const addScanTagBtn = gridjs.h("button", {
+                            type: "button",
+                            className: "btn btn-outline-warning btn-sm me-1 mb-1",
+                            title: "Add a tag to this scan",
+                            onClick: () => {
+                                const tagName = prompt("Enter the name of the tag to add")
+                                if (tagName) {
+                                    api.addScanTag(d._id, tagName).then((r) => {
+                                        alert(`Success: Tag '${tagName}' was added to the scan '${d._id}'`)
+                                    }).catch((e) => {
+                                        alert(`Error: ${e}`)
+                                    })
+                                }
+                            }
+                        }, "")
+                        addScanTagBtn.props.children = [gridjs.h("i", {className: "bi bi-tag"})]
+                        const deleteScanTagBtn = gridjs.h("button", {
+                            type: "button",
+                            className: "btn btn-outline-danger btn-sm me-1 mb-1",
+                            title: "Delete a tag from this scan",
+                            onClick: () => {
+                                const tagName = prompt("Enter the name of the tag to delete")
+                                if (tagName) {
+                                    api.deleteScanTag(d._id, tagName).then((r) => {
+                                        alert(`Success: Tag '${tagName}' was removed from the scan '${d._id}'`)
+                                    }).catch((e) => {
+                                        alert(`Error: ${e}`)
+                                    })
+                                }
+                            }
+                        }, "")
+                        deleteScanTagBtn.props.children = [gridjs.h("i", {className: "bi bi-tag"})]
+                        const rescanErrorsBtn = gridjs.h("button", {
+                            type: "button",
+                            className: "btn btn-outline-warning btn-sm me-1 mb-1",
+                            title: "Rescan all tasks from this scan that returned exceptions",
+                            onClick: () => {
+                                const check = prompt("Type 'yes' to rescan all tasks from this scan that returned exceptions")
+                                if (check === "yes") {
+                                    api.rescanErrors(analysis, d._id).then((r) => {
+                                        alert(`Success: Rescanning #${r['data'].length} tasks from the scan '${d._id}' that returned unexpected errors`)
+                                    }).catch((e) => {
+                                        alert(`Error: ${e}`)
+                                    })
+                                }
+                            }
+                        }, "")
+                        rescanErrorsBtn.props.children = [gridjs.h("i", {className: "bi bi-bug"})]
+                        const deleteDuplicatesBtn = gridjs.h("button", {
+                            type: "button",
+                            className: "btn btn-outline-danger btn-sm me-1 mb-1",
+                            title: "Delete duplicates in this scan",
+                            onClick: () => {
+                                const check = prompt("Type 'yes' to delete duplicates in this scan")
+                                if (check === "yes") {
+                                    api.deleteDuplicates(analysis, d._id).then((r) => {
+                                        alert(`Success: Duplicates in scan '${d._id}' were deleted`)
+                                    }).catch((e) => {
+                                        alert(`Error: ${e}`)
+                                    })
+                                }
+                            }
+                        }, "")
+                        deleteDuplicatesBtn.props.children = [gridjs.h("i", {className: "bi bi-trash"})]
+                        const deleteBtn = gridjs.h("button", {
+                            type: "button",
+                            className: "btn btn-outline-danger btn-sm me-1 mb-1",
+                            title: "Delete this scan",
+                            onClick: () => {
+                                const check = prompt("Type 'yes' to delete this scan")
+                                if (check === "yes") {
+                                    api.deleteScan(d._id).then((r) => {
+                                        alert(`Success: Scan '${d._id}' was deleted`)
+                                    }).catch((e) => {
+                                        alert(`Error: ${e}`)
+                                    })
+                                }
+                            }
+                        }, "")
+                        deleteBtn.props.children = [gridjs.h("i", {className: "bi bi-trash"})]
+                        adminCell.props.children = [addScanTagBtn, deleteScanTagBtn, rescanErrorsBtn, deleteDuplicatesBtn, deleteBtn]
+
+                        const cells = []
+                        if (showFilterStatsBtn) cells.push(filterStatsBtn)
+                        cells.push(d._id)
+                        cells.push(timestampToString(d.first_task_config?.task_timestamp_request_sent))
+                        cells.push(typesCell)
+                        if (d.first_scan_config?.domain) {
+                            cells.push(d.first_scan_config?.domain)
+                        } else if (d.first_scan_config?.list_id) {
+                            const startIndex = parseInt(d.first_scan_config?.offset).toLocaleString()
+                            const endIndex = parseInt(d.first_scan_config?.offset + d.first_scan_config?.limit - 1).toLocaleString()
+                            cells.push(`${d.first_scan_config?.list_id} (${startIndex} - ${endIndex})`)
+                        } else if (d.first_scan_config?.gt_id) {
+                            const startIndex = parseInt(d.first_scan_config?.offset).toLocaleString()
+                            const endIndex = parseInt(d.first_scan_config?.offset + d.first_scan_config?.limit - 1).toLocaleString()
+                            cells.push(`${d.first_scan_config?.gt_id} (${startIndex} - ${endIndex})`)
+                        } else if (d.first_scan_config?.reference_scan_id) {
+                            cells.push(d.first_scan_config?.reference_scan_id)
+                        } else {
+                            cells.push("")
+                        }
+                        cells.push(tagsCell)
+                        cells.push(d.response_received)
+                        cells.push(moreCell)
+                        if (showAdminBtn) cells.push(adminCell)
+                        return cells
+                    })
+                }
+            }
+        })
+    }
+</script>

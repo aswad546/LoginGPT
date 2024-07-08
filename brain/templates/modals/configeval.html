@@ -1,0 +1,128 @@
+<div class="modal modal-xl fade" tabindex="-1" id="configEvalModal">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Configurations</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col">
+                        <p>You can select multiple scans with their scan ids or scan tags. The generated line chart shows the time performance and detection accuracy of all selected scans. This allows the identification of scan configurations that have the best tradeoff between performance and accuracy.</p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <h5>Scan Tags</h5>
+                        <select class="form-control" id="tagNameSelection" multiple>
+                            <option value="example-tag">example-tag</option>
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <h5>Scan IDs</h5>
+                        <select class="form-control" id="scanIDSelection" multiple>
+                            <option value="12039983742374892">12039983742374892</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <canvas id="landscapeAnalysisConfigEvalChartContainer"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let landscapeAnalysisConfigEvalChart = undefined
+
+    const renderConfigEvalChart = () => {
+        const tagNames = [...tagNameSelection.options].filter(o => o.selected).map(o => o.value)
+        const scanIDs = [...scanIDSelection.options].filter(o => o.selected).map(o => o.value)
+
+        api.statsScansTimeVsIdps(tagNames, scanIDs).then((r) => {
+            if (landscapeAnalysisConfigEvalChart) landscapeAnalysisConfigEvalChart.destroy()
+            landscapeAnalysisConfigEvalChart = new Chart(landscapeAnalysisConfigEvalChartContainer, {
+                type: "bubble",
+                data: {
+                    datasets: [{
+                        label: "Dataset 1",
+                        data: Object.entries(r.data).map(([k, v]) => {
+                            return {
+                                x: v.total_idps,
+                                y: v.total_time,
+                                r: 5
+                            }
+                        }),
+                        backgroundColor: Object.values(COLORS)
+                    }]
+                },
+                options: {
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: "# Detected IdPs"
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: "Total Time (in seconds)"
+                            },
+                            reverse: true
+                        }
+                    }
+                }
+            })
+        }).catch((e) => {
+            console.error(e)
+        })
+    }
+
+    configEvalModal.addEventListener("show.bs.modal", (e) => {
+        const modalButton = e.relatedTarget
+
+        // fetch tags
+        api.tags().then(r => {
+            tagNameSelection.innerHTML = ""
+            for (const tag of r.data) {
+                const option = document.createElement("option")
+                option.value = tag["tag_name"]
+                option.innerText = tag["tag_name"]
+                tagNameSelection.appendChild(option)
+            }
+        }).catch(e => {
+            console.error(e)
+        })
+
+        // fetch scan ids
+        api.scanIDs("landscape_analysis").then(r => {
+            scanIDSelection.innerHTML = ""
+            for (const sid of r.data) {
+                const option = document.createElement("option")
+                option.value = sid
+                option.innerText = sid
+                scanIDSelection.appendChild(option)
+            }
+        }).catch(e => {
+            console.error(e)
+        })
+    })
+
+    configEvalModal.addEventListener("hide.bs.modal", (e) => {
+    })
+
+    tagNameSelection.addEventListener("change", () => {
+        renderConfigEvalChart()
+    })
+
+    scanIDSelection.addEventListener("change", () => {
+        renderConfigEvalChart()
+    })
+</script>

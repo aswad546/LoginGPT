@@ -1,0 +1,55 @@
+<div class="modal fade" id="formModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Form</h3>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form class="mb-2"></form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary"></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    formModal.addEventListener("show.bs.modal", (e) => {
+        const sourceBtn = e.relatedTarget
+        const closeOrBackBtn = formModal.querySelector("button.btn-secondary")
+        if (sourceBtn.hasAttribute("data-bs-back_modal")) {
+            closeOrBackBtn.removeAttribute("data-bs-dismiss")
+            closeOrBackBtn.setAttribute("data-bs-toggle", "modal")
+            closeOrBackBtn.setAttribute("data-bs-target", sourceBtn.getAttribute("data-bs-back_modal"))
+            closeOrBackBtn.textContent = "Back"
+            if (sourceBtn.hasAttribute("data-bs-back_modal-props")) {
+                const props = JSON.parse(sourceBtn.getAttribute("data-bs-back_modal-props"))
+                for (const prop in props) {
+                    if (props[prop]) closeOrBackBtn.setAttribute(`data-bs-${prop}`, props[prop])
+                }
+            }
+        } else {
+            closeOrBackBtn.removeAttribute("data-bs-toggle")
+            closeOrBackBtn.removeAttribute("data-bs-target")
+            closeOrBackBtn.setAttribute("data-bs-dismiss", "modal")
+            closeOrBackBtn.textContent = "Close"
+        }
+    })
+
+    const initFormModal = (formAnalysis, formValue) => {
+        formModal.querySelector("form").innerHTML = ""
+        const formEditor = new JSONEditor(formModal.querySelector("form"), {
+            ...JSONEditorDefaultsView,
+            schema: {
+                "$ref": `${formAnalysis}.json`,
+                "required": true
+            }
+        })
+        formEditor.on("ready", () => {
+            formEditor.setValue(formValue)
+            formEditor.disable()
+        })
+    }
+</script>

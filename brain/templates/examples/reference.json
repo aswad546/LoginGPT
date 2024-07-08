@@ -1,0 +1,8 @@
+{
+    "type": "reference", // this is a reference to a file in the object storage
+    "data": {
+        "bucket_name": "...", // name of the bucket ("folder") that contains the object ("file")
+        "object_name": "...", // name of the object that is contained in the bucket
+        "extension": "..." // file extension of the object (i.e., "png", "json", "har", ...)
+    }
+}

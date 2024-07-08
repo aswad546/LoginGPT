@@ -1,0 +1,86 @@
+<div class="modal modal-xl fade" tabindex="-1" id="tagsModal">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Tags</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <button class="btn btn-primary mb-2" id="tagsRefreshBtn">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                    </button>
+                </div>
+                <div id="tagsTable"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let tagsGrid = undefined
+
+    tagsModal.addEventListener("show.bs.modal", (e) => {
+        const modalButton = e.relatedTarget
+        tagsGrid = createTagsGrid({
+            analysis: modalButton.getAttribute("data-bs-analysis"),
+            showFilterStatsBtn: modalButton.hasAttribute("data-bs-showFilterStatsBtn")
+        })
+        setTimeout(() => tagsGrid.render(tagsTable), 250)
+    })
+
+    tagsModal.addEventListener("hide.bs.modal", () => {
+        tagsGrid.destroy()
+    })
+
+    tagsRefreshBtn.addEventListener("click", () => {
+        tagsGrid.forceRender()
+    })
+
+    const createTagsGrid = ({
+        analysis = "landscape_analysis",
+        showFilterStatsBtn = false
+    } = {}) => {
+
+        const columns = []
+        if (showFilterStatsBtn) columns.push({id: "filter stats"})
+        columns.push("Tag ID")
+        columns.push("Tag Name")
+        columns.push("Scan IDs")
+
+        return new gridjs.Grid({
+            style: gridjsDefaultStyle,
+            pagination: gridjsDefaultStaticPagination,
+            columns: columns,
+            server: {
+                url: `/api/tags`,
+                total: (data) => data.data.length,
+                then: (data) => {
+                    return data.data.map(d => {
+
+                        // filter stats button
+                        const filterStatsCell = gridjs.h("div", {}, "")
+                        const filterStatsBtn = gridjs.h("button", {
+                            type: "button",
+                            className: "btn btn-outline-secondary btn-sm",
+                            title: "Filter stats with this tag",
+                            onClick: () => loadStats[analysis]({tagName: d.tag_name})
+                        }, "")
+                        filterStatsBtn.props.children = [gridjs.h("i", {className: "bi bi-funnel-fill"})]
+                        filterStatsCell.props.children = [filterStatsBtn]
+
+                        const cells = []
+                        if (showFilterStatsBtn) cells.push(filterStatsBtn)
+                        cells.push(d.tag_id)
+                        cells.push(d.tag_name)
+                        cells.push(d.scan_ids.join(", "))
+                        return cells
+                    })
+                }
+            }
+        })
+    }
+</script>

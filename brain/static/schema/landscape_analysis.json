@@ -1,0 +1,982 @@
+{
+    "type": "object",
+    "title": "Landscape Analysis",
+    "properties": {
+        "scan_config": {
+            "type": "object",
+            "title": "Scan Configuration",
+            "oneOf": [
+                {
+                    "title": "Scan on a single domain",
+                    "properties": {
+                        "scan_id": {
+                            "type": "string",
+                            "required": true,
+                            "default": "",
+                            "options": {
+                                "hidden": true
+                            }
+                        },
+                        "scan_type": {
+                            "type": "string",
+                            "required": true,
+                            "enum": [
+                                "single"
+                            ],
+                            "options": {
+                                "hidden": true
+                            }
+                        },
+                        "domain": {
+                            "type": "string",
+                            "required": true,
+                            "title": "Domain"
+                        }
+                    }
+                },
+                {
+                    "title": "Scan on a range of domains",
+                    "properties": {
+                        "scan_id": {
+                            "type": "string",
+                            "required": true,
+                            "default": "",
+                            "options": {
+                                "hidden": true
+                            }
+                        },
+                        "scan_type": {
+                            "type": "string",
+                            "required": true,
+                            "enum": [
+                                "range"
+                            ],
+                            "options": {
+                                "hidden": true
+                            }
+                        },
+                        "list_id": {
+                            "type": "string",
+                            "required": true,
+                            "title": "List ID"
+                        },
+                        "offset": {
+                            "type": "integer",
+                            "required": true,
+                            "default": 1,
+                            "title": "Offset"
+                        },
+                        "limit": {
+                            "type": "integer",
+                            "required": true,
+                            "default": 100,
+                            "title": "Limit"
+                        }
+                    }
+                },
+                {
+                    "title": "Scan on a ground truth",
+                    "properties": {
+                        "scan_id": {
+                            "type": "string",
+                            "required": true,
+                            "default": "",
+                            "options": {
+                                "hidden": true
+                            }
+                        },
+                        "scan_type": {
+                            "type": "string",
+                            "required": true,
+                            "enum": [
+                                "ground-truth"
+                            ],
+                            "options": {
+                                "hidden": true
+                            }
+                        },
+                        "gt_id": {
+                            "type": "string",
+                            "required": true,
+                            "title": "Ground Truth ID"
+                        },
+                        "offset": {
+                            "type": "integer",
+                            "required": true,
+                            "default": 1,
+                            "title": "Offset"
+                        },
+                        "limit": {
+                            "type": "integer",
+                            "required": true,
+                            "default": 1000,
+                            "title": "Limit"
+                        }
+                    }
+                },
+                {
+                    "title": "Rescan login pages from prior scan or latest",
+                    "properties": {
+                        "scan_id": {
+                            "type": "string",
+                            "required": true,
+                            "default": "",
+                            "options": {
+                                "hidden": true
+                            }
+                        },
+                        "scan_type": {
+                            "type": "string",
+                            "required": true,
+                            "enum": [
+                                "rescan-login-pages"
+                            ],
+                            "options": {
+                                "hidden": true
+                            }
+                        },
+                        "reference_scan_id": {
+                            "type": "string",
+                            "required": true,
+                            "title": "Reference scan id or 'latest'"
+                        }
+                    }
+                }
+            ]
+        },
+        "landscape_analysis_config": {
+            "type": "object",
+            "title": "Landscape Analysis Configuration",
+            "properties": {
+                "browser_config": {
+                    "type": "object",
+                    "required": true,
+                    "title": "Browser Configuration",
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "required": true,
+                            "title": "Browser",
+                            "default": "CHROMIUM",
+                            "enum": [
+                                "CHROMIUM",
+                                "FIREFOX",
+                                "WEBKIT"
+                            ]
+                        },
+                        "width": {
+                            "type": "integer",
+                            "required": true,
+                            "default": 1920,
+                            "title": "Width of Browser Window"
+                        },
+                        "height": {
+                            "type": "integer",
+                            "required": true,
+                            "default": 1080,
+                            "title": "Height of Browser Window"
+                        },
+                        "user_agent": {
+                            "type": "string",
+                            "required": true,
+                            "default": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36",
+                            "title": "User Agent"
+                        },
+                        "extensions": {
+                            "type": "array",
+                            "required": true,
+                            "uniqueItems": true,
+                            "title": "Browser Extensions",
+                            "default": [
+                                "chromium/isdcac-v1.1.1"
+                            ],
+                            "items": {
+                                "type": "string",
+                                "enum": [
+                                    "chromium/adblock-v5.4.1",
+                                    "chromium/idcac-v3.4.6",
+                                    "chromium/isdcac-v1.1.1",
+                                    "chromium/ninja-cookie-v0.7.0",
+                                    "chromium/poper-blocker-v6.2.0",
+                                    "chromium/ublock-v1.48.8",
+                                    "chromium/consent-o-matic-v1.0.12",
+                                    "chromium/lastpass-v4.114.0"
+                                ]
+                            }
+                        },
+                        "scripts": {
+                            "type": "array",
+                            "required": true,
+                            "uniqueItems": true,
+                            "title": "Browser Scripts",
+                            "default": [],
+                            "items": {
+                                "type": "string",
+                                "enum": [
+                                    "text-invisible.js"
+                                ]
+                            }
+                        },
+                        "headless": {
+                            "type": "boolean",
+                            "required": true,
+                            "default": false,
+                            "title": "Headless Mode"
+                        },
+                        "locale": {
+                            "type": "string",
+                            "required": true,
+                            "default": "en-US",
+                            "title": "Locale"
+                        },
+                        "wait_for_networkidle": {
+                            "type": "boolean",
+                            "required": true,
+                            "default": true,
+                            "title": "Wait for networkidle after onload"
+                        },
+                        "timeout_default": {
+                            "type": "number",
+                            "required": true,
+                            "default": 30,
+                            "title": "Timeout for playwright (in seconds)"
+                        },
+                        "timeout_navigation": {
+                            "type": "number",
+                            "required": true,
+                            "default": 30,
+                            "title": "Timeout for navigations (in seconds)"
+                        },
+                        "timeout_networkidle": {
+                            "type": "number",
+                            "required": true,
+                            "default": 5,
+                            "title": "Timeout for networkidle (in seconds)"
+                        },
+                        "sleep_after_onload": {
+                            "type": "number",
+                            "required": true,
+                            "default": 0,
+                            "title": "Timeout to wait after onload (in seconds)"
+                        },
+                        "sleep_after_networkidle": {
+                            "type": "number",
+                            "required": true,
+                            "default": 2,
+                            "title": "Timeout to wait after networkidle (in seconds)"
+                        }
+                    }
+                },
+                "login_page_config": {
+                    "type": "object",
+                    "required": true,
+                    "title": "Login Page Configuration",
+                    "properties": {
+                        "login_page_strategy_scope": {
+                            "type": "array",
+                            "required": true,
+                            "title": "In-Scope Login Page Strategies",
+                            "default": [
+                                "PATHS",
+                                "CRAWLING",
+                                "METASEARCH",
+                                "SITEMAP",
+                                "HOMEPAGE"
+                            ],
+                            "items": {
+                                "type": "string",
+                                "enum": [
+                                    "PATHS",
+                                    "CRAWLING",
+                                    "METASEARCH",
+                                    "HOMEPAGE",
+                                    "SITEMAP",
+                                    "ROBOTS",
+                                    "MANUAL"
+                                ]
+                            }
+                        },
+                        "login_page_url_regexes": {
+                            "type": "array",
+                            "required": true,
+                            "title": "Prioritized Login Page URL Regexes",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "regex": {
+                                        "type": "string",
+                                        "required": true,
+                                        "title": "Regex"
+                                    },
+                                    "priority": {
+                                        "type": "integer",
+                                        "required": true,
+                                        "title": "Priority",
+                                        "minimum": 0,
+                                        "maximum": 100
+                                    }
+                                }
+                            },
+                            "default": [
+                                {
+                                    "regex": "/(show|users?|web|sso)*[_\\-\\s]*(log|sign)[_\\-\\s]*(in|up|on)(/.*|\\?.*|\\#.*|\\s*)$",
+                                    "priority": 99
+                                },
+                                {
+                                    "regex": "/(auth|authn|authenticate|authentication|auth(s|z)|authori(s|z)e|authori(s|z)ation)(/.*|\\?.*|\\#.*|\\s*)$",
+                                    "priority": 99
+                                },
+                                {
+                                    "regex": "/(sso|oauth|openid|identity)(/.*|\\?.*|\\#.*|\\s*)$",
+                                    "priority": 98
+                                },
+                                {
+                                    "regex": "/(accounts?|profiles?|users?)(/.*|\\?.*|\\#.*|\\s*)$",
+                                    "priority": 98
+                                },
+                                {
+                                    "regex": "/(register|registration)(/.*|\\?.*|\\#.*|\\s*)$",
+                                    "priority": 98
+                                },
+                                {
+                                    "regex": "/(manage|managing|anmelden|portal|dashboard)(/.*|\\?.*|\\#.*|\\s*)$",
+                                    "priority": 97
+                                },
+                                {
+                                    "regex": "/connect(ing|ion|ed)?(/.*|\\?.*|\\#.*|\\s*)$",
+                                    "priority": 97
+                                },
+                                {
+                                    "regex": "/(show|users?|web|sso)*[_\\-\\s]*(log|sign)[_\\-\\s]*(in|up|on)",
+                                    "priority": 89
+                                },
+                                {
+                                    "regex": "/(auth|authn|authenticate|authentication|auth(s|z)|authori(s|z)e|authori(s|z)ation)",
+                                    "priority": 89
+                                },
+                                {
+                                    "regex": "/(sso|oauth|openid|identity)",
+                                    "priority": 88
+                                },
+                                {
+                                    "regex": "/(accounts?|profiles?|users?)",
+                                    "priority": 88
+                                },
+                                {
+                                    "regex": "/(register|registration)",
+                                    "priority": 88
+                                },
+                                {
+                                    "regex": "/(manage|managing|anmelden|portal|dashboard)",
+                                    "priority": 87
+                                },
+                                {
+                                    "regex": "/connect(ing|ion|ed)?",
+                                    "priority": 87
+                                },
+                                {
+                                    "regex": "[^a-z](show|users?|web|sso)*[_\\-\\s]*(log|sign)[_\\-\\s]*(in|up|on)[^a-z]",
+                                    "priority": 79
+                                },
+                                {
+                                    "regex": "[^a-z](auth|authn|authenticate|authentication|auth(s|z)|authori(s|z)e|authori(s|z)ation)[^a-z]",
+                                    "priority": 79
+                                },
+                                {
+                                    "regex": "[^a-z](sso|oauth|openid|identity)[^a-z]",
+                                    "priority": 78
+                                },
+                                {
+                                    "regex": "[^a-z](accounts?|profiles?|users?)[^a-z]",
+                                    "priority": 78
+                                },
+                                {
+                                    "regex": "[^a-z](register|registration)[^a-z]",
+                                    "priority": 78
+                                },
+                                {
+                                    "regex": "[^a-z](manage|managing|anmelden|portal|dashboard)[^a-z]",
+                                    "priority": 77
+                                },
+                                {
+                                    "regex": "[^a-z]connect(ing|ion|ed)?[^a-z]",
+                                    "priority": 77
+                                }
+                            ]
+                        },
+                        "login_page_element_keywords": {
+                            "type": "array",
+                            "required": true,
+                            "title": "Login Element Keywords",
+                            "items": {
+                                "type": "string"
+                            },
+                            "default": [
+                                "login",
+                                "log in",
+                                "log-in",
+                                "log_in",
+                                "logon",
+                                "log on",
+                                "log-on",
+                                "log_on",
+                                "signin",
+                                "sign in",
+                                "sign-in",
+                                "sign_in",
+                                "signup",
+                                "sign up",
+                                "sign-up",
+                                "sign_up",
+                                "signon",
+                                "sign on",
+                                "sign-on",
+                                "sign_on",
+                                "register",
+                                "registration",
+                                "anmelden",
+                                "registrieren"
+                            ]
+                        },
+                        "manual_strategy_config": {
+                            "type": "object",
+                            "required": false,
+                            "title": "Manual Strategy Configuration",
+                            "properties": {
+                                "login_page_candidates": {
+                                    "type": "array",
+                                    "required": true,
+                                    "default": [],
+                                    "title": "Manually specified Login Page Candidates",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        "paths_strategy_config": {
+                            "type": "object",
+                            "required": false,
+                            "title": "Paths Strategy Configuration",
+                            "properties": {
+                                "paths": {
+                                    "type": "array",
+                                    "required": true,
+                                    "title": "Paths",
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "default": [
+                                        "/login",
+                                        "/log-in",
+                                        "/log_in",
+                                        "/signin",
+                                        "/sign-in",
+                                        "/sign_in",
+                                        "/account",
+                                        "/account/login",
+                                        "/account/log-in",
+                                        "/account/log_in",
+                                        "/account/signin",
+                                        "/account/sign-in",
+                                        "/account/sign_in",
+                                        "/accounts",
+                                        "/accounts/login",
+                                        "/accounts/signin",
+                                        "/profile",
+                                        "/profile/login",
+                                        "/profile/signin",
+                                        "/user/login",
+                                        "/user/signin",
+                                        "/users/login",
+                                        "/users/signin",
+                                        "/users/connect",
+                                        "/auth",
+                                        "/auth/login",
+                                        "/auth/signin",
+                                        "/m/login",
+                                        "/m/signin",
+                                        "/registration",
+                                        "/registration/login",
+                                        "/registration/signin",
+                                        "/.well-known/change-password"
+                                    ]
+                                },
+                                "subdomains": {
+                                    "type": "array",
+                                    "required": true,
+                                    "title": "Subdomains",
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "default": [
+                                        "login",
+                                        "signin",
+                                        "account",
+                                        "profile",
+                                        "auth"
+                                    ]
+                                }
+                            }
+                        },
+                        "crawling_strategy_config": {
+                            "type": "object",
+                            "required": false,
+                            "title": "Crawling Strategy Configuration",
+                            "properties": {
+                                "max_anchor_candidates": {
+                                    "type": "integer",
+                                    "required": true,
+                                    "title": "Maximum number of login page candidates for anchor hrefs",
+                                    "default": 1
+                                },
+                                "max_element_candidates": {
+                                    "type": "integer",
+                                    "required": true,
+                                    "title": "Maximum number of login page candidates for any elements",
+                                    "default": 1
+                                },
+                                "max_elements_to_click": {
+                                    "type": "integer",
+                                    "required": true,
+                                    "title": "Maximum number of elements to click",
+                                    "default": 10
+                                }
+                            }
+                        },
+                        "sitemap_strategy_config": {
+                            "type": "object",
+                            "required": false,
+                            "title": "Sitemap Strategy Configuration",
+                            "properties": {
+                                "max_candidates": {
+                                    "type": "integer",
+                                    "required": true,
+                                    "title": "Maximum number of login page candidates",
+                                    "default": 1
+                                },
+                                "max_recursion_level": {
+                                    "type": "integer",
+                                    "required": true,
+                                    "title": "Maximum recursion level of sitemaps",
+                                    "default": 0
+                                },
+                                "max_sitemap_size": {
+                                    "type": "integer",
+                                    "required": true,
+                                    "title": "Maximum size of sitemap (in bytes)",
+                                    "default": 50000000
+                                },
+                                "timeout_fetch_sitemap": {
+                                    "type": "number",
+                                    "required": true,
+                                    "title": "Timeout to fetch sitemap (in seconds)",
+                                    "default": 10
+                                }
+                            }
+                        },
+                        "robots_strategy_config": {
+                            "type": "object",
+                            "required": false,
+                            "title": "Robots Strategy Configuration",
+                            "properties": {
+                                "max_candidates": {
+                                    "type": "integer",
+                                    "required": true,
+                                    "title": "Maximum number of login page candidates",
+                                    "default": 1
+                                },
+                                "timeout_fetch_robots": {
+                                    "type": "number",
+                                    "required": true,
+                                    "title": "Timeout to fetch robots.txt (in seconds)",
+                                    "default": 10
+                                }
+                            }
+                        },
+                        "metasearch_strategy_config": {
+                            "type": "object",
+                            "required": false,
+                            "title": "Metasearch Strategy Configuration",
+                            "properties": {
+                                "search_term": {
+                                    "type": "string",
+                                    "required": true,
+                                    "default": "%s login",
+                                    "title": "Search Term"
+                                },
+                                "search_engines": {
+                                    "type": "array",
+                                    "required": true,
+                                    "uniqueItems": true,
+                                    "title": "Search Engines",
+                                    "default": [
+                                        "BING",
+                                        "BRAVE",
+                                        "DUCKDUCKGO",
+                                        "GOOGLE",
+                                        "MOJEEK",
+                                        "QWANT",
+                                        "STARTPAGE",
+                                        "WIBY",
+                                        "YAHOO",
+                                        "SEZNAM",
+                                        "GOO",
+                                        "NAVER",
+                                        "PETALSEARCH",
+                                        "YEP"
+                                    ],
+                                    "items": {
+                                        "type": "string",
+                                        "enum": [
+                                            "BING",
+                                            "BRAVE",
+                                            "DUCKDUCKGO",
+                                            "GOOGLE",
+                                            "MOJEEK",
+                                            "QWANT",
+                                            "STARTPAGE",
+                                            "WIBY",
+                                            "YAHOO",
+                                            "SEZNAM",
+                                            "GOO",
+                                            "NAVER",
+                                            "PETALSEARCH",
+                                            "YEP"
+                                        ]
+                                    }
+                                },
+                                "search_results_number": {
+                                    "type": "integer",
+                                    "required": true,
+                                    "default": 3,
+                                    "minimum": 1,
+                                    "maximum": 10,
+                                    "title": "Number of Search Results"
+                                }
+                            }
+                        }
+                    }
+                },
+                "idp_config": {
+                    "type": "object",
+                    "required": true,
+                    "title": "IdP Configuration",
+                    "properties": {
+                        "idp_scope": {
+                            "type": "array",
+                            "required": true,
+                            "uniqueItems": true,
+                            "title": "In-Scope IdPs",
+                            "default": [
+                                "APPLE",
+                                "FACEBOOK",
+                                "GOOGLE",
+                                "TWITTER_1.0",
+                                "LINKEDIN",
+                                "MICROSOFT",
+                                "BAIDU",
+                                "GITHUB",
+                                "QQ",
+                                "SINA_WEIBO",
+                                "WECHAT"
+                            ],
+                            "items": {
+                                "type": "string",
+                                "enum": [
+                                    "APPLE",
+                                    "FACEBOOK",
+                                    "GOOGLE",
+                                    "TWITTER_1.0",
+                                    "LINKEDIN",
+                                    "MICROSOFT",
+                                    "BAIDU",
+                                    "GITHUB",
+                                    "QQ",
+                                    "SINA_WEIBO",
+                                    "WECHAT"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "recognition_strategy_config": {
+                    "type": "object",
+                    "required": true,
+                    "title": "Recognition Strategy Configuration",
+                    "properties": {
+                        "recognition_strategy_scope": {
+                            "type": "array",
+                            "required": true,
+                            "default": [
+                                "KEYWORD-CSS",
+                                "LOGO",
+                                "REQUEST",
+                                "NAVIGATOR_CREDENTIALS",
+                                "LASTPASS_ICON",
+                                "METADATA"
+                            ],
+                            "title": "In-Scope Recognition Strategies",
+                            "items": {
+                                "type": "string",
+                                "enum": [
+                                    "KEYWORD-CSS",
+                                    "KEYWORD-XPATH",
+                                    "KEYWORD-ACCESSIBILITY",
+                                    "KEYWORD-ACCESSIBILITYSAAT",
+                                    "LOGO",
+                                    "REQUEST",
+                                    "NAVIGATOR_CREDENTIALS",
+                                    "LASTPASS_ICON",
+                                    "METADATA"
+                                ]
+                            }
+                        },
+                        "recognition_mode": {
+                            "type": "string",
+                            "required": true,
+                            "title": "Recognition Mode",
+                            "default": "FAST",
+                            "enum": [
+                                "FAST",
+                                "NORMAL",
+                                "EXTENSIVE"
+                            ]
+                        }
+                    }
+                },
+                "keyword_recognition_config": {
+                    "type": "object",
+                    "required": true,
+                    "title": "Keyword Recognition Configuration",
+                    "properties": {
+                        "keywords": {
+                            "type": "array",
+                            "required": true,
+                            "uniqueItems": true,
+                            "title": "Keywords",
+                            "items": {
+                                "type": "string"
+                            },
+                            "default": [
+                                "login with %s",
+                                "log in with %s",
+                                "logon with %s",
+                                "log on with %s",
+                                "signin with %s",
+                                "sign in with %s",
+                                "signup with %s",
+                                "sign up with %s",
+                                "signon with %s",
+                                "sign on with %s",
+                                "continue with %s",
+                                "connect with %s",
+                                "login using %s",
+                                "log in using %s",
+                                "logon using %s",
+                                "log on using %s",
+                                "signin using %s",
+                                "sign in using %s",
+                                "signup using %s",
+                                "sign up using %s",
+                                "signon using %s",
+                                "sign on using %s",
+                                "continue using %s",
+                                "connect using %s",
+                                "use %s",
+                                "mit %s anmelden",
+                                "mit %s einloggen",
+                                "mit %s registrieren",
+                                "mit %s fortfahren",
+                                "mit %s fortsetzen",
+                                "mit %s verbinden",
+                                "%s verwenden zum anmelden",
+                                "%s verwenden zum einloggen",
+                                "%s verwenden zum registrieren",
+                                "%s verwenden zum fortfahren",
+                                "%s verwenden zum verbinden",
+                                "%s verwenden",
+                                "weiter mit %s",
+                                "anmelden mit %s",
+                                "über %s fortfahren",
+                                "masuk dengan %s",
+                                "entrar com %s",
+                                "continuar com o %s",
+                                "daftar/masuk lewat %s",
+                                "使用 %s 登录"
+                            ]
+                        },
+                        "xpath": {
+                            "type": "array",
+                            "required": true,
+                            "uniqueItems": true,
+                            "title": "XPath",
+                            "default": [
+                                "//*"
+                            ],
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "max_elements_to_click": {
+                            "type": "integer",
+                            "required": true,
+                            "title": "Maximum number of elements to click",
+                            "default": 3
+                        }
+                    }
+                },
+                "logo_recognition_config": {
+                    "type": "object",
+                    "required": true,
+                    "title": "Logo Recognition Configuration",
+                    "properties": {
+                        "logo_size": {
+                            "type": "string",
+                            "required": true,
+                            "title": "Logo Size",
+                            "default": "100x100",
+                            "enum": [
+                                "16x16",
+                                "100x100",
+                                "250x250"
+                            ]
+                        },
+                        "max_matching": {
+                            "type": "number",
+                            "required": true,
+                            "default": 0.9,
+                            "title": "Maximum Matching"
+                        },
+                        "upper_bound": {
+                            "type": "number",
+                            "required": true,
+                            "default": 0.8,
+                            "title": "Upper Bound"
+                        },
+                        "lower_bound": {
+                            "type": "number",
+                            "required": true,
+                            "default": 0.7,
+                            "title": "Lower Bound"
+                        },
+                        "scale_upper_bound": {
+                            "type": "number",
+                            "required": true,
+                            "default": 0.5,
+                            "title": "Scale Upper Bound"
+                        },
+                        "scale_lower_bound": {
+                            "type": "number",
+                            "required": true,
+                            "default": 0.12,
+                            "title": "Scale Lower Bound"
+                        },
+                        "scale_method": {
+                            "type": "string",
+                            "required": true,
+                            "title": "Scale Method",
+                            "default": "scale_template",
+                            "enum": [
+                                "scale_template",
+                                "scale_screenshot"
+                            ]
+                        },
+                        "scale_space": {
+                            "type": "string",
+                            "required": true,
+                            "title": "Intervals to scale",
+                            "default": "linspace",
+                            "enum": [
+                                "geomspace",
+                                "linspace"
+                            ]
+                        },
+                        "scale_order": {
+                            "type": "string",
+                            "required": true,
+                            "title": "Scale Order",
+                            "default": "descending",
+                            "enum": [
+                                "ascending",
+                                "descending"
+                            ]
+                        },
+                        "match_intensity": {
+                            "type": "number",
+                            "required": true,
+                            "default": 10,
+                            "title": "Match Intensity"
+                        },
+                        "match_algorithm": {
+                            "type": "integer",
+                            "required": true,
+                            "default": 5,
+                            "title": "Match Algorithm (1: TM_SQDIFF_NORMED, 3: TM_CCORR_NORMED, 5: TM_CCOEFF_NORMED)",
+                            "enum": [
+                                1,
+                                3,
+                                5
+                            ]
+                        },
+                        "max_elements_to_click": {
+                            "type": "integer",
+                            "required": true,
+                            "title": "Maximum number of elements to click",
+                            "default": 3
+                        }
+                    }
+                },
+                "artifacts_config": {
+                    "type": "object",
+                    "required": true,
+                    "title": "Artifacts Configuration",
+                    "properties": {
+                        "store_login_page_candidate_screenshot": {
+                            "type": "boolean",
+                            "required": true,
+                            "default": true,
+                            "title": "Store screenshot of login page candidate"
+                        },
+                        "store_sso_button_detection_screenshot": {
+                            "type": "boolean",
+                            "required": true,
+                            "default": true,
+                            "title": "Store screenshot of sso button detection"
+                        },
+                        "store_idp_screenshot": {
+                            "type": "boolean",
+                            "required": true,
+                            "default": true,
+                            "title": "Store screenshot of idp"
+                        },
+                        "store_idp_har": {
+                            "type": "boolean",
+                            "required": true,
+                            "default": true,
+                            "title": "Store HTTP traffic of IdP in HAR"
+                        },
+                        "store_login_page_analysis_har": {
+                            "type": "boolean",
+                            "required": true,
+                            "default": false,
+                            "title": "Store HTTP traffic of login page analysis in HAR"
+                        },
+                        "store_sitemap": {
+                            "type": "boolean",
+                            "required": true,
+                            "default": false,
+                            "title": "Store sitemap"
+                        },
+                        "store_robots": {
+                            "type": "boolean",
+                            "required": true,
+                            "default": false,
+                            "title": "Store robots.txt"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

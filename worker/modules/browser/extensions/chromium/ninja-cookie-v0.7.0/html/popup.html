@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<!--
+  Copyright (c) 2020-present Théo Goudout. All rights reserved.
+
+  This work is dual-licensed under Prorietary license and
+  GPL 3.0 (or any later version). You can choose between
+  one of them if you use this work.
+
+  For details please refer to LICENSE file.
+-->
+<html>
+  <head>
+    <title></title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  </head>
+  <body>
+    <div id="menu" class="container py-2">
+      <div id="header" class="bg-primary">
+        <div class="row">
+          <div id="settings" class="col">
+            <a class="light" title=""></a>
+          </div>
+          <div id="disable" class="col col-auto d-none">
+            <div class="btn-group border border-white rounded">
+              <button type="button" class="btn btn-primary border-0 dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              </button>
+              <div class="dropdown-menu dropdown-menu-right">
+                <a class="dropdown-item d-none premium" data-target="hostname" href="#"></a>
+                <a class="dropdown-item" data-target="duration" data-duration="30" href="#"></a>
+                <a class="dropdown-item premium" data-target="duration" data-duration="Infinity" href="#"></a>
+              </div>
+            </div>
+          </div>
+          <div id="enable" class="col col-auto d-none">
+            <button type="button" class="btn btn-primary border border-white">
+            </button>
+          </div>
+        </div>
+      </div>
+      <hr/>
+      <div id="status" class="row">
+        <div class="col col-auto">
+          <div class="sticker">
+            <div class="logo"></div>
+            <div class="tooltip"></div>
+          </div>
+        </div>
+        <div class="col">
+          <p>
+            <span class="header"></span>
+            <span class="desc" data-toggle="popover" data-html="true" data-placement="top"></span>
+          </p>
+        </div>
+      </div>
+      <div id="content" class="row">
+        <div class="col text-center">
+          <p class="font-weight-bold header">
+          </p>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col text-center mx-4">
+          <button id="report" class="btn btn-primary mb-1 w-100" action="report">
+          </button>
+          <button id="suggest" class="btn btn-outline-primary w-100" action="suggest">
+          </button>
+        </div>
+      </div>
+      <hr/>
+      <div id="stats-banners" class="row justify-content-between">
+        <div class="col col-auto">
+          <span class="font-weight-bold header"></span>
+        </div>
+        <div class="col text-right">
+          <span class="count"></span>
+        </div>
+      </div>
+      <div id="stats-time" class="row">
+        <div class="col col-auto">
+          <span class="font-weight-bold header"></span>
+          <span class="desc" data-toggle="popover" data-html="true" data-placement="top"></span>
+        </div>
+        <div class="col text-right">
+          <span class="count"></span>
+          <span class="unit"></span>
+        </div>
+      </div>
+      <hr/>
+      <div id="share" class="row">
+        <div class="col text-center mt-1 px-2">
+          <a class="btn btn-outline-secondary facebook" title="" href="#" target="_blank">Share</a>
+        </div>
+        <div class="col text-center mt-1 px-2">
+          <a class="btn btn-outline-secondary twitter" title="" href="#" target="_blank">Tweet</a>
+        </div>
+        <div class="col text-center mt-1 px-2">
+          <a class="btn btn-outline-secondary review" title="" href="#" target="_blank">Review</a>
+        </div>
+      </div>
+      <hr/>
+      <div id="footer" class="bg-primary">
+        <div id="subscription" class="row my-2">
+          <div class="col text-center">
+            <a class="btn btn-primary border border-white" href="#" target="_blank" role="button"></a>
+            <small id="subscription-subtitle" class="d-block m-1 text-white"></small>
+          </div>
+        </div>
+        <div id="social" class="row">
+          <div class="col"></div>
+          <div class="col col-auto text-center">
+            <small class="text-white header"></small>
+            <a class="website light" title="" href="#" target="_blank"></a>
+            <a class="facebook light" title="" href="#" target="_blank"></a>
+            <a class="twitter light" title="" href="#" target="_blank"></a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="/popup.js"></script>
+  </body>
+</html>
