@@ -13,7 +13,7 @@ from modules.loginpagedetection.paths import Paths
 from modules.loginpagedetection.sitemap import Sitemap
 from modules.loginpagedetection.robots import Robots
 from modules.loginpagedetection.searxng import Searxng
-from modules.loginpagedetection.crawling import Crawling
+from modules.loginpagedetection.crawling_llm import Crawling
 from modules.detectors.sso_button import SSOButtonDetector
 from modules.detectors.request import RequestDetector
 from modules.detectors.lastpass_icon import LastpassIconDetector
@@ -70,27 +70,27 @@ class LandscapeAnalyzer:
             self.login_page_analysis()
             self.result["timings"]["login_page_analysis_duration_seconds"] = time.time() - t
 
-        # sso button detection
-        if self.result["resolved"]["reachable"]:
-            t = time.time()
-            SSOButtonDetector(self.config, self.result).start()
-            self.result["timings"]["sso_button_detection_duration_seconds"] = time.time() - t
+        # # sso button detection
+        # if self.result["resolved"]["reachable"]:
+        #     t = time.time()
+        #     SSOButtonDetector(self.config, self.result).start()
+        #     self.result["timings"]["sso_button_detection_duration_seconds"] = time.time() - t
 
-        # merge recognized_idps_passive into recognized_idps
-        self.result["recognized_idps"].extend(self.result["recognized_idps_passive"])
-        del self.result["recognized_idps_passive"]
+        # # merge recognized_idps_passive into recognized_idps
+        # self.result["recognized_idps"].extend(self.result["recognized_idps_passive"])
+        # del self.result["recognized_idps_passive"]
 
-        # sdk detection
-        if self.result["resolved"]["reachable"]:
-            t = time.time()
-            self.sdk_detection()
-            self.result["timings"]["sdk_detection_duration_seconds"] = time.time() - t
+        # # sdk detection
+        # if self.result["resolved"]["reachable"]:
+        #     t = time.time()
+        #     self.sdk_detection()
+        #     self.result["timings"]["sdk_detection_duration_seconds"] = time.time() - t
 
-        # metadata detection
-        if self.result["resolved"]["reachable"] and "METADATA" in self.recognition_strategy_scope:
-            t = time.time()
-            MetadataDetector(self.config, self.result).start()
-            self.result["timings"]["metadata_detection_duration_seconds"] = time.time() - t
+        # # metadata detection
+        # if self.result["resolved"]["reachable"] and "METADATA" in self.recognition_strategy_scope:
+        #     t = time.time()
+        #     MetadataDetector(self.config, self.result).start()
+        #     self.result["timings"]["metadata_detection_duration_seconds"] = time.time() - t
 
         self.result["timings"]["total_duration_seconds"] = time.time() - ttotal
 
@@ -174,10 +174,10 @@ class LandscapeAnalyzer:
                 self.result["timings"]["login_page_detection_paths_duration_seconds"] = time.time() - t
 
             # strategy: crawling (crawls on homepage)
-            if lps == "CRAWLING":
-                t = time.time()
-                Crawling(self.config, self.result).start()
-                self.result["timings"]["login_page_detection_crawling_duration_seconds"] = time.time() - t
+            # if lps == "CRAWLING":
+            #     t = time.time()
+            #     Crawling(self.config, self.result).start()
+            #     self.result["timings"]["login_page_detection_crawling_duration_seconds"] = time.time() - t
 
             # strategy: sitemap (sitemap.xml)
             if lps == "SITEMAP":
