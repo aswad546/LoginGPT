@@ -4,19 +4,31 @@ import torch
 from PIL import Image
 from transformers import MllamaForConditionalGeneration, AutoProcessor
 
+import logging
+
+logger = logging.getLogger(__name__)
+
+logger.info(f"Loading the classify_screenshots")
+
 # -----------------------
 # Model and Processor Setup
 # -----------------------
 model_id = "meta-llama/Llama-3.2-11B-Vision-Instruct"
 
+# Explicitly set the device to GPU 1
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
 model = MllamaForConditionalGeneration.from_pretrained(
     model_id,
-    torch_dtype="auto",
-    device_map="auto",  # Use all available GPUs automatically
+    torch_dtype=torch.float16,  # Use float16 for efficiency
+    device_map=None,           # Disable automatic device mapping
 )
+model.to(device)               # Move model to GPU 1
 model.tie_weights()
 
 processor = AutoProcessor.from_pretrained(model_id)
+
+logger.info(f"Successfully loaded model classify_screenshots")
 
 # -----------------------
 # Construct the Prompt
@@ -66,7 +78,7 @@ def analyze_image(image_path):
         input_text,
         add_special_tokens=False,
         return_tensors="pt",
-    ).to(model.device)
+    ).to(device)  # Send inputs to GPU 1
     
     # Generate output
     with torch.no_grad():
@@ -92,7 +104,6 @@ def process_images(input_dir, output_dir):
                 
                 # Run inference
                 response = analyze_image(image_path)
-                response = response[response.index('assistant'):]
                 print(f"Model Response: {response}")
                 
                 # Check if the response is 'Yes'

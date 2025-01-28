@@ -5,6 +5,11 @@ from PIL import Image
 import re
 import torch
 import time
+import logging
+
+logger = logging.getLogger(__name__)
+
+logger.info(f"Loading the crawler_backend")
 
 device = torch.device("cuda:0")  # Set to GPU 1 (indexed as cuda:0)
 # Load the main model and processor
@@ -12,6 +17,8 @@ model = Qwen2VLForConditionalGeneration.from_pretrained(
     "OS-Copilot/OS-Atlas-Base-7B", torch_dtype="auto", device_map={"": "cuda:0"}
 )
 processor = AutoProcessor.from_pretrained("OS-Copilot/OS-Atlas-Base-7B")
+
+logger.info(f"Successfully loaded model crawler_backend")
 
 # Load summarization model and tokenizer
 summarizer = pipeline("summarization", model="sshleifer/distilbart-cnn-12-6", device=0)  # Use GPU

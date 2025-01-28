@@ -150,12 +150,14 @@ services:
       - 1.1.1.1
       - 1.0.0.1
     volumes:
+      - /scratch/a8tariq/huggingface:/root/.cache/huggingface
       - type: tmpfs
         target: /tmpfs
     deploy:
       mode: replicated
       replicas: 2
     environment:
+      - HF_HOME=/root/.cache/huggingface
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - TMP_PATH=${TMP_PATH:-/tmpfs}
       # auth
@@ -261,7 +263,7 @@ services:
       - 9000
       - 9090
     ports:
-      - 0.0.0.0:9000:9000
+      - 0.0.0.0:9005:9000
       - 127.0.0.1:9090:9090
     labels:
       - "traefik.enable=true"
@@ -339,7 +341,7 @@ services:
     expose:
       - 8888
     ports:
-      - 127.0.0.1:8888:8888
+      - 127.0.0.1:53831:8888
     deploy:
       resources:
         limits:
