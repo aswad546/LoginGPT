@@ -16,7 +16,7 @@ logger.info(f"Loading the classify_screenshots")
 model_id = "meta-llama/Llama-3.2-11B-Vision-Instruct"
 
 # Explicitly set the device to GPU 1
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
 
 model = MllamaForConditionalGeneration.from_pretrained(
     model_id,
@@ -121,8 +121,8 @@ def process_images(input_dir, output_dir):
 # Main Script
 # -----------------------
 if __name__ == "__main__":
-    input_directory = "/u1/a8tariq/LoginCrawler/OS-ATLAS/screenshot_flows_new"   # Directory containing images in subdirectories
-    output_directory = "./output_images_new" # Directory to save images with login elements
+    input_directory = "/u1/a8tariq/LoginCrawler/OS-ATLAS/screenshot_flows"   # Directory containing images in subdirectories
+    output_directory = "./output_images" # Directory to save images with login elements
     
     print("Starting image processing...")
     process_images(input_directory, output_directory)

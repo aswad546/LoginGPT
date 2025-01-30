@@ -14,7 +14,7 @@ logger.info(f"Loading the crawler_backend")
 device = torch.device("cuda:0")  # Set to GPU 1 (indexed as cuda:0)
 # Load the main model and processor
 model = Qwen2VLForConditionalGeneration.from_pretrained(
-    "OS-Copilot/OS-Atlas-Base-7B", torch_dtype="auto", device_map={"": "cuda:0"}
+    "OS-Copilot/OS-Atlas-Base-7B", torch_dtype="auto", device_map={"": "cuda:0"}, cache_dir='/tmp/'
 )
 processor = AutoProcessor.from_pretrained("OS-Copilot/OS-Atlas-Base-7B")
 
@@ -25,7 +25,7 @@ summarizer = pipeline("summarization", model="sshleifer/distilbart-cnn-12-6", de
 attention_model = AutoModelForSeq2SeqLM.from_pretrained("facebook/bart-large-cnn").to(device)
 
 # Socket server setup
-HOST = 'localhost'
+HOST = '0.0.0.0'
 PORT = 5000
 
 # Dictionary to maintain conversation history for each client

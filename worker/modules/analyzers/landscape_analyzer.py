@@ -174,10 +174,10 @@ class LandscapeAnalyzer:
                 self.result["timings"]["login_page_detection_paths_duration_seconds"] = time.time() - t
 
             # strategy: crawling (crawls on homepage)
-            # if lps == "CRAWLING":
-            #     t = time.time()
-            #     Crawling(self.config, self.result).start()
-            #     self.result["timings"]["login_page_detection_crawling_duration_seconds"] = time.time() - t
+            if lps == "CRAWLING":
+                t = time.time()
+                Crawling(self.config, self.result).start()
+                self.result["timings"]["login_page_detection_crawling_duration_seconds"] = time.time() - t
 
             # strategy: sitemap (sitemap.xml)
             if lps == "SITEMAP":

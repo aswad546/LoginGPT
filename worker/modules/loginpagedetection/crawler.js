@@ -323,7 +323,7 @@ async function continueFlow(page, url, client, parentDir, flowIndex, screenshotI
 
 // Function to run the crawler
 async function runCrawler(url) {
-  const HOST = 'localhost';
+  const HOST = '172.17.0.1';
   const PORT = 5000;
   let client;
   let browser;
@@ -363,7 +363,7 @@ async function runCrawler(url) {
     });
 
     // Create a parent directory for the URL
-    const parentDir = path.join(__dirname, 'screenshot_flows_new', generateParentDirectoryName(url));
+    const parentDir = path.join(__dirname, '/screenshot_flows', generateParentDirectoryName(url));
     if (!fs.existsSync(parentDir)) {
       fs.mkdirSync(parentDir, { recursive: true });
     }
@@ -438,9 +438,9 @@ async function main() {
   }
   
 
-main();
-// runCrawler('https://www.bibank.com')
+// main();
+runCrawler('https://www.bibank.com')
 /**
  * www.ucbi.com
- * www.22ndstatebank.com
+ * www.22ndstatebank.com  
  */

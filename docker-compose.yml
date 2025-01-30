@@ -1,6 +1,28 @@
 version: "3"
 
 services:
+  # worker-backend:
+  #   build:
+  #     context: ./worker-backend  # Ensure this points to the correct directory
+  #     dockerfile: Dockerfile
+  #   restart: unless-stopped
+  #   networks:
+  #     - sso-monitor-network
+  #   expose:
+  #     - "5000"
+  #   ports:
+  #     - "5000:5000"
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: all
+  #             capabilities: [gpu]
+  #   environment:
+  #     - NVIDIA_VISIBLE_DEVICES=all
+  #     - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+  #     - CONDA_ENV=qwen_env
 
   traefik:
     image: traefik:v2.10
@@ -150,7 +172,8 @@ services:
       - 1.1.1.1
       - 1.0.0.1
     volumes:
-      - /scratch/a8tariq/huggingface:/root/.cache/huggingface
+      - "/tmp/Workspace/SSO-Monitor-mine/worker/modules/loginpagedetection/screenshot_flows:/app/modules/loginpagedetection/screenshot_flows"
+      - "/tmp/Workspace/SSO-Monitor-mine/worker/modules/loginpagedetection/output_images:/app/modules/loginpagedetection/output_images"
       - type: tmpfs
         target: /tmpfs
     deploy:
