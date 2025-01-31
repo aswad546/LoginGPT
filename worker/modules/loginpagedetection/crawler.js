@@ -420,7 +420,11 @@ function getUrlsFromFile(filePath) {
 
 async function main() {
     const args = process.argv.slice(2); // Get arguments passed to the script
-    const url = args[0]; // Take the first argument as the URL
+    let url = args[0]; // Take the first argument as the URL
+
+    if (!url.startsWith('http')) {
+      url = 'http://' + url
+    }
   
     if (url) {
       console.log(`Processing single URL from arguments: ${url}`);
@@ -438,8 +442,8 @@ async function main() {
   }
   
 
-// main();
-runCrawler('https://www.bibank.com')
+main();
+// runCrawler('www.cadencebank.com')
 /**
  * www.ucbi.com
  * www.22ndstatebank.com  

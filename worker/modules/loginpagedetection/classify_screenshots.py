@@ -1,11 +1,12 @@
 import os
 import shutil
 import torch
+import socket
 from PIL import Image
 from transformers import MllamaForConditionalGeneration, AutoProcessor
-
 import logging
 
+# Setup logging
 logger = logging.getLogger(__name__)
 
 logger.info(f"Loading the classify_screenshots")
@@ -23,7 +24,7 @@ model = MllamaForConditionalGeneration.from_pretrained(
     torch_dtype=torch.float16,  # Use float16 for efficiency
     device_map=None,           # Disable automatic device mapping
 )
-model.to(device)               # Move model to GPU 1
+model.to(device)  # Move model to GPU 1
 model.tie_weights()
 
 processor = AutoProcessor.from_pretrained(model_id)
@@ -31,30 +32,29 @@ processor = AutoProcessor.from_pretrained(model_id)
 logger.info(f"Successfully loaded model classify_screenshots")
 
 # -----------------------
-# Construct the Prompt
+# Utility Functions
 # -----------------------
 def construct_prompt():
     """Generate the instruction prompt for the model."""
     return """
-Analyze the provided image and determine if it contains input fields elements 
-that are associated with the login flow of a web page. Examples include:
+Analyze the provided image and determine if it contains input fields associated with the login flow of a web page. Specifically, look for:
 
-- Username or email input fields other examples could include forms with user id, a unique user id etc.
-- Password input fields
+Username or email input fields (e.g., forms with user ID, unique user ID, email address, or similar fields).
+Password input fields (fields intended for password entry).
+Follow this structured approach:
 
-Try to detect if there is a login form on the page that contains any of these elements ignore any irrelevant elements.
-For example input fields not related to the login form. Also answer yes only if there is at least one relevant visible input form field present.
+Identify all input fields in the image.
+Filter out irrelevant input fields, such as those related to search, comments, or non-login-related data collection.
+Determine if at least one relevant login-related input field is present and visible on the page.
+Explain your reasoning step by step (Chain of Thought) to justify your decision.
+Strictly output either "YES" or "NO" at the end, based on whether a login form containing at least one relevant input field is detected.
+Output Format (Important):
+After explaining your reasoning, respond strictly with either:
 
-If you detect such elements, respond strictly with 'Yes'.
-If no such elements are detected, respond strictly with 'No'.
-
-Output format (important): 
-Yes or No
+"YES" (if a relevant login input field is present and visible).
+"NO" (if no relevant login input field is found).
 """
 
-# -----------------------
-# Model Inference Function
-# -----------------------
 def analyze_image(image_path):
     """Run the LLaMA model on the image and return the response."""
     # Open the image
@@ -87,9 +87,6 @@ def analyze_image(image_path):
     
     return response
 
-# -----------------------
-# Directory Traversal and Saving
-# -----------------------
 def process_images(input_dir, output_dir):
     """Process all images in a directory structure and save only those with login elements."""
     if not os.path.exists(output_dir):
@@ -107,7 +104,7 @@ def process_images(input_dir, output_dir):
                 print(f"Model Response: {response}")
                 
                 # Check if the response is 'Yes'
-                if 'yes' in response.lower():
+                if 'YES' in response[:-5]:
                     # Create corresponding directory in output
                     relative_path = os.path.relpath(root, input_dir)
                     target_dir = os.path.join(output_dir, relative_path)
@@ -117,13 +114,58 @@ def process_images(input_dir, output_dir):
                     shutil.copy(image_path, os.path.join(target_dir, file))
                     print(f"Saved: {os.path.join(target_dir, file)}")
 
+def sanitize_url(url):
+    """Convert a URL like bradbank.com or www.bradbank.com to bradbank_com or www_bradbank_com."""
+    return url.replace(".", "_")
+
 # -----------------------
-# Main Script
+# Socket Server Setup
+# -----------------------
+HOST = "0.0.0.0"  # Listen on all available interfaces
+PORT = 5050        # Define a port for communication
+
+def start_socket_server():
+    """Start a socket server to accept URLs and process corresponding images."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
+        server_socket.bind((HOST, PORT))
+        server_socket.listen()
+        print(f"Socket server listening on {HOST}:{PORT}...")
+
+        while True:
+            conn, addr = server_socket.accept()
+            with conn:
+                print(f"Connected by {addr}")
+
+                # Receive URL from client
+                data = conn.recv(1024)
+                if not data:
+                    continue
+
+                # Decode and sanitize URL
+                url = data.decode("utf-8").strip()
+                sanitized_url = sanitize_url(url)
+
+                logger.info(f"Received URL: {url} -> Sanitized: {sanitized_url}")
+
+                # Define dynamic input and output directories
+                input_directory = f"/tmp/Workspace/SSO-Monitor-mine/worker/modules/loginpagedetection/screenshot_flows/{sanitized_url}"
+                output_directory = f"/tmp/Workspace/SSO-Monitor-mine/worker/modules/loginpagedetection/output_images/{sanitized_url}"
+
+                # Ensure directories exist
+                if not os.path.exists(input_directory):
+                    print(f"Input directory does not exist: {input_directory}")
+                    conn.sendall(f"Error: Input directory does not exist: {input_directory}".encode("utf-8"))
+                    continue
+
+                logger.info(f"Processing images in {input_directory}, saving results to {output_directory}...")
+                process_images(input_directory, output_directory)
+
+                # Notify client that processing is complete
+                conn.sendall(f"Processing completed for {sanitized_url}".encode("utf-8"))
+
+# -----------------------
+# Main Execution
 # -----------------------
 if __name__ == "__main__":
-    input_directory = "/u1/a8tariq/LoginCrawler/OS-ATLAS/screenshot_flows"   # Directory containing images in subdirectories
-    output_directory = "./output_images" # Directory to save images with login elements
-    
-    print("Starting image processing...")
-    process_images(input_directory, output_directory)
-    print("Processing completed.")
+    print("Starting socket server for image classification...")
+    start_socket_server()

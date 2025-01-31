@@ -73,6 +73,12 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
                 img_path = data.decode('utf-8').strip()
                 print(f"Received image path: {img_path}")
 
+                fixed_path = '../worker/' + '/'.join(img_path.split('/')[2:])
+
+                print(f'Fixed path {fixed_path}')
+
+                img_path = fixed_path
+
                 # Open the image
                 try:
                     img = Image.open(img_path)
