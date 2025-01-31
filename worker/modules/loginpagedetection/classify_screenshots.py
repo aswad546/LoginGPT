@@ -34,6 +34,29 @@ logger.info(f"Successfully loaded model classify_screenshots")
 # -----------------------
 # Utility Functions
 # -----------------------
+import re
+
+def extract_final_answer(response):
+    """
+    Extracts the final 'YES' or 'NO' from the assistant's response,
+    ensuring it does not pick up occurrences in the user's input.
+    """
+    # Split response into sections based on roles (User and Assistant)
+    sections = response.split("assistant")  # Splitting at the assistant's response section
+
+    if len(sections) < 2:
+        return None  # No assistant response found
+
+    assistant_response = sections[-1]  # Take the last assistant's response
+
+    # Search for the last standalone YES or NO in the assistant's response only
+    matches = re.findall(r'\b(YES|NO)\b', assistant_response.strip(), re.IGNORECASE)
+
+    if matches:
+        return matches[-1].upper()  # Return the last match in uppercase
+    return None  # Return None if no valid answer is found
+
+
 def construct_prompt():
     """Generate the instruction prompt for the model."""
     return """
@@ -104,7 +127,7 @@ def process_images(input_dir, output_dir):
                 print(f"Model Response: {response}")
                 
                 # Check if the response is 'Yes'
-                if 'YES' in response[:-5]:
+                if extract_final_answer(response) == 'YES':
                     # Create corresponding directory in output
                     relative_path = os.path.relpath(root, input_dir)
                     target_dir = os.path.join(output_dir, relative_path)

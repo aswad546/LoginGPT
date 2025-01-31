@@ -5,6 +5,7 @@ import time
 import json
 import os
 import re
+import traceback
 
 logger = logging.getLogger(__name__)
 
@@ -12,6 +13,7 @@ class Crawling:
     def __init__(self, config: dict, result: dict, domain):
         self.resolved_url = result["resolved"]["url"]
         self.domain = domain
+        self.result = result
         pass
 
     def classify_screenshots(self):
@@ -75,7 +77,7 @@ class Crawling:
         login_pages = {}
         for dir, _, files in os.walk(output_dir):
             if 'flow_' in dir:
-                _, _, url, flow = dir.split('/')
+                url, flow = dir.split('/')[-2:]
                 # Preprocess and collect all clicks upto a potential login page for each flow
                 actions_file_path = os.path.join(raw_results_dir, flow,  f'click_actions_{flow}.json')
                 actions, click_sequence = self.read_action_file(actions_file_path)
@@ -110,8 +112,9 @@ class Crawling:
             # Find minimal set of actions and unique URLs from Crawl
 
             logger.info('Finding valid urls')
-            output_dir = f'/app/modules/loginpagedetection/output_images/{self.domain.replace('.', '_')}'
-            raw_results_dir = f'/app/modules/loginpagedetection/screenshot_flows/{self.domain.replace('.', '_')}'
+            adjustedURL = self.domain.replace('.', '_')
+            output_dir = f'/app/modules/loginpagedetection/output_images/{adjustedURL}'
+            raw_results_dir = f'/app/modules/loginpagedetection/screenshot_flows/{adjustedURL}'
             login_pages = self.process_actions(output_dir, raw_results_dir)
 
             for url, actions in login_pages.items():
@@ -126,5 +129,5 @@ class Crawling:
             logger.error(f"stderr: {e.stderr}")
             raise Exception("")
         except Exception as e:
-            logger.warning(f'Error while crawling: {self.domain}')
-            logger.debug(e)
+            logger.warning(f'Error while crawling: {self.domain}', exc_info=True)
+            logger.warning(traceback.format_exc())
