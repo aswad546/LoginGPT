@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 def store_jsondata(objstore, bucket_name, object_name, jsondata, metadata={}):
-    logger.info(f"Storing jsondata in object store: {bucket_name}:{object_name} (metadata: {metadata})")
+    logger.info(f"LOOKIE HERE: Storing jsondata in object store: {bucket_name}:{object_name} (metadata: {metadata})")
     objstore.put_object(
         bucket_name,
         object_name,
