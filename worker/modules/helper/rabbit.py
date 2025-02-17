@@ -14,6 +14,83 @@ logger = logging.getLogger(__name__)
 
 class RabbitHelper:
 
+    def publish_login_candidates(self, candidates):
+        """
+        Publish the preprocessed login candidates to a new queue named 'login_candidates'.
+        'candidates' should be a Python list/dict that can be serialized to JSON.
+        """
+        new_queue = "login_candidates"
+        # Declare the new queue (durable)
+        self.channel.queue_declare(queue=new_queue, durable=True)
+        
+        # Serialize the candidates to a JSON string and encode it to bytes
+        message_body = json.dumps(candidates).encode('utf-8')
+        
+        # Publish the message to the new queue
+        self.channel.basic_publish(
+            exchange="",
+            routing_key=new_queue,
+            body=message_body,
+            properties=pika.BasicProperties(
+                delivery_mode=2  # Make message persistent
+            )
+        )
+        print(f"Published login candidates to queue '{new_queue}'")
+        logger.info(f"Published login candidates to queue '{new_queue}'")
+
+
+    def preprocess_candidates(input_json):
+        """
+        Given an input JSON object containing landscape_analysis_result with login_page_candidates,
+        this function deduplicates candidates by URL. If there are duplicates and one candidate has 
+        login_page_strategy 'CRAWLING', that candidate is kept.
+        
+        The output is a list of dicts with keys: id, url, actions, and scan_domain.
+        """
+        # Extract the list of candidates from the input JSON.
+        candidates = input_json.get("landscape_analysis_result", {}).get("login_page_candidates", [])
+        
+        # Extract the scan domain from scan_config (if present)
+        scan_domain = input_json.get("scan_config", {}).get("domain", "")
+        
+        # Group candidates by their URL.
+        grouped = {}
+        for candidate in candidates:
+            url = candidate.get("login_page_candidate", "").strip()
+            if not url:
+                continue  # Skip if no URL is provided.
+            grouped.setdefault(url, []).append(candidate)
+        
+        # Process each group and choose one candidate per URL.
+        output = []
+        id_counter = 1
+        for url, group in grouped.items():
+            # Try to find a candidate with login_page_strategy == 'CRAWLING' (case-insensitive)
+            chosen = None
+            for candidate in group:
+                if candidate.get("login_page_strategy", "").upper() == "CRAWLING":
+                    chosen = candidate
+                    break
+            # If no candidate is marked as CRAWLING, select the first candidate in the group.
+            if not chosen:
+                chosen = group[0]
+            
+            # Extract the 'login_page_actions' if it exists. Otherwise, set to None.
+            actions = chosen.get("login_page_actions", None)
+            
+            # Build the output dictionary including the scan domain.
+            output.append({
+                "id": id_counter,
+                "url": url,
+                "actions": actions,  # This will be None if not present.
+                "scan_domain": scan_domain
+            })
+            id_counter += 1
+
+        return output
+
+
+
 
     def __init__(
         self, admin_user: str, admin_password: str,
@@ -103,6 +180,14 @@ class RabbitHelper:
 
     def reply_data_and_ack_msg(self, channel, method, properties, data):
         logger.info(f"Reply data and acknowledge message received on queue: {self.queue}")
+        print(f'Sending data to reply_data: {data}')
+        logger.info(f'Sending data to reply_data: {data}')
+        # Preprocess candidates using the static method
+        candidates = RabbitHelper.preprocess_candidates(data)
+        print('Candidates:', candidates)
+        logger.info(f'Candidates:{candidates}')
+        # Publish them to the 'login_candidates' queue
+        self.publish_login_candidates(candidates)
         if properties.reply_to:
             while True:
                 success = self.reply_data(properties.reply_to, data)
@@ -123,5 +208,7 @@ class RabbitHelper:
         if r.status_code != 200:
             logger.warning(f"Invalid status code ({r.status_code}) while replying data to: {reply_to}")
             return False
+        print(f'Sending data back to brain: {data}')
+        logger.info(f'Sending data back to brain: {data}')
         logger.info(f"Successfully replied data to: {reply_to}")
         return True

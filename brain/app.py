@@ -13,6 +13,7 @@ from blueprints.bp_api import bp_api
 
 def create_app():
     app = APIFlask(__name__, title="SSO-Monitor")
+    app.config['DEBUG'] = True
 
     config_env(app)
     config_logging(app)
