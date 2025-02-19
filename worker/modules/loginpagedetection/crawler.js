@@ -315,6 +315,18 @@ async function continueFlow(page, url, client, parentDir, flowIndex, screenshotI
     ({ screenshotPath, currentUrl } = await takeScreenshot());
   }
 
+  // After the loop, if we've reached the click limit and haven't added a final entry, add one.
+  if (clickCount >= clickLimit) {
+    // This ensures that even if the last click didn't result in a valid element,
+    // we still record a final action with null clickPosition and elementHTML.
+    actions.push({
+      step: actions.length + 1,
+      clickPosition: null,
+      elementHTML: null,
+      screenshot: screenshotPath,
+      url: currentUrl,
+    });
+  }
   // Write actions to JSON file for this specific flow
   const outputJSONPath = path.join(flowDir, `click_actions_flow_${flowIndex}.json`);
   fs.writeFileSync(outputJSONPath, JSON.stringify(actions, null, 2));

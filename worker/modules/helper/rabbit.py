@@ -53,7 +53,7 @@ class RabbitHelper:
         'candidates' should be a Python list/dict that can be serialized to JSON.
         """
         # Construct the target URL for the API endpoint. Change the path as needed.
-        api_url = "http://host.docker.internal:4000/api/login_candidates"
+        api_url = "http://172.17.0.1:4050/api/login_candidates"
         
         # Serialize candidates to JSON.
         payload = json.dumps(candidates)
