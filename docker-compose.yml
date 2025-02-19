@@ -2,20 +2,20 @@ version: "3"
 
 services:
 
-  watcher:
-    build:
-      context: ./watcher  # Ensure this directory contains a Dockerfile
-      dockerfile: Dockerfile
-    networks:
-      - sso-monitor-network
-    depends_on:
-      mongodb:
-        condition: service_healthy
-    environment:
-      - MONGO_HOST=mongodb  # Use service name as hostname inside Docker
-      - MONGO_PORT=27017
-      - DATABASE_NAME=sso-monitor
-      - COLLECTION_NAME=landscape_analysis_tres
+  # watcher:
+  #   build:
+  #     context: ./watcher  # Ensure this directory contains a Dockerfile
+  #     dockerfile: Dockerfile
+  #   networks:
+  #     - sso-monitor-network
+  #   depends_on:
+  #     mongodb:
+  #       condition: service_healthy
+  #   environment:
+  #     - MONGO_HOST=mongodb  # Use service name as hostname inside Docker
+  #     - MONGO_PORT=27017
+  #     - DATABASE_NAME=sso-monitor
+  #     - COLLECTION_NAME=landscape_analysis_tres
 
   # worker-backend:
   #   build:
@@ -129,7 +129,7 @@ services:
     expose:
       - 8080
     ports:
-      - 127.0.0.1:8080:8080
+      - 127.0.0.1:8084:8080
     healthcheck:
       test: curl -f http://localhost:8080/api/ping
       interval: 10s
@@ -257,7 +257,6 @@ services:
       - 27017
     ports:
       - 127.0.0.1:27017:27017
-    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongo localhost:27017/test --quiet
       interval: 10s
@@ -277,7 +276,7 @@ services:
     expose:
       - 8081
     ports:
-      - 127.0.0.1:8081:8081
+      - 127.0.0.1:8085:8081
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.mongo-express.entrypoints=web,websecure"

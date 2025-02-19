@@ -112,9 +112,10 @@ def analyze_image(image_path):
 
 def process_images(input_dir, output_dir):
     """Process all images in a directory structure and save only those with login elements."""
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-    
+    if os.path.exists(output_dir):
+        shutil.rmtree(output_dir)
+    os.makedirs(output_dir)
+
     # Traverse the input directory
     for root, _, files in os.walk(input_dir):
         for file in files:

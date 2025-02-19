@@ -221,8 +221,6 @@ class RabbitHelper:
 
     def reply_data_and_ack_msg(self, channel, method, properties, data):
         logger.info(f"Reply data and acknowledge message received on queue: {self.queue}")
-        print(f'Sending data to reply_data: {data}')
-        logger.info(f'Sending data to reply_data: {data}')
         # Preprocess candidates using the static method
         candidates = RabbitHelper.preprocess_candidates(data)
         print('Candidates:', candidates)
@@ -249,7 +247,5 @@ class RabbitHelper:
         if r.status_code != 200:
             logger.warning(f"Invalid status code ({r.status_code}) while replying data to: {reply_to}")
             return False
-        print(f'Sending data back to brain: {data}')
-        logger.info(f'Sending data back to brain: {data}')
         logger.info(f"Successfully replied data to: {reply_to}")
         return True

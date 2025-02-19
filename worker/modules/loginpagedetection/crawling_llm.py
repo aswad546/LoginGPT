@@ -98,36 +98,51 @@ class Crawling:
 
         # Run the subprocess
         try:
-            result = subprocess.run(
-                args,  # Command and arguments
-                capture_output=True,  # Capture stdout and stderr
-                text=True,            # Decode output as text
-                check=True            # Raise an error if the command fails
+            proc = subprocess.Popen(
+                args,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,  # equivalent to universal_newlines=True
+                bufsize=1   # line-buffered
             )
+            
+            # Read stdout and stderr line by line in real time.
+            # Using iter() to continuously read lines until EOF.
+            for line in iter(proc.stdout.readline, ''):
+                logger.info(f"stdout: {line.strip()}")
+            for line in iter(proc.stderr.readline, ''):
+                logger.error(f"stderr: {line.strip()}")
+            
+            # Wait for the process to complete
+            proc.wait()
+            
+            if proc.returncode != 0:
+                raise subprocess.CalledProcessError(proc.returncode, args)
+            
             logger.info("Puppeteer script executed successfully")
-            logger.debug(f"Script output: {result.stdout}")
+            # Continue with further processing...
             logger.info("Classifying pages (begin)")
             self.classify_screenshots()
             logger.info("Classifying pages (end)")
-            # Find minimal set of actions and unique URLs from Crawl
-
+            
             logger.info('Finding valid urls')
             adjustedURL = self.domain.replace('.', '_')
             output_dir = f'/app/modules/loginpagedetection/output_images/{adjustedURL}'
             raw_results_dir = f'/app/modules/loginpagedetection/screenshot_flows/{adjustedURL}'
             login_pages = self.process_actions(output_dir, raw_results_dir)
-
+            
             for url, actions in login_pages.items():
                 self.result["login_page_candidates"].append({
                     'login_page_candidate': url,
                     'login_page_strategy': 'CRAWLING',
                     'login_page_actions': actions
-            })
+                })
             logger.info(f'Completed crawling url: {self.domain}')
+            
         except subprocess.CalledProcessError as e:
             logger.error("Error executing Puppeteer script")
-            logger.error(f"stderr: {e.stderr}")
-            raise Exception("")
+            logger.error(f"Return code: {e.returncode}")
+            raise
         except Exception as e:
-            logger.warning(f'Error while crawling: {self.domain}', exc_info=True)
-            logger.warning(traceback.format_exc())
+            logger.exception(f"Error while crawling: {self.domain}")
+            raise

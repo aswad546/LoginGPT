@@ -376,9 +376,13 @@ async function runCrawler(url) {
 
     // Create a parent directory for the URL
     const parentDir = path.join(__dirname, '/screenshot_flows', generateParentDirectoryName(url));
-    if (!fs.existsSync(parentDir)) {
-      fs.mkdirSync(parentDir, { recursive: true });
+    // Delete the directory if it exists
+    if (fs.existsSync(parentDir)) {
+      fs.rmSync(parentDir, { recursive: true, force: true });
     }
+
+    fs.mkdirSync(parentDir, { recursive: true });
+
 
     // Open a page to get the select options
     let page = await browser.newPage();
