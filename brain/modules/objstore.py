@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 def store_jsondata(objstore, bucket_name, object_name, jsondata, metadata={}):
-    logger.info(f"LOOKIE HERE: Storing jsondata in object store: {bucket_name}:{object_name} (metadata: {metadata})")
+    logger.info(f"Storing jsondata in object store: {bucket_name}:{object_name} (metadata: {metadata})")
     objstore.put_object(
         bucket_name,
         object_name,
@@ -55,8 +55,6 @@ def store_and_mutate_data(objstore, bucket_name, prefix, data, ext):
         input data: any json serializable data
         output data: {"type": "reference", "data": {"bucket_name": "<bucket_name>", "object_name": "/<prefix>/<uuid>.<ext>", "extension": "<ext>"}}
     """
-    logger.info(f"Storing data to database{objstore, bucket_name, prefix, data}")
-    print(f"Storing data to database{objstore, bucket_name, prefix, data}")
     uuid = uuid4()
     object_name = f"/{prefix}/{uuid}.{ext}"
     logger.info(f"Storing and mutating data of type {ext}: {bucket_name}:{object_name}")
