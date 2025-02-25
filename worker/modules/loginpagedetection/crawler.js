@@ -64,7 +64,7 @@ async function getSelectOptions(page) {
   return allSelectOptions;
 }
 
-// Function to generate all combinations of select options
+// (Optional) Original function to generate full combinations – not used in the new flow generation logic
 function generateOptionCombinations(optionsArray) {
   const combinations = [];
 
@@ -82,6 +82,29 @@ function generateOptionCombinations(optionsArray) {
 
   helper([], 0);
   return combinations;
+}
+
+// Helper: Deduplicate select options and build a mapping.
+// For example, if selectOptions is [A, B, A, C], then:
+//   - uniqueOptions becomes [A, B, C]
+//   - mapping becomes [[0, 2], [1], [3]]
+function deduplicateOptionsWithMapping(optionsArray) {
+  const uniqueOptions = [];
+  const mapping = [];
+  const seenKeys = new Map();
+
+  optionsArray.forEach((opts, idx) => {
+    const key = JSON.stringify(opts);
+    if (seenKeys.has(key)) {
+      const uniqueIndex = seenKeys.get(key);
+      mapping[uniqueIndex].push(idx);
+    } else {
+      seenKeys.set(key, uniqueOptions.length);
+      uniqueOptions.push(opts);
+      mapping.push([idx]);
+    }
+  });
+  return { uniqueOptions, mapping };
 }
 
 async function fillInputFields(page) {
@@ -105,12 +128,9 @@ async function fillInputFields(page) {
           input.type('aa', { delay: 100 }),
           new Promise((_, reject) => setTimeout(() => reject('Timeout'), 3000)),
         ]);
-        // console.log('Successfully filled input field');
-      } else {
-        // console.log('Skipping non-interactable input field.');
       }
     } catch (e) {
-      // console.log('Skipping input field due to timeout or other error:', e.message);
+      // Skipping non-interactable input field.
     }
   }
 
@@ -118,7 +138,6 @@ async function fillInputFields(page) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
   await sleep(Math.floor(Math.random() * 500) + 500); // Random delay after scrolling to top
-
   await sleep(1000);
 }
 
@@ -154,8 +173,9 @@ async function detectNavigationOrNewTab(page) {
   ]);
 }
 
-// Function to perform the flow for a given combination of select options
-async function performFlow(browser, url, parentDir, client, selectCombination, flowIndex, clickLimit) {
+// Function to perform the flow for a given combination of select options.
+// NOTE: We now pass an additional parameter "mapping" to apply the select values to duplicate selects.
+async function performFlow(browser, url, parentDir, client, selectCombination, mapping, flowIndex, clickLimit) {
   let page = await browser.newPage();
   await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64)');
   await page.setViewport({ width: 1280, height: 800 });
@@ -168,34 +188,47 @@ async function performFlow(browser, url, parentDir, client, selectCombination, f
     await page.goto(url, { timeout: 60000, waitUntil: 'load' });
     await sleep(Math.floor(Math.random() * 2000) + 1000);
 
-    // Apply the select options
+    // Retrieve select identifiers (id, name, or fallback index) for all select elements.
+    const selectIdentifiers = await page.evaluate(() => {
+      return Array.from(document.querySelectorAll('select')).map((el, i) => {
+        return { index: i, id: el.id || null, name: el.name || null };
+      });
+    });
+
+
+    // Apply the select options using the deduplicated mapping.
     const selectElements = await page.$$('select');
-    for (let i = 0; i < selectCombination.length; i++) {
-      const selectElement = selectElements[i];
-      const value = selectCombination[i];
+    for (let uniqueIndex = 0; uniqueIndex < mapping.length; uniqueIndex++) {
+      const value = selectCombination[uniqueIndex];
+      // For every duplicate select element that shares the same option set:
+      for (let origIdx of mapping[uniqueIndex]) {
+        const selectElement = selectElements[origIdx];
+        const selectedValues = await selectElement.select(value);
+        if (selectedValues.length === 0) {
+          console.error(`Value "${value}" not found in select element at index ${origIdx}.`);
+          return;
+        }
+        console.log(`Set select element at index ${origIdx} to value ${value}`);
 
-      // Use Puppeteer's select method
-      const selectedValues = await selectElement.select(value);
-      if (selectedValues.length === 0) {
-        console.error(`Value "${value}" not found in select element.`);
-        // Optionally handle the error, e.g., continue to the next flow
-        return;
-      }
-
-      console.log(`Set select index ${i} to value ${value}`);
-
-      // Wait for any potential navigation
-      const newPage = await detectNavigationOrNewTab(page);
-      if (newPage && newPage !== page) {
-        console.log('Navigation or new tab detected after selecting option.');
-        await page.close(); // Close the old page
-        page = newPage;
-        await page.bringToFront();
+        // Wait for any potential navigation
+        const newPage = await detectNavigationOrNewTab(page);
+        if (newPage && newPage !== page) {
+          console.log('Navigation or new tab detected after selecting option.');
+          await page.close();
+          page = newPage;
+          await page.bringToFront();
+        }
       }
     }
+    const fullSelectMapping = buildFullSelectMapping(mapping, selectCombination, selectIdentifiers);
+    const actions = [];
+    actions.push({
+      selectOptions: fullSelectMapping
+    });
 
-    // Proceed with the flow
-    await continueFlow(page, url, client, parentDir, flowIndex, 1, 0, clickLimit);
+
+    // Proceed with the rest of the flow.
+    await continueFlow(page, url, client, parentDir, flowIndex, 1, 0, clickLimit, selectCombination, actions);
   } catch (error) {
     console.error('Error during flow:', error);
   } finally {
@@ -205,9 +238,32 @@ async function performFlow(browser, url, parentDir, client, selectCombination, f
   }
 }
 
+function buildFullSelectMapping(mapping, uniqueCombination, selectIdentifiers) {
+  // Create an array with the same length as the total number of selects
+  const fullMapping = new Array(selectIdentifiers.length);
+  // For each unique group, assign the chosen value to every original select in that group.
+  mapping.forEach((origIndices, uniqueIndex) => {
+    origIndices.forEach((i) => {
+      fullMapping[i] = {
+        // Use the element's id if available; otherwise name; otherwise fallback to a string using its index.
+        identifier: selectIdentifiers[i].id || selectIdentifiers[i].name || `select_${i}`,
+        value: uniqueCombination[uniqueIndex]
+      };
+    });
+  });
+  return fullMapping;
+}
+
+
+const truncateString = (str, maxLength = 200) => {
+  if (str.length > maxLength) {
+    return str.slice(0, maxLength) + '...';
+  }
+  return str;
+};
+
 // Function to continue with actions after selecting options
-async function continueFlow(page, url, client, parentDir, flowIndex, screenshotIndex, clickCount, clickLimit) {
-  const actions = []; // To store the action history
+async function continueFlow(page, url, client, parentDir, flowIndex, screenshotIndex, clickCount, clickLimit, selectCombination, actions) {
   const flowDirName = generateFlowDirectoryName(flowIndex);
   const flowDir = path.join(parentDir, flowDirName);
 
@@ -225,7 +281,7 @@ async function continueFlow(page, url, client, parentDir, flowIndex, screenshotI
     screenshotIndex++;
     return { screenshotPath, currentUrl };
   };
-  console.log('Filled input fields now taking screenshot');
+  console.log('Filled input fields, now taking screenshot');
   let { screenshotPath, currentUrl } = await takeScreenshot();
   let previousElementHTML = null;
 
@@ -244,17 +300,17 @@ async function continueFlow(page, url, client, parentDir, flowIndex, screenshotI
     });
 
     const match = clickPosition.match(/Click Point:\s*(\d+),\s*(\d+)/);
-    if (clickPosition === 'No login button detected' || clickPosition == 'Error: No relevant element detected.') {
+    if (clickPosition === 'No login button detected' || clickPosition === 'Error: No relevant element detected.') {
       console.log('No login button detected');
       actions.push({
-        step: actions.length + 1,
+        step: actions.length,
         clickPosition: null,
         elementHTML: null,
         screenshot: screenshotPath,
         url: currentUrl,
       });
       break;
-    } else if (clickPosition == 'No popups found') {
+    } else if (clickPosition === 'No popups found') {
       console.log('No popups found');
       continue;
     } else if (!match) {
@@ -273,7 +329,7 @@ async function continueFlow(page, url, client, parentDir, flowIndex, screenshotI
       console.log(currentElementHTML);
       console.log('No element found or repeated element at the click position.');
       actions.push({
-        step: actions.length + 1,
+        step: actions.length,
         clickPosition: null,
         elementHTML: null,
         screenshot: screenshotPath,
@@ -285,9 +341,9 @@ async function continueFlow(page, url, client, parentDir, flowIndex, screenshotI
     previousElementHTML = currentElementHTML;
 
     actions.push({
-      step: actions.length + 1,
+      step: actions.length,
       clickPosition: { x, y },
-      elementHTML: currentElementHTML,
+      elementHTML: truncateString(currentElementHTML),
       screenshot: screenshotPath,
       url: currentUrl,
     });
@@ -304,7 +360,7 @@ async function continueFlow(page, url, client, parentDir, flowIndex, screenshotI
     const newPage = await detectNavigationOrNewTab(page);
     if (newPage && newPage !== page) {
       console.log('New tab or navigation detected after click, switching to new page');
-      await page.close(); // Close the old page
+      await page.close();
       page = newPage;
       await page.bringToFront();
       await page.setDefaultNavigationTimeout(60000);
@@ -317,10 +373,8 @@ async function continueFlow(page, url, client, parentDir, flowIndex, screenshotI
 
   // After the loop, if we've reached the click limit and haven't added a final entry, add one.
   if (clickCount >= clickLimit) {
-    // This ensures that even if the last click didn't result in a valid element,
-    // we still record a final action with null clickPosition and elementHTML.
     actions.push({
-      step: actions.length + 1,
+      step: actions.length,
       clickPosition: null,
       elementHTML: null,
       screenshot: screenshotPath,
@@ -380,9 +434,7 @@ async function runCrawler(url) {
     if (fs.existsSync(parentDir)) {
       fs.rmSync(parentDir, { recursive: true, force: true });
     }
-
     fs.mkdirSync(parentDir, { recursive: true });
-
 
     // Open a page to get the select options
     let page = await browser.newPage();
@@ -392,16 +444,30 @@ async function runCrawler(url) {
     const selectOptions = await getSelectOptions(page);
     await page.close();
 
-    // Generate all combinations of select options
-    const optionsArray = selectOptions;
-    const combinations = generateOptionCombinations(optionsArray);
-    console.log(`Generated ${combinations.length} combinations of select options.`);
+    // Deduplicate select options and build a mapping.
+    const { uniqueOptions, mapping } = deduplicateOptionsWithMapping(selectOptions);
+    // Define a default combination using the first option from each unique group.
+    const defaultCombination = uniqueOptions.map(options => options[0]);
 
-    // Iterate over each combination and perform the flow
-    for (let i = 0; i < combinations.length; i++) {
-      const selectCombination = combinations[i];
+    // Build flows: for each unique select group, try each option (if not the default)
+    // while keeping other groups at their default.
+    const flows = [];
+    uniqueOptions.forEach((options, groupIndex) => {
+      options.forEach(option => {
+        if (option !== defaultCombination[groupIndex]) {
+          const variation = [...defaultCombination];
+          variation[groupIndex] = option;
+          flows.push(variation);
+        }
+      });
+    });
+    console.log(`Generated ${flows.length} flows based on unique select options.`);
+
+    // Iterate over each flow and perform the flow
+    for (let i = 0; i < flows.length; i++) {
+      const selectCombination = flows[i];
       console.log(`Starting flow ${i} with select options: ${selectCombination}`);
-      await performFlow(browser, url, parentDir, client, selectCombination, i, 10);
+      await performFlow(browser, url, parentDir, client, selectCombination, mapping, i, 10);
     }
   } catch (error) {
     console.error('Error:', error);
@@ -435,28 +501,27 @@ function getUrlsFromFile(filePath) {
 }
 
 async function main() {
-    const args = process.argv.slice(2); // Get arguments passed to the script
-    let url = args[0]; // Take the first argument as the URL
+  const args = process.argv.slice(2); // Get arguments passed to the script
+  let url = args[0]; // Take the first argument as the URL
 
-    if (!url.startsWith('http')) {
-      url = 'http://' + url
-    }
-  
-    if (url) {
-      console.log(`Processing single URL from arguments: ${url}`);
-      try {
-        await runCrawler(url); // Call the crawler for the given URL
-      } catch (error) {
-        console.error(`Error processing URL ${url}: ${error.message}`);
-      }
-    } else {
-        console.log('Invalid URL passed in')
-    }
-  
-    console.log('Finished processing all URLs.');
-    process.exit(0);
+  if (!url.startsWith('http')) {
+    url = 'http://' + url;
   }
-  
+
+  if (url) {
+    console.log(`Processing single URL from arguments: ${url}`);
+    try {
+      await runCrawler(url); // Call the crawler for the given URL
+    } catch (error) {
+      console.error(`Error processing URL ${url}: ${error.message}`);
+    }
+  } else {
+    console.log('Invalid URL passed in');
+  }
+
+  console.log('Finished processing all URLs.');
+  process.exit(0);
+}
 
 main();
 // runCrawler('www.cadencebank.com')
