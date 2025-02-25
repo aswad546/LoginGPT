@@ -52,7 +52,7 @@ class Crawling:
         with open(actions_file_path, 'r') as act:
             actions = json.load(act)
             for action in actions:
-                if action['clickPosition'] is not None:
+                if 'clickPosition' in action and action['clickPosition'] is not None:
                     click_sequence.append((action['clickPosition']['x'], action['clickPosition']['y']))
         return actions, click_sequence
 
