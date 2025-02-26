@@ -49,6 +49,29 @@ async function overlayClickPosition(inputImagePath, outputImagePath, x, y) {
   }
 }
 
+async function classifyScreenshot(screenshotPath) {
+  return new Promise((resolve, reject) => {
+    const classificationHost = '127.0.0.1'; // adjust if necessary
+    const classificationPort = 5060; // port where your classification server is running
+
+    const socket = new net.Socket();
+    socket.connect(classificationPort, classificationHost, () => {
+      console.log(`Connected to classification server for ${screenshotPath}`);
+      // Send the screenshot path and then close the connection
+      socket.write(`${screenshotPath}\n`, () => {
+        socket.end();
+        resolve("Sent");
+      });
+    });
+    socket.on('error', (err) => {
+      console.error(`Socket error while classifying ${screenshotPath}: ${err}`);
+      reject(err);
+    });
+  });
+}
+
+
+
 // Function to get all select elements and their options
 async function getSelectOptions(page) {
   const selectElements = await page.$$('select');
@@ -283,6 +306,12 @@ async function continueFlow(page, url, client, parentDir, flowIndex, screenshotI
   };
   console.log('Filled input fields, now taking screenshot');
   let { screenshotPath, currentUrl } = await takeScreenshot();
+
+  classifyScreenshot(screenshotPath)
+    .then(() => console.log(`Classification sent for ${screenshotPath}`))
+    .catch(err => console.error(`Error sending screenshot ${screenshotPath}: ${err}`));
+
+
   let previousElementHTML = null;
 
   // Main loop to interact with elements based on server response
@@ -369,6 +398,11 @@ async function continueFlow(page, url, client, parentDir, flowIndex, screenshotI
     await fillInputFields(page);
     await sleep(4000);
     ({ screenshotPath, currentUrl } = await takeScreenshot());
+    classifyScreenshot(screenshotPath)
+    .then(() => console.log(`Classification sent for ${screenshotPath}`))
+    .catch(err => console.error(`Error sending screenshot ${screenshotPath}: ${err}`));
+
+
   }
 
   // After the loop, if we've reached the click limit and haven't added a final entry, add one.
