@@ -31,7 +31,7 @@ attention_model = AutoModelForSeq2SeqLM.from_pretrained("facebook/bart-large-cnn
 # We assume that vLLM Serve is running separately with a command like:
 # vllm serve "OS-Copilot/OS-Atlas-Base-7B" --max-model-len 4096 --gpu-memory-utilization 0.9 --api-key token-abc123
 # Adjust the URL and API key as needed.
-VLLM_SERVE_URL = "http://127.0.0.1:8000/v1/completions"  # Change if you run it on a different host/port
+VLLM_SERVE_URL = "http://127.0.0.1:8002/v1/completions"  # Change if you run it on a different host/port
 API_KEY = "token-abc123"
 
 # Socket server setup
@@ -81,9 +81,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
                 img_path = data.decode('utf-8').strip()
                 print(f"Received image path: {img_path}")
 
-                # fixed_path = '../worker/' + '/'.join(img_path.split('/')[2:])
-                # print(f'Fixed path {fixed_path}')
-                # img_path = fixed_path
+                fixed_path = '../worker/' + '/'.join(img_path.split('/')[2:])
+                print(f'Fixed path {fixed_path}')
+                img_path = fixed_path
 
                 # Open the image
                 try:

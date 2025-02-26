@@ -121,9 +121,9 @@ class Crawling:
             
             logger.info("Puppeteer script executed successfully")
             # Continue with further processing...
-            logger.info("Classifying pages (begin)")
-            self.classify_screenshots()
-            logger.info("Classifying pages (end)")
+            # logger.info("Classifying pages (begin)")
+            # self.classify_screenshots()
+            # logger.info("Classifying pages (end)")
             
             logger.info('Finding valid urls')
             adjustedURL = self.domain.replace('.', '_')
