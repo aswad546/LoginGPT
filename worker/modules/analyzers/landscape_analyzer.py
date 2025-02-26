@@ -1,6 +1,7 @@
 import logging
 import time
 import traceback
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from copy import deepcopy
 from urllib.parse import urlparse
 from playwright.sync_api import sync_playwright, Error, TimeoutError
@@ -61,7 +62,7 @@ class LandscapeAnalyzer:
         # login page detection
         if self.result["resolved"]["reachable"]:
             t = time.time()
-            self.login_page_detection()
+            self.login_page_detection_parallel()
             self.result["timings"]["login_page_detection_duration_seconds"] = time.time() - t
 
         # login page analysis
@@ -138,6 +139,91 @@ class LandscapeAnalyzer:
                 logger.info(f"Error while resolving domain {self.domain} with http")
                 logger.debug(e)
                 self.result["resolved"] = {"reachable": False, "error_msg": f"{e}", "error": traceback.format_exc()}
+
+    def _detect_homepage(self):
+        t = time.time()
+        lpc = self.result["resolved"]["url"]
+        self.result["login_page_candidates"].append({
+            "login_page_candidate": URLHelper.normalize(lpc),
+            "login_page_strategy": "HOMEPAGE",
+            "login_page_priority": URLHelper.prio_of_url(lpc, self.login_page_url_regexes)
+        })
+        duration = time.time() - t
+        return {"login_page_detection_homepage_duration_seconds": duration}
+
+    def _detect_manual(self):
+        t = time.time()
+        for lpc in self.config["login_page_config"]["manual_strategy_config"]["login_page_candidates"]:
+            self.result["login_page_candidates"].append({
+                "login_page_candidate": URLHelper.normalize(lpc),
+                "login_page_strategy": "MANUAL",
+                "login_page_priority": URLHelper.prio_of_url(lpc, self.login_page_url_regexes)
+            })
+        duration = time.time() - t
+        return {"login_page_detection_manual_duration_seconds": duration}
+
+    def _detect_crawling(self):
+        t = time.time()
+        Crawling(self.config, self.result, self.domain).start()
+        duration = time.time() - t
+        return {"login_page_detection_crawling_duration_seconds": duration}
+
+    def _detect_paths(self):
+        t = time.time()
+        Paths(self.config, self.result).start()
+        duration = time.time() - t
+        return {"login_page_detection_paths_duration_seconds": duration}
+
+    def _detect_sitemap(self):
+        t = time.time()
+        Sitemap(self.config, self.result).start()
+        duration = time.time() - t
+        return {"login_page_detection_sitemap_duration_seconds": duration}
+
+    def _detect_robots(self):
+        t = time.time()
+        Robots(self.config, self.result).start()
+        duration = time.time() - t
+        return {"login_page_detection_robots_duration_seconds": duration}
+
+    def _detect_metasearch(self):
+        t = time.time()
+        Searxng(self.config, self.result).start()
+        duration = time.time() - t
+        return {"login_page_detection_metasearch_duration_seconds": duration}
+
+    def login_page_detection_parallel(self):
+        logger.info(f"Starting parallel login page detection for domain: {self.domain}")
+        strategy_functions = []
+
+        for lps in self.login_page_strategy_scope:
+            if lps == "HOMEPAGE":
+                strategy_functions.append(self._detect_homepage)
+            elif lps == "MANUAL":
+                strategy_functions.append(self._detect_manual)
+            elif lps == "PATHS":
+                strategy_functions.append(self._detect_paths)
+            elif lps == "CRAWLING":
+                strategy_functions.append(self._detect_crawling)
+            elif lps == "SITEMAP":
+                strategy_functions.append(self._detect_sitemap)
+            elif lps == "ROBOTS":
+                strategy_functions.append(self._detect_robots)
+            elif lps == "METASEARCH":
+                strategy_functions.append(self._detect_metasearch)
+
+        # Run all strategies concurrently using a thread pool
+        timings = {}
+        with ThreadPoolExecutor(max_workers=len(strategy_functions)) as executor:
+            futures = [executor.submit(fn) for fn in strategy_functions]
+            for future in as_completed(futures):
+                try:
+                    result = future.result()
+                    timings.update(result)
+                except Exception as e:
+                    logger.error("Error in detection strategy: " + str(e))
+        # Merge collected timings into self.result["timings"]
+        self.result["timings"].update(timings)
 
 
     def login_page_detection(self):
