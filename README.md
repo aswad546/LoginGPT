@@ -15,6 +15,31 @@ You can find more details in the [paper](https://sso-monitor.me/paper.pdf) our o
 - Make sure ports `80`, `443`, `5672`, `8080`, `27017`, `8081`, `9000`, `9090`, `6379`, `8082`, and `8888` are free on your host
 - Clone this repo: `git clone https://github.com/RUB-NDS/SSO-Monitor.git`
 - Go into this directory: `cd ./SSO-Monitor`
+- Go to the worker backend directory and run the worker backend
+  ```
+  cd worker-backend
+  conda activate vllm3
+  python vllm_backend.py
+  ```
+- In a new shell run the following (Run classification backnend):
+  ```
+  cd worker-backend
+  conda activate vllm3
+  python classify_screenshots_parrallel.py
+  ```
+- Host images locally in new shell
+  ```
+  cd worker/modules/loginpagedetection/screenshot_flows
+  python -m python -m http.server 8001
+  ```
+- In a new shell run the vllm serve command for OS-ATLAS:
+  ```
+  CUDA_VISIBLE_DEVICES=1 vllm serve "OS-Copilot/OS-Atlas-Base-7B" --max-model-len 8192 --gpu-memory-utilization 0.9 --api-key token-abc123 --port 8002
+  ```
+- In another shell run the Qwen2.5VL for image classification
+  ```
+  vllm serve "Qwen/Qwen2.5-VL-7B-Instruct" --max-model-len 8192 --gpu-memory-utilization 0.9 --api-key token-abc123
+  ```
 - Run: `docker-compose build`
 - Run: `docker-compose up`
 - Open `http://localhost:8080` in your webbrowser for SSO-Monitor's web interface
