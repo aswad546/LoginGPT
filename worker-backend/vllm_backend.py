@@ -1,13 +1,14 @@
 import socket
 import json
-import requests
-from transformers import Qwen2VLForConditionalGeneration, AutoProcessor, pipeline, AutoModelForSeq2SeqLM
-from qwen_vl_utils import process_vision_info
-from PIL import Image
 import re
-import torch
 import time
 import logging
+from PIL import Image
+import torch
+import requests
+
+# Import OpenAI client for vLLM Serve style connection.
+from openai import OpenAI
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -15,35 +16,52 @@ logger.setLevel(logging.INFO)
 logger.info("Loading the crawler_backend")
 
 device = torch.device("cuda:0")  # Using GPU 0 here
-# Load the main model and processor (for prompt formatting, etc.)
-# model = Qwen2VLForConditionalGeneration.from_pretrained(
-#     "OS-Copilot/OS-Atlas-Base-7B", torch_dtype="auto", device_map={"": "cuda:0"}, cache_dir='/tmp/'
-# )
-processor = AutoProcessor.from_pretrained("OS-Copilot/OS-Atlas-Base-7B")
 
+# Load the processor for prompt formatting (used later to format the chat template if needed)
+from transformers import AutoProcessor, pipeline, AutoModelForSeq2SeqLM
+processor = AutoProcessor.from_pretrained("OS-Copilot/OS-Atlas-Base-7B")
 logger.info("Successfully loaded model crawler_backend")
 
 # Load summarization model and tokenizer
 summarizer = pipeline("summarization", model="sshleifer/distilbart-cnn-12-6", device=0)  # Use GPU
 attention_model = AutoModelForSeq2SeqLM.from_pretrained("facebook/bart-large-cnn").to(device)
 
-# ---- vLLM Serve Setup ----
-# We assume that vLLM Serve is running separately with a command like:
-# vllm serve "OS-Copilot/OS-Atlas-Base-7B" --max-model-len 4096 --gpu-memory-utilization 0.9 --api-key token-abc123
-# Adjust the URL and API key as needed.
-VLLM_SERVE_URL = "http://127.0.0.1:8002/v1/completions"  # Change if you run it on a different host/port
+# ---- vLLM Serve / OpenAI Setup ----
+# We assume that vLLM Serve is running on a non-default port (8002 in this case)
+# and that we want to connect using the OpenAI client interface.
 API_KEY = "token-abc123"
+client = OpenAI(
+    api_key=API_KEY,
+    base_url="http://127.0.0.1:8002/v1",
+)
 
 # Socket server setup
 HOST = '0.0.0.0'
 PORT = 5000
 
-# Dictionary to maintain conversation history for each client
+# Dictionaries to maintain conversation history and task states per client
 conversation_histories = {}
 task_states = {}  # Tracks the current task state for each client
 last_image = {}   # Tracks the latest image for each client
 
-# Define utility functions
+def convert_path_to_url(path: str) -> str:
+    """
+    Given a file system path, find the "screenshot_flows" marker and
+    convert the remainder into an HTTP URL (using localhost on port 8001).
+    Example:
+      /tmp/Workspace/.../screenshot_flows/www_example_com/flow_1/page.png
+    becomes:
+      http://localhost:8001/www_example_com/flow_1/page.png
+    """
+    marker = "screenshot_flows"
+    idx = path.find(marker)
+    if idx == -1:
+        logger.error("Marker 'screenshot_flows' not found in the path.")
+        return None
+    relative_part = path[idx + len(marker) + 1:]  # +1 to skip the '/'
+    url = f"http://localhost:8001/{relative_part}"
+    return url
+
 def summarize_conversation(history, max_length=100):
     conversation_text = " ".join([msg['content'] for msg in history])
     summary = summarizer(conversation_text, max_length=max_length, min_length=30, do_sample=False)
@@ -70,7 +88,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
             # Initialize conversation history and task state for the new client
             if addr not in conversation_histories:
                 conversation_histories[addr] = []
-                task_states[addr] = "check_popups"  # Start by checking for popups or cookie banners
+                task_states[addr] = "check_popups"  # Start with checking for popups or cookie banners
                 last_image[addr] = None
 
             while True:
@@ -81,11 +99,13 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
                 img_path = data.decode('utf-8').strip()
                 print(f"Received image path: {img_path}")
 
+                # Convert the path to a local file path if needed.
+                # (This step may be adjusted based on your directory structure.)
                 fixed_path = '../worker/' + '/'.join(img_path.split('/')[2:])
-                print(f'Fixed path {fixed_path}')
+                print(f'Fixed path: {fixed_path}')
                 img_path = fixed_path
 
-                # Open the image
+                # Open the image to check its dimensions.
                 try:
                     img = Image.open(img_path)
                 except Exception as e:
@@ -95,10 +115,10 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
                 width, height = img.size
                 print("The dimensions of the image are:", width, "x", height)
 
-                # Update the last image for this client
+                # Update the last image for this client (for reference, if needed)
                 last_image[addr] = img
 
-                # Prepare the prompt based on the task state
+                # Prepare the prompt based on the current task state.
                 if task_states[addr] == "check_popups":
                     prompt_text = (
                         """
@@ -116,7 +136,7 @@ Guidelines:
 - Provide precise bounding box coordinates.
 """
                     )
-                    task_states[addr] = "find_login"  # Move to the next task state after checking for popups
+                    task_states[addr] = "find_login"  # Move to the next task state after checking for popups.
                 elif task_states[addr] == "find_login":
                     prompt_text = (
                         """
@@ -133,72 +153,64 @@ Guidelines:
 """
                     )
 
-                # Add the user's prompt to conversation history
+                # Add the user's prompt to conversation history.
                 user_message = {
                     "role": "user",
                     "content": prompt_text,
                 }
                 conversation_histories[addr].append(user_message)
 
-                # Summarize conversation if too long
+                # Summarize conversation if too long.
                 if len(conversation_histories[addr]) > 5:
                     summary = summarize_conversation(conversation_histories[addr])
                     conversation_histories[addr] = [{"role": "system", "content": summary}]
 
-                # Prepare prompt with sliding window segments
-                segments = get_sliding_window_segments(conversation_histories[addr])
-                prompt = ""
-                for segment in segments:
-                    for message in segment:
-                        prompt += f"{message['role']}: {message['content']}\n"
+                # Optionally, include conversation history in the new prompt if needed.
+                # Here, we simply use the latest instruction.
+                # Prepare the image URL using our helper function.
+                image_url = convert_path_to_url(img_path)
+                if image_url is None:
+                    conn.sendall("Error: Could not convert image path to URL.".encode('utf-8'))
+                    continue
 
-                # Prepare the input for the model using the conversation prompt and the latest instructions.
-                messages_payload = [
-                    {
-                        "role": "user",
-                        "content": [
-                            {"type": "image", "image": last_image[addr]},  # latest image
-                            {"type": "text", "text": prompt_text},           # latest instructions
-                        ],
-                    }
+                # Build the messages payload using the OpenAI client format.
+                messages = [
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": [
+                        {"type": "image_url", "image_url": {"url": image_url}},
+                        {"type": "text", "text": prompt_text}
+                    ]}
                 ]
-                # Create the full prompt text using the processor (as before)
-                text = processor.apply_chat_template(messages_payload, tokenize=False, add_generation_prompt=True)
 
                 # ---------------------------
-                # <<--- vLLM Serve Inference Step --->
-                # Instead of calling llm.generate directly, we send an HTTP request to the vLLM Serve API.
-                payload = {
-                    "model": "OS-Copilot/OS-Atlas-Base-7B",
-                    "prompt": text,
-                    "max_tokens": 512,
-                }
-                headers = {
-                    "Content-Type": "application/json",
-                    "Authorization": f"Bearer {API_KEY}",
-                }
+                # <<--- vLLM Serve Inference Step using OpenAI client --->>
                 start_time = time.time()
-                response = requests.post(VLLM_SERVE_URL, json=payload, headers=headers)
+                try:
+                    chat_response = client.chat.completions.create(
+                        model="OS-Copilot/OS-Atlas-Base-7B",
+                        messages=messages,
+                        max_tokens=512,
+                        temperature=0.01,
+                        top_p=0.001,
+                    )
+                    # Use attribute access to get the text from the response.
+                    output_text = chat_response.choices[0].message.content.strip()
+                except Exception as e:
+                    logger.error(f"Inference error: {e}")
+                    conn.sendall(f"Inference error: {e}".encode('utf-8'))
+                    continue
                 end_time = time.time()
-                if response.status_code != 200:
-                    print("vLLM Serve API error:", response.text)
-                    output_text = ""
-                else:
-                    result_json = response.json()
-                    output_text = result_json.get("choices", [{}])[0].get("text", "")
-                    print(result_json.get("choices"))
                 print("Model Output:", output_text)
                 print(f'Time elapsed: {end_time - start_time}')
-                # ---------------------------
 
-                # Append the model's response to conversation history
+                # Append the model's response to conversation history.
                 model_response = {
                     "role": "assistant",
                     "content": output_text,
                 }
                 conversation_histories[addr].append(model_response)
 
-                # Extract bounding box coordinates using regex
+                # Extract bounding box coordinates using regex.
                 pattern = r'Bounding Box Coordinates:\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)'
                 matches = re.findall(pattern, output_text)
                 if not matches:
@@ -208,14 +220,14 @@ Guidelines:
                         conn.sendall("Error: No relevant element detected.".encode('utf-8'))
                     continue
 
-                # Convert matches to a list of tuples with integer values
+                # Convert matches to a list of tuples with integer values.
                 bounding_boxes = [
                     ((int(x1), int(y1)), (int(x2), int(y2))) for x1, y1, x2, y2 in matches
                 ]
                 print("Original bounding boxes:", bounding_boxes)
 
-                # Scale coordinates based on image dimensions
-                scale_factor = 1000  # Adjust based on the model's coordinate system
+                # Scale coordinates based on image dimensions.
+                scale_factor = 1000  # Adjust based on the model's coordinate system.
                 scaled_bounding_boxes = [
                     (
                         (int((x1 / scale_factor) * width), int((y1 / scale_factor) * height)),
@@ -225,7 +237,7 @@ Guidelines:
                 ]
                 print("Scaled bounding boxes:", scaled_bounding_boxes)
 
-                # Assume there's one element to click on
+                # Assume there's one element to click on.
                 if scaled_bounding_boxes:
                     (x1, y1), (x2, y2) = scaled_bounding_boxes[0]
                     click_point = ((x1 + x2) // 2, (y1 + y2) // 2)

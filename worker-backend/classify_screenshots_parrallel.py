@@ -35,6 +35,30 @@ After explaining your reasoning, respond strictly with either:
 "NO" (if no relevant login input field is found).
 """
 
+def convert_input_to_output_path(input_path: str, change_path: bool) -> str:
+    """
+    Convert the Docker internal path to the desired output image path.
+    
+    For example, if the input is:
+      /app/modules/loginpagedetection/screenshot_flows/www_hancockwhitney_com/flow_0/page_1.png
+    then this function will return:
+      /tmp/Workspace/SSO-Monitor-mine/worker/modules/loginpagedetection/output_images/www_hancockwhitney_com/flow_0/page_1.png
+    """
+    # If the input path starts with "/app/", remove that prefix.
+    if input_path.startswith("/app/"):
+        relative_path = input_path[len("/app/"):]
+    else:
+        relative_path = input_path
+
+    # Replace "screenshot_flows" with "output_images"
+    if change_path:
+        relative_path = relative_path.replace("screenshot_flows", "output_images")
+
+    # Prepend the base directory for output images.
+    output_path = f"/tmp/Workspace/SSO-Monitor-mine/worker/{relative_path}"
+    return output_path
+
+
 def sanitize_input_path(input_path: str) -> str:
     """Clean up the input path string."""
     return input_path.strip()
@@ -57,11 +81,19 @@ def convert_path_to_url(input_path: str) -> str:
     url = f"http://localhost:8001/{relative_part}"
     return url
 
-def convert_input_to_output_path(input_path: str) -> str:
-    """
-    Replace "screenshot_flows" with "output_images" in the input path.
-    """
-    return input_path.replace("screenshot_flows", "output_images")
+def clear_directory(directory: str):
+    """Clears out all contents of the given directory, but does not remove the directory itself."""
+    if os.path.exists(directory):
+        for filename in os.listdir(directory):
+            file_path = os.path.join(directory, filename)
+            try:
+                if os.path.isfile(file_path) or os.path.islink(file_path):
+                    os.unlink(file_path)
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)
+            except Exception as e:
+                logger.error(f"Failed to delete {file_path}: {e}")
+
 
 def classify_image(image_url: str) -> (str, str):
     """
@@ -129,9 +161,9 @@ def start_socket_server():
                 else:
                     # If classification is YES, save the image to the output path.
                     if final_answer == "YES":
-                        output_path = convert_input_to_output_path(input_path)
+                        output_path = convert_input_to_output_path(input_path, True)
                         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-                        shutil.copy(input_path, output_path)
+                        shutil.copy(convert_input_to_output_path(input_path, False), output_path)
                         response_msg = f"Classification: YES, image saved to {output_path}"
                         conn.sendall(response_msg.encode("utf-8"))
                         logger.info(response_msg)
@@ -143,7 +175,14 @@ def start_socket_server():
 if __name__ == "__main__":
     # At startup, remove the base output_images directory if it exists.
     base_output_dir = "/tmp/Workspace/SSO-Monitor-mine/worker/modules/loginpagedetection/output_images"
+    # Instead of deleting the directory, clear its contents
     if os.path.exists(base_output_dir):
-        shutil.rmtree(base_output_dir)
-        logger.info(f"Removed existing output_images directory: {base_output_dir}")
+        clear_directory(base_output_dir)
+        logger.info(f"Cleared contents of {base_output_dir}")
+    else:
+        os.makedirs(base_output_dir, exist_ok=True)
+    # Ensure the base output directory has proper permissions
+    os.chmod(base_output_dir, 0o777)
+    logger.info(f"Set permissions for {base_output_dir} to 777")
     start_socket_server()
+

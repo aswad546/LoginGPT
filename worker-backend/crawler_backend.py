@@ -28,6 +28,11 @@ attention_model = AutoModelForSeq2SeqLM.from_pretrained("facebook/bart-large-cnn
 HOST = '0.0.0.0'
 PORT = 5000
 
+print(model.config)
+# or, if available:
+print(model.generation_config)
+
+
 # Dictionary to maintain conversation history for each client
 conversation_histories = {}
 task_states = {}  # Tracks the current task state for each client

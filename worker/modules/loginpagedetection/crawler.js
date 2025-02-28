@@ -51,7 +51,7 @@ async function overlayClickPosition(inputImagePath, outputImagePath, x, y) {
 
 async function classifyScreenshot(screenshotPath) {
   return new Promise((resolve, reject) => {
-    const classificationHost = '127.0.0.1'; // adjust if necessary
+    const classificationHost = '172.17.0.1'; // adjust if necessary
     const classificationPort = 5060; // port where your classification server is running
 
     const socket = new net.Socket();
@@ -306,7 +306,7 @@ async function continueFlow(page, url, client, parentDir, flowIndex, screenshotI
   };
   console.log('Filled input fields, now taking screenshot');
   let { screenshotPath, currentUrl } = await takeScreenshot();
-
+  console.log('Sending screenshot for classification')
   classifyScreenshot(screenshotPath)
     .then(() => console.log(`Classification sent for ${screenshotPath}`))
     .catch(err => console.error(`Error sending screenshot ${screenshotPath}: ${err}`));
