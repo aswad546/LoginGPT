@@ -62,15 +62,15 @@ class Crawling:
             try:
                 # TODO: Add regex here
                 page_number = self.extract_page_number(file)
-                relevant_action = actions[page_number - 1]
+                relevant_action = actions[page_number]
                 action_url = relevant_action['url']
                 relevant_click_sequence = click_sequence[:page_number - 1]
                 # One login url may only have one login page (across all flows), find shortest path (number of clicks) to reach this page
                 if action_url not in login_pages or len(login_pages[action_url]) > len(relevant_click_sequence):
-                    login_pages[action_url] = actions[:page_number - 1]
+                    login_pages[action_url] = actions[:page_number]
             except Exception as e:
                 print(f'Finding actions for the following file {dir}/{file} failed due to {e}')
-                logger.error(f'Failed to find minimum path to login for {action_url}')
+                logger.exception(f'Failed to find minimum path to login for {action_url}')
 
 
     def process_actions(self, output_dir, raw_results_dir):

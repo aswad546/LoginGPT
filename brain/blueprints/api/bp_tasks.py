@@ -257,6 +257,7 @@ def dispatch_landscape_analysis_task_request():
             treq["task_config"]["task_id"] = tid
             treq["task_config"]["task_timestamp_request_sent"] = time()
             treq["domain"] = gt["domain"]
+            print("Lookie here", treq["domain"])
             rabbit.send_treq("landscape_analysis_treq", "/api/tasks/landscape_analysis/tres", tid, treq)
 
     # scan type: ground-truth

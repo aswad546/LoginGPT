@@ -218,38 +218,45 @@ async function performFlow(browser, url, parentDir, client, selectCombination, m
       });
     });
 
+    const actions = [];
 
-    // Apply the select options using the deduplicated mapping.
-    const selectElements = await page.$$('select');
-    for (let uniqueIndex = 0; uniqueIndex < mapping.length; uniqueIndex++) {
-      const value = selectCombination[uniqueIndex];
-      // For every duplicate select element that shares the same option set:
-      for (let origIdx of mapping[uniqueIndex]) {
-        const selectElement = selectElements[origIdx];
-        const selectedValues = await selectElement.select(value);
-        if (selectedValues.length === 0) {
-          console.error(`Value "${value}" not found in select element at index ${origIdx}.`);
-          return;
-        }
-        console.log(`Set select element at index ${origIdx} to value ${value}`);
+    // Check if there are any select options to process.
+      if (selectCombination && mapping && mapping.length > 0) {
+      // Apply the select options using the deduplicated mapping.
+      const selectElements = await page.$$('select');
+      for (let uniqueIndex = 0; uniqueIndex < mapping.length; uniqueIndex++) {
+        const value = selectCombination[uniqueIndex];
+        // For every duplicate select element that shares the same option set:
+        for (let origIdx of mapping[uniqueIndex]) {
+          const selectElement = selectElements[origIdx];
+          const selectedValues = await selectElement.select(value);
+          if (selectedValues.length === 0) {
+            console.error(`Value "${value}" not found in select element at index ${origIdx}.`);
+            return;
+          }
+          console.log(`Set select element at index ${origIdx} to value ${value}`);
 
-        // Wait for any potential navigation
-        const newPage = await detectNavigationOrNewTab(page);
-        if (newPage && newPage !== page) {
-          console.log('Navigation or new tab detected after selecting option.');
-          await page.close();
-          page = newPage;
-          await page.bringToFront();
+          // Wait for any potential navigation
+          const newPage = await detectNavigationOrNewTab(page);
+          if (newPage && newPage !== page) {
+            console.log('Navigation or new tab detected after selecting option.');
+            await page.close();
+            page = newPage;
+            await page.bringToFront();
+          }
         }
       }
+      const fullSelectMapping = buildFullSelectMapping(mapping, selectCombination, selectIdentifiers);
+      actions.push({
+        selectOptions: fullSelectMapping
+      });
+    } else {
+      // No select options found: set selectOptions to null in the actions file.
+      console.log("No select options to set. Continuing flow without modifying selects.");
+      actions.push({
+        selectOptions: null
+      });
     }
-    const fullSelectMapping = buildFullSelectMapping(mapping, selectCombination, selectIdentifiers);
-    const actions = [];
-    actions.push({
-      selectOptions: fullSelectMapping
-    });
-
-
     // Proceed with the rest of the flow.
     await continueFlow(page, url, client, parentDir, flowIndex, 1, 0, clickLimit, selectCombination, actions);
   } catch (error) {
@@ -478,30 +485,36 @@ async function runCrawler(url) {
     const selectOptions = await getSelectOptions(page);
     await page.close();
 
-    // Deduplicate select options and build a mapping.
-    const { uniqueOptions, mapping } = deduplicateOptionsWithMapping(selectOptions);
-    // Define a default combination using the first option from each unique group.
-    const defaultCombination = uniqueOptions.map(options => options[0]);
+    if (selectOptions.length === 0) {
+      console.log("No select options found. Running flow without select options.");
+      // Passing null as selectCombination and an empty array for mapping.
+      await performFlow(browser, url, parentDir, client, null, [], 0, 10);
+    } else {
+      // Deduplicate select options and build a mapping.
+      const { uniqueOptions, mapping } = deduplicateOptionsWithMapping(selectOptions);
+      // Define a default combination using the first option from each unique group.
+      const defaultCombination = uniqueOptions.map(options => options[0]);
 
-    // Build flows: for each unique select group, try each option (if not the default)
-    // while keeping other groups at their default.
-    const flows = [];
-    uniqueOptions.forEach((options, groupIndex) => {
-      options.forEach(option => {
-        if (option !== defaultCombination[groupIndex]) {
-          const variation = [...defaultCombination];
-          variation[groupIndex] = option;
-          flows.push(variation);
-        }
+      // Build flows: for each unique select group, try each option (if not the default)
+      // while keeping other groups at their default.
+      const flows = [];
+      uniqueOptions.forEach((options, groupIndex) => {
+        options.forEach(option => {
+          if (option !== defaultCombination[groupIndex]) {
+            const variation = [...defaultCombination];
+            variation[groupIndex] = option;
+            flows.push(variation);
+          }
+        });
       });
-    });
-    console.log(`Generated ${flows.length} flows based on unique select options.`);
+      console.log(`Generated ${flows.length} flows based on unique select options.`);
 
-    // Iterate over each flow and perform the flow
-    for (let i = 0; i < flows.length; i++) {
-      const selectCombination = flows[i];
-      console.log(`Starting flow ${i} with select options: ${selectCombination}`);
-      await performFlow(browser, url, parentDir, client, selectCombination, mapping, i, 10);
+      // Iterate over each flow and perform the flow
+      for (let i = 0; i < flows.length; i++) {
+        const selectCombination = flows[i];
+        console.log(`Starting flow ${i} with select options: ${selectCombination}`);
+        await performFlow(browser, url, parentDir, client, selectCombination, mapping, i, 10);
+      }
     }
   } catch (error) {
     console.error('Error:', error);

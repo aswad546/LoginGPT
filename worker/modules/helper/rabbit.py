@@ -56,7 +56,7 @@ class RabbitHelper:
         api_url = "http://172.17.0.1:4050/api/login_candidates"
         
         # Serialize candidates to JSON.
-        payload = json.dumps(candidates)
+        payload = json.dumps({"candidates": candidates})
         
         try:
             # Send a POST request with the JSON payload.
@@ -90,9 +90,11 @@ class RabbitHelper:
         # Extract the list of candidates from the input JSON.
         candidates = input_json.get("landscape_analysis_result", {}).get("login_page_candidates", [])
         
-        # Extract the scan domain from scan_config (if present)
-        scan_domain = input_json.get("scan_config", {}).get("domain", "")
-        
+        # First try to extract the scan domain from scan_config, then fall back to the top-level domain.
+        scan_domain = input_json.get("scan_config", {}).get("domain")
+        if not scan_domain:
+            scan_domain = input_json.get("domain", "")
+            
         # Group candidates by their URL.
         grouped = {}
         for candidate in candidates:
