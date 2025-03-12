@@ -66,10 +66,10 @@ class LandscapeAnalyzer:
             self.result["timings"]["login_page_detection_duration_seconds"] = time.time() - t
 
         # login page analysis
-        if self.result["resolved"]["reachable"]:
-            t = time.time()
-            self.login_page_analysis()
-            self.result["timings"]["login_page_analysis_duration_seconds"] = time.time() - t
+        # if self.result["resolved"]["reachable"]:
+        #     t = time.time()
+        #     self.login_page_analysis()
+        #     self.result["timings"]["login_page_analysis_duration_seconds"] = time.time() - t
 
         # # sso button detection
         # if self.result["resolved"]["reachable"]:

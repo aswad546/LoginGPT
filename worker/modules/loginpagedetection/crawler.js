@@ -469,6 +469,8 @@ async function runCrawler(url) {
       ],
     });
 
+    const CLICK_LIMIT = 5;
+
     // Create a parent directory for the URL
     const parentDir = path.join(__dirname, '/screenshot_flows', generateParentDirectoryName(url));
     // Delete the directory if it exists
@@ -488,7 +490,7 @@ async function runCrawler(url) {
     if (selectOptions.length === 0) {
       console.log("No select options found. Running flow without select options.");
       // Passing null as selectCombination and an empty array for mapping.
-      await performFlow(browser, url, parentDir, client, null, [], 0, 10);
+      await performFlow(browser, url, parentDir, client, null, [], 0, CLICK_LIMIT);
     } else {
       // Deduplicate select options and build a mapping.
       const { uniqueOptions, mapping } = deduplicateOptionsWithMapping(selectOptions);
@@ -513,7 +515,7 @@ async function runCrawler(url) {
       for (let i = 0; i < flows.length; i++) {
         const selectCombination = flows[i];
         console.log(`Starting flow ${i} with select options: ${selectCombination}`);
-        await performFlow(browser, url, parentDir, client, selectCombination, mapping, i, 10);
+        await performFlow(browser, url, parentDir, client, selectCombination, mapping, i, CLICK_LIMIT);
       }
     }
   } catch (error) {
