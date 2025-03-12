@@ -3,6 +3,7 @@ import shutil
 import socket
 import logging
 import re
+import threading
 from openai import OpenAI  # Import the new OpenAI client
 
 # Setup logging
@@ -58,7 +59,6 @@ def convert_input_to_output_path(input_path: str, change_path: bool) -> str:
     output_path = f"/tmp/Workspace/SSO-Monitor-mine/worker/{relative_path}"
     return output_path
 
-
 def sanitize_input_path(input_path: str) -> str:
     """Clean up the input path string."""
     return input_path.strip()
@@ -93,7 +93,6 @@ def clear_directory(directory: str):
                     shutil.rmtree(file_path)
             except Exception as e:
                 logger.error(f"Failed to delete {file_path}: {e}")
-
 
 def classify_image(image_url: str) -> (str, str):
     """
@@ -138,6 +137,34 @@ def process_image(input_path: str) -> (str, str):
     logger.info(f"Using image URL: {image_url}")
     return classify_image(image_url)
 
+def handle_client(conn, addr):
+    """Handle a single client connection in its own thread."""
+    with conn:
+        logger.info(f"Connected by {addr}")
+        data = conn.recv(1024)
+        if not data:
+            logger.info(f"No data received from {addr}.")
+            return
+        input_path = data.decode("utf-8").strip()
+        logger.info(f"Received image path from {addr}: {input_path}")
+        input_path = sanitize_input_path(input_path)
+        final_answer, full_response = process_image(input_path)
+        if final_answer is None:
+            conn.sendall("Error: Classification failed".encode("utf-8"))
+        else:
+            # If classification is YES, save the image to the output path.
+            if final_answer == "YES":
+                output_path = convert_input_to_output_path(input_path, True)
+                os.makedirs(os.path.dirname(output_path), exist_ok=True)
+                shutil.copy(convert_input_to_output_path(input_path, False), output_path)
+                response_msg = f"Classification: YES, image saved to {output_path}"
+                conn.sendall(response_msg.encode("utf-8"))
+                logger.info(response_msg)
+            else:
+                response_msg = "Classification: NO"
+                conn.sendall(response_msg.encode("utf-8"))
+                logger.info(response_msg)
+
 def start_socket_server():
     HOST = "0.0.0.0"
     PORT = 5060
@@ -147,30 +174,10 @@ def start_socket_server():
         logger.info(f"Socket server listening on {HOST}:{PORT}...")
         while True:
             conn, addr = server_socket.accept()
-            with conn:
-                logger.info(f"Connected by {addr}")
-                data = conn.recv(1024)
-                if not data:
-                    continue
-                input_path = data.decode("utf-8").strip()
-                logger.info(f"Received image path: {input_path}")
-                input_path = sanitize_input_path(input_path) 
-                final_answer, full_response = process_image(input_path)
-                if final_answer is None:
-                    conn.sendall("Error: Classification failed".encode("utf-8"))
-                else:
-                    # If classification is YES, save the image to the output path.
-                    if final_answer == "YES":
-                        output_path = convert_input_to_output_path(input_path, True)
-                        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-                        shutil.copy(convert_input_to_output_path(input_path, False), output_path)
-                        response_msg = f"Classification: YES, image saved to {output_path}"
-                        conn.sendall(response_msg.encode("utf-8"))
-                        logger.info(response_msg)
-                    else:
-                        response_msg = "Classification: NO"
-                        conn.sendall(response_msg.encode("utf-8"))
-                        logger.info(response_msg)
+            # Spawn a new thread to handle each connection.
+            client_thread = threading.Thread(target=handle_client, args=(conn, addr))
+            client_thread.daemon = True
+            client_thread.start()
 
 if __name__ == "__main__":
     # At startup, remove the base output_images directory if it exists.
@@ -185,4 +192,3 @@ if __name__ == "__main__":
     os.chmod(base_output_dir, 0o777)
     logger.info(f"Set permissions for {base_output_dir} to 777")
     start_socket_server()
-

@@ -12,6 +12,9 @@ from modules.queries import match_latest, match_archived
 from modules.objstore import store_and_mutate_data
 from modules.auth import admin_auth
 from modules.validate import JsonString
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 bp_tasks = APIBlueprint("tasks", __name__, url_prefix="/tasks")
@@ -218,6 +221,7 @@ def get_tasks(query_data):
 @bp_tasks.put("/landscape_analysis/treq")
 @bp_tasks.auth_required(admin_auth)
 def dispatch_landscape_analysis_task_request():
+    logger.info("recieved job request from the UI")
     db = current_app.config["db"]
     rabbit = current_app.config["rabbit"]
     reqdata = request.get_json()
@@ -248,16 +252,20 @@ def dispatch_landscape_analysis_task_request():
 
     # scan type: range
     elif scan_type == "range":
+        logger.info("Scan type is range")
         list_id = reqdata["scan_config"]["list_id"]
         offset = reqdata["scan_config"]["offset"]
         limit = reqdata["scan_config"]["limit"]
-        for gt in db["top_sites_lists"].find({"id": list_id, "rank": {"$gte": offset, "$lt": offset + limit}}):
+        list_items = db["top_sites_lists"].find({"id": list_id, "rank": {"$gte": offset, "$lt": offset + limit}})
+        logger.info(f"List items are: {list_items}")
+        for gt in list_items:
+            logger.info(f"Element at the id is: {gt}, {gt['domain']}")
             treq = deepcopy(reqdata)
             tid = str(uuid4())
             treq["task_config"]["task_id"] = tid
             treq["task_config"]["task_timestamp_request_sent"] = time()
             treq["domain"] = gt["domain"]
-            print("Lookie here", treq["domain"])
+            logger.info(f"Lookie here {treq['domain']}")
             rabbit.send_treq("landscape_analysis_treq", "/api/tasks/landscape_analysis/tres", tid, treq)
 
     # scan type: ground-truth
