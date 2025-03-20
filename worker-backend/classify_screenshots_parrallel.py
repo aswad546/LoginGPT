@@ -56,7 +56,7 @@ def convert_input_to_output_path(input_path: str, change_path: bool) -> str:
         relative_path = relative_path.replace("screenshot_flows", "output_images")
 
     # Prepend the base directory for output images.
-    output_path = f"/tmp/Workspace/SSO-Monitor-mine/worker/{relative_path}"
+    output_path = f"../worker/{relative_path}"
     return output_path
 
 def sanitize_input_path(input_path: str) -> str:
@@ -181,7 +181,7 @@ def start_socket_server():
 
 if __name__ == "__main__":
     # At startup, remove the base output_images directory if it exists.
-    base_output_dir = "/tmp/Workspace/SSO-Monitor-mine/worker/modules/loginpagedetection/output_images"
+    base_output_dir ="../worker/modules/loginpagedetection/output_images"
     # Instead of deleting the directory, clear its contents
     if os.path.exists(base_output_dir):
         clear_directory(base_output_dir)

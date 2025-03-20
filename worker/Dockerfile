@@ -1,39 +1,34 @@
 FROM mcr.microsoft.com/playwright/python:v1.35.0-jammy
-
 # Set non-interactive mode for apt-get
 ENV DEBIAN_FRONTEND=noninteractive
-
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-    curl \
-    gnupg \
-    ca-certificates \
-    libnss3 \
-    libatk1.0-0 \
-    libatk-bridge2.0-0 \
-    libx11-xcb1 \
-    libxcomposite1 \
-    libxcursor1 \
-    libxdamage1 \
-    libxfixes3 \
-    libxrandr2 \
-    libgbm-dev \
-    libasound2 \
-    libpango1.0-0 \
-    fonts-liberation \
-    libappindicator3-1 \
-    xdg-utils \
-    xvfb \
-    && rm -rf /var/lib/apt/lists/*
-
+ curl \
+ gnupg \
+ ca-certificates \
+ libnss3 \
+ libatk1.0-0 \
+ libatk-bridge2.0-0 \
+ libx11-xcb1 \
+ libxcomposite1 \
+ libxcursor1 \
+ libxdamage1 \
+ libxfixes3 \
+ libxrandr2 \
+ libgbm-dev \
+ libasound2 \
+ libpango1.0-0 \
+ fonts-liberation \
+ libappindicator3-1 \
+ xdg-utils \
+ xvfb \
+ && rm -rf /var/lib/apt/lists/*
 # Install Node.js (Latest LTS Version)
 RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - && \
-    apt-get install -y nodejs && \
-    node -v && npm -v
-
+ apt-get install -y nodejs && \
+ node -v && npm -v
 # Set working directory
 WORKDIR /app
-
 ##############################
 # Install Node.js Dependencies
 ##############################
@@ -41,6 +36,18 @@ WORKDIR /app
 COPY modules/loginpagedetection/package.json modules/loginpagedetection/package-lock.json ./modules/loginpagedetection/
 WORKDIR /app/modules/loginpagedetection
 RUN npm install
+
+# Install OpenTelemetry dependencies
+RUN npm install --save \
+  @opentelemetry/api \
+  @opentelemetry/sdk-node \
+  @opentelemetry/auto-instrumentations-node \
+  @opentelemetry/exporter-prometheus \
+  @opentelemetry/exporter-jaeger \
+  @opentelemetry/resources \
+  @opentelemetry/semantic-conventions \
+  @opentelemetry/sdk-trace-base \
+  @opentelemetry/sdk-metrics
 
 ##############################
 # Install Python Dependencies
@@ -50,11 +57,17 @@ WORKDIR /app
 COPY Pipfile Pipfile.lock ./
 # Install pipenv and Python dependencies
 RUN pip install pipenv && \
-    PIPENV_VENV_IN_PROJECT=1 pipenv install --system
-
+ PIPENV_VENV_IN_PROJECT=1 pipenv install --system
 ##############################
 # Copy Application Code
 ##############################
 WORKDIR /app
 COPY . .
 
+# Expose Prometheus metrics port
+EXPOSE 9464
+
+# Set OpenTelemetry environment variables
+ENV JAEGER_ENDPOINT=http://host.docker.internal:14268/api/traces
+ENV PROMETHEUS_PORT=9464
+ENV SERVICE_NAME=login-page-detection

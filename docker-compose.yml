@@ -2,44 +2,6 @@ version: "3"
 
 services:
 
-  # watcher:
-  #   build:
-  #     context: ./watcher  # Ensure this directory contains a Dockerfile
-  #     dockerfile: Dockerfile
-  #   networks:
-  #     - sso-monitor-network
-  #   depends_on:
-  #     mongodb:
-  #       condition: service_healthy
-  #   environment:
-  #     - MONGO_HOST=mongodb  # Use service name as hostname inside Docker
-  #     - MONGO_PORT=27017
-  #     - DATABASE_NAME=sso-monitor
-  #     - COLLECTION_NAME=landscape_analysis_tres
-
-  # worker-backend:
-  #   build:
-  #     context: ./worker-backend  # Ensure this points to the correct directory
-  #     dockerfile: Dockerfile
-  #   restart: unless-stopped
-  #   networks:
-  #     - sso-monitor-network
-  #   expose:
-  #     - "5000"
-  #   ports:
-  #     - "5000:5000"
-  #   deploy:
-  #     resources:
-  #       reservations:
-  #         devices:
-  #           - driver: nvidia
-  #             count: all
-  #             capabilities: [gpu]
-  #   environment:
-  #     - NVIDIA_VISIBLE_DEVICES=all
-  #     - NVIDIA_DRIVER_CAPABILITIES=compute,utility
-  #     - CONDA_ENV=qwen_env
-
   traefik:
     image: traefik:v2.10
     restart: unless-stopped
@@ -72,10 +34,10 @@ services:
       - "traefik.http.routers.mock.tls.certresolver=letsencrypt"
       - "traefik.http.routers.mock.service=noop@internal"
       # middlewares: guestauth
-      - "traefik.http.middlewares.guestauth.basicauth.users=${GUEST_HASH:-guest:$$2y$$05$$1zzyF57XWcRpfz2zvxyz4eAUqeZHnCbFULhaliUjwGcq6DDDvP/XC}" # guest:changeme
+      - "traefik.http.middlewares.guestauth.basicauth.users=${GUEST_HASH:-guest:$$2y$$05$$1zzyF57XWcRpfz2zvxyz4eAUqeZHnCbFULhaliUjwGcq6DDDvP/XC}"
       - "traefik.http.middlewares.guestauth.basicauth.removeheader=true"
       # middlewares: adminauth
-      - "traefik.http.middlewares.adminauth.basicauth.users=${ADMIN_HASH:-admin:$$2y$$05$$1zzyF57XWcRpfz2zvxyz4eAUqeZHnCbFULhaliUjwGcq6DDDvP/XC}" # admin:changeme
+      - "traefik.http.middlewares.adminauth.basicauth.users=${ADMIN_HASH:-admin:$$2y$$05$$1zzyF57XWcRpfz2zvxyz4eAUqeZHnCbFULhaliUjwGcq6DDDvP/XC}"
       - "traefik.http.middlewares.adminauth.basicauth.removeheader=true"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -118,7 +80,7 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
-      mongodb:
+      mongodb-new:
         condition: service_healthy
       minio:
         condition: service_healthy
@@ -160,7 +122,7 @@ services:
       - RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
       - RABBITMQ_PORT_API=${RABBITMQ_PORT_API:-15672}
       # mongodb
-      - MONGODB_HOST=${MONGODB_HOST:-mongodb}
+      - MONGODB_HOST=${MONGODB_HOST:-mongodb-new}
       - MONGODB_PORT=${MONGODB_PORT:-27017}
       # minio
       - MINIO_HOST=${MINIO_HOST:-minio}
@@ -177,6 +139,8 @@ services:
     restart: unless-stopped
     init: true
     ipc: host
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     security_opt:
       - seccomp=./worker/seccomp_profile.json
     depends_on:
@@ -188,8 +152,8 @@ services:
       - 1.1.1.1
       - 1.0.0.1
     volumes:
-      - "/tmp/Workspace/SSO-Monitor-mine/worker/modules/loginpagedetection/screenshot_flows:/app/modules/loginpagedetection/screenshot_flows"
-      - "/tmp/Workspace/SSO-Monitor-mine/worker/modules/loginpagedetection/output_images:/app/modules/loginpagedetection/output_images"
+      - "./worker/modules/loginpagedetection/screenshot_flows:/app/modules/loginpagedetection/screenshot_flows"
+      - "./worker/modules/loginpagedetection/output_images:/app/modules/loginpagedetection/output_images"
       - type: tmpfs
         target: /tmpfs
     deploy:
@@ -248,15 +212,32 @@ services:
       - RABBITMQ_DEFAULT_USER=${ADMIN_USER:-admin}
       - RABBITMQ_DEFAULT_PASS=${ADMIN_PASS:-changeme}
 
-  mongodb:
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   container_name: prometheus
+  #   restart: unless-stopped
+  #   networks:
+  #     - sso-monitor-network
+  #   ports:
+  #     - 9090:9090
+  #   volumes:
+  #     - ./prometheus.yml:/etc/prometheus/prometheus.yml
+  #   command:
+  #     - "--config.file=/etc/prometheus/prometheus.yml"
+  #   depends_on:
+  #     - otel-collector
+
+
+  mongodb-new:
     image: mongo:4.4.6
+    container_name: sso-monitor-mongodb-new
     restart: unless-stopped
     networks:
       - sso-monitor-network
     expose:
       - 27017
     ports:
-      - 127.0.0.1:27017:27017
+      - 127.0.0.1:27018:27017
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongo localhost:27017/test --quiet
       interval: 10s
@@ -269,7 +250,7 @@ services:
     image: mongo-express:0.54.0
     restart: unless-stopped
     depends_on:
-      mongodb:
+      mongodb-new:
         condition: service_healthy
     networks:
       - sso-monitor-network
@@ -290,7 +271,9 @@ services:
       timeout: 10s
       retries: 15
     environment:
-      - ME_CONFIG_MONGODB_SERVER=${ME_CONFIG_MONGODB_SERVER:-mongodb}
+      - ME_CONFIG_MONGODB_SERVER=${ME_CONFIG_MONGODB_SERVER:-mongodb-new}
+
+  
 
   minio:
     image: minio/minio:RELEASE.2023-12-14T18-51-57Z-cpuv1
@@ -365,13 +348,14 @@ services:
       - ./searxng/settings.yml:/etc/searxng/settings.yml
       - ./searxng/uwsgi.ini:/etc/searxng/uwsgi.ini
 
-  jupyter:
+  jupyter-new:
+    container_name: sso-monitor-jupyter-new
     build:
       context: ./jupyter
       dockerfile: Dockerfile
     restart: unless-stopped
     depends_on:
-      mongodb:
+      mongodb-new:
         condition: service_healthy
       minio:
         condition: service_healthy
@@ -380,7 +364,7 @@ services:
     expose:
       - 8888
     ports:
-      - 127.0.0.1:53831:8888
+      - 127.0.0.1:53832:8888
     deploy:
       resources:
         limits:
@@ -392,16 +376,16 @@ services:
       retries: 15
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.jupyter.entrypoints=web,websecure"
-      - "traefik.http.routers.jupyter.rule=Host(`${JUPYTER_EXTERNAL_DOMAIN:-jupyter.docker.localhost}`)"
-      - "traefik.http.routers.jupyter.tls.certresolver=letsencrypt"
-      - "traefik.http.services.jupyter.loadbalancer.server.port=8888"
+      - "traefik.http.routers.jupyter-new.entrypoints=web,websecure"
+      - "traefik.http.routers.jupyter-new.rule=Host(`${JUPYTER_EXTERNAL_DOMAIN:-jupyter.docker.localhost}`)"
+      - "traefik.http.routers.jupyter-new.tls.certresolver=letsencrypt"
+      - "traefik.http.services.jupyter-new.loadbalancer.server.port=8888"
     volumes:
-      - jupyter-home:/home/jovyan
+      - jupyter-home-new:/home/jovyan
     environment:
       - ADMIN_USER=${ADMIN_USER:-admin}
       - ADMIN_PASS=${ADMIN_PASS:-changeme}
-      - MONGODB_HOST=${MONGODB_HOST:-mongodb}
+      - MONGODB_HOST=${MONGODB_HOST:-mongodb-new}
       - MONGODB_PORT=${MONGODB_PORT:-27017}
       - MINIO_HOST=${MINIO_HOST:-minio}
       - MINIO_PORT=${MINIO_PORT:-9000}
@@ -418,3 +402,4 @@ volumes:
   redis-data:
   traefik-logs:
   traefik-acme:
+  jupyter-home-new:

@@ -7,77 +7,14 @@ import multiprocessing
 import ssl
 import requests
 from modules.analyzers import ANALYZER
+import traceback
+
 
 
 logger = logging.getLogger(__name__)
 
 
 class RabbitHelper:
-
-    # def publish_login_candidates(self, candidates):
-    #     """
-    #     Publish the preprocessed login candidates to a new queue named 'login_candidates'.
-    #     'candidates' should be a Python list/dict that can be serialized to JSON.
-    #     """
-    #     new_queue = "login_candidates"
-
-    #     # Define queue arguments:
-    #     # - x-message-ttl: 24 hours in milliseconds (86400000)
-    #     # - x-max-length-bytes: 536 MB (536870912)
-    #     arguments = {
-    #         "x-message-ttl":86400000,           # Message time-to-live in ms
-    #         "x-max-length-bytes": 536870912      # Maximum total size of the queue in bytes
-    #     }
-
-    #     # Declare the new queue with the given arguments (this is idempotent)
-    #     self.channel.queue_declare(queue=new_queue, durable=True, arguments=arguments)
-        
-    #     # Serialize the candidates to a JSON string and encode it to bytes
-    #     message_body = json.dumps(candidates).encode('utf-8')
-        
-    #     # Publish the message to the new queue
-    #     self.channel.basic_publish(
-    #         exchange="",
-    #         routing_key=new_queue,
-    #         body=message_body,
-    #         properties=pika.BasicProperties(
-    #             delivery_mode=2  # Make message persistent
-    #         )
-    #     )
-    #     print(f"Published login candidates to queue '{new_queue}'")
-    #     logger.info(f"Published login candidates to queue '{new_queue}'")
-
-    def send_candidates_to_api(candidates):
-        """
-        Send the preprocessed login candidates to a remote API endpoint.
-        'candidates' should be a Python list/dict that can be serialized to JSON.
-        """
-        # Construct the target URL for the API endpoint. Change the path as needed.
-        api_url = "http://172.17.0.1:4050/api/login_candidates"
-        
-        # Serialize candidates to JSON.
-        payload = json.dumps({"candidates": candidates})
-        
-        try:
-            # Send a POST request with the JSON payload.
-            response = requests.post(
-                api_url,
-                data=payload,
-                headers={'Content-Type': 'application/json'},
-            )
-        except Exception as e:
-            logger.error("Error sending candidates to API: %s", e, exc_info=True)
-            return False
-
-        if response.status_code != 200:
-            logger.warning("Failed to send candidates to API. Status code: %s", response.status_code)
-            return False
-
-        logger.info("Successfully sent login candidates to API at %s", api_url)
-        return True
-
-
-
 
     def preprocess_candidates(input_json):
         """
@@ -220,22 +157,71 @@ class RabbitHelper:
             logger.debug(e)
             return {"exception": f"{e}"}
 
+    def send_candidates_to_api(candidates, task_id):
+        """
+        Send the preprocessed login candidates to a remote API endpoint.
+        'candidates' should be a Python list/dict that can be serialized to JSON.
+        
+        Returns a tuple: (success: bool, status_code: int, error_detail: str or None)
+        """
+        api_url = "http://172.17.0.1:4050/api/login_candidates"
+        payload = json.dumps({
+            "candidates": candidates, 
+            "task_id": task_id
+        })
+        
+        try:
+            response = requests.post(
+                api_url,
+                data=payload,
+                headers={'Content-Type': 'application/json'},
+            )
+            if response.status_code != 200:
+                error_detail = (f"API responded with status code {response.status_code}. "
+                                f"Response: {response.text}")
+                logger.warning("Failed to send candidates to API. %s", error_detail)
+                return False, response.status_code, error_detail
+        except requests.exceptions.ConnectionError as e:
+            error_detail = f"Connection error: {str(e)}"
+            logger.error("Connection error: API is down or unreachable. Error: %s", error_detail, exc_info=True)
+            return False, 0, error_detail
+        except requests.exceptions.Timeout as e:
+            error_detail = f"Timeout error: {str(e)}"
+            logger.error("Request timed out. API might be slow or down. Error: %s", error_detail, exc_info=True)
+            return False, 0, error_detail
+        except Exception as e:
+            error_detail = f"Unexpected error: {str(e)}"
+            logger.error("Unexpected error when sending candidates to API: %s", error_detail, exc_info=True)
+            return False, 0, error_detail
+
+        logger.info("Successfully sent login candidates to API at %s", api_url)
+        return True, response.status_code, None
+
+
 
     def reply_data_and_ack_msg(self, channel, method, properties, data):
         logger.info(f"Reply data and acknowledge message received on queue: {self.queue}")
-        # Preprocess candidates using the static method
         candidates = RabbitHelper.preprocess_candidates(data)
-        print('Candidates:', candidates)
-        logger.info(f'Candidates:{candidates}')
-        # Publish them to the 'login_candidates' api
-        RabbitHelper.send_candidates_to_api(candidates)
+        logger.info(f"Candidates: {candidates}")
+        success, status_code, error_detail = RabbitHelper.send_candidates_to_api(candidates, properties.correlation_id)
+        if not success:
+            data["api_status"] = status_code
+            data["api_error"] = error_detail
+        else:
+            data["api_status"] = status_code
+            data["api_error"] = None
         if properties.reply_to:
+            logger.info("Replying to the PUT request at: %s", properties.reply_to)
             while True:
-                success = self.reply_data(properties.reply_to, data)
-                if success: break
-                else: time.sleep(60)
+                success_reply = self.reply_data(properties.reply_to, data)
+                if success_reply:
+                    break
+                else:
+                    time.sleep(60)
         logger.info(f"Acknowledge message received on queue: {self.queue}")
         channel.basic_ack(delivery_tag=method.delivery_tag)
+
+
 
 
     def reply_data(self, reply_to: str, data: dict) -> bool:
