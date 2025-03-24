@@ -1,92 +1,50 @@
-// OpenTelemetry configuration for crawler.js
+// otel-setup.js
 const { NodeSDK } = require('@opentelemetry/sdk-node');
 const { getNodeAutoInstrumentations } = require('@opentelemetry/auto-instrumentations-node');
-const { Resource } = require('@opentelemetry/resources');
-const { SemanticResourceAttributes } = require('@opentelemetry/semantic-conventions');
-const { PrometheusExporter } = require('@opentelemetry/exporter-prometheus');
-const { JaegerExporter } = require('@opentelemetry/exporter-jaeger');
-const { SimpleSpanProcessor } = require('@opentelemetry/sdk-trace-base');
-const { metrics, trace } = require('@opentelemetry/api');
-const { MeterProvider } = require('@opentelemetry/sdk-metrics');
+const { resourceFromAttributes, defaultResource } = require('@opentelemetry/resources');
+const {ATTR_SERVICE_NAME} = require('@opentelemetry/semantic-conventions');
+const { OTLPTraceExporter } = require('@opentelemetry/exporter-trace-otlp-grpc');
+const { OTLPMetricExporter } = require('@opentelemetry/exporter-metrics-otlp-grpc');
+const { PeriodicExportingMetricReader, MeterProvider } = require('@opentelemetry/sdk-metrics');
+const {metrics} = require('@opentelemetry/api')
+const { diag, DiagConsoleLogger, DiagLogLevel } = require('@opentelemetry/api');
+diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.DEBUG);
 
-// Configuration from environment variables
-const JAEGER_ENDPOINT = process.env.JAEGER_ENDPOINT || 'http://localhost:14268/api/traces';
-const PROMETHEUS_PORT = parseInt(process.env.PROMETHEUS_PORT || '9464');
-const SERVICE_NAME = process.env.SERVICE_NAME || 'login-page-detection';
 
-// Set up Prometheus exporter
-const prometheusExporter = new PrometheusExporter({
-  port: PROMETHEUS_PORT,
-  startServer: true,
+// Configure OTLP exporters
+const traceExporter = new OTLPTraceExporter({
+  host: '172.17.0.1',
+  port: '4317', // Collector's OTLP endpoint for traces
+});
+const metricExporter = new OTLPMetricExporter({
+  host: '172.17.0.1',
+  port: '4317', // Collector's OTLP endpoint for metrics
 });
 
-// Configure Jaeger exporter
-const jaegerExporter = new JaegerExporter({
-  endpoint: JAEGER_ENDPOINT,
-});
-
-// Create and configure the meter provider with the Prometheus exporter
-const meterProvider = new MeterProvider({
-  resource: new Resource({
-    [SemanticResourceAttributes.SERVICE_NAME]: SERVICE_NAME,
-    [SemanticResourceAttributes.SERVICE_VERSION]: '1.0.0',
+const resource = defaultResource().merge(
+  resourceFromAttributes({
+    [ATTR_SERVICE_NAME]: 'sso-crawler-service',
   }),
-});
-meterProvider.addMetricReader(prometheusExporter);
-metrics.setGlobalMeterProvider(meterProvider);
+)
 
-// Create the SDK with tracing enabled
+
+// Set up the OpenTelemetry SDK
 const sdk = new NodeSDK({
-  resource: new Resource({
-    [SemanticResourceAttributes.SERVICE_NAME]: SERVICE_NAME,
-    [SemanticResourceAttributes.SERVICE_VERSION]: '1.0.0',
+  resource: resource,
+  traceExporter: traceExporter,
+  metricReader: new PeriodicExportingMetricReader({
+    exporter: metricExporter,
+    exportIntervalMillis: 15000, // Export metrics every 15 seconds
   }),
-  traceExporter: jaegerExporter,
-  spanProcessor: new SimpleSpanProcessor(jaegerExporter),
-  instrumentations: [getNodeAutoInstrumentations()],
 });
 
 // Start the SDK
-sdk.start();
+sdk.start()
 
-// Create tracer and meter for manual instrumentation
-const meter = metrics.getMeter(SERVICE_NAME);
-const tracer = trace.getTracer(SERVICE_NAME);
 
-// Define key metrics
-const pageLoadDuration = meter.createHistogram('page_load_duration_seconds', {
-  description: 'Duration of page loads in seconds',
-  unit: 's'
-});
+module.exports = { sdk };
 
-const classificationDuration = meter.createHistogram('classification_duration_seconds', {
-  description: 'Duration of screenshot classification in seconds',
-  unit: 's'
-});
+/*
+export OTEL_EXPORTER_OTLP_ENDPOINT="http://172.17.0.1:4317"
 
-const clickPositionDuration = meter.createHistogram('click_position_duration_seconds', {
-  description: 'Duration of click position inference in seconds',
-  unit: 's'
-});
-
-const screenshotsTotal = meter.createCounter('screenshots_total', {
-  description: 'Total number of screenshots taken'
-});
-
-const flowsCompleted = meter.createCounter('flows_completed_total', {
-  description: 'Total number of completed crawler flows'
-});
-
-// Export the objects for use in crawler.js
-module.exports = {
-  meter,
-  tracer,
-  metrics: {
-    pageLoadDuration,
-    classificationDuration,
-    clickPositionDuration,
-    screenshotsTotal,
-    flowsCompleted
-  },
-  shutdown: () => sdk.shutdown()
-};
+*/

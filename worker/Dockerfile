@@ -37,17 +37,6 @@ COPY modules/loginpagedetection/package.json modules/loginpagedetection/package-
 WORKDIR /app/modules/loginpagedetection
 RUN npm install
 
-# Install OpenTelemetry dependencies
-RUN npm install --save \
-  @opentelemetry/api \
-  @opentelemetry/sdk-node \
-  @opentelemetry/auto-instrumentations-node \
-  @opentelemetry/exporter-prometheus \
-  @opentelemetry/exporter-jaeger \
-  @opentelemetry/resources \
-  @opentelemetry/semantic-conventions \
-  @opentelemetry/sdk-trace-base \
-  @opentelemetry/sdk-metrics
 
 ##############################
 # Install Python Dependencies
@@ -68,6 +57,7 @@ COPY . .
 EXPOSE 9464
 
 # Set OpenTelemetry environment variables
-ENV JAEGER_ENDPOINT=http://host.docker.internal:14268/api/traces
+ENV JAEGER_ENDPOINT=http://172.17.0.1:14268/api/traces
 ENV PROMETHEUS_PORT=9464
+ENV OTEL_EXPORTER_OTLP_ENDPOINT="http://172.17.0.1:4317"
 ENV SERVICE_NAME=login-page-detection
