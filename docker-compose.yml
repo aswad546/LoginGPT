@@ -188,6 +188,10 @@ services:
     expose:
       - 5672
       - 15672
+      - 15692
+    ports:
+      - 127.0.0.1:15762:15672
+      - 127.0.0.1:15692:15692
     labels:
       - "traefik.enable=true"
       # http router

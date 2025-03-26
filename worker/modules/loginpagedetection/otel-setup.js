@@ -8,7 +8,7 @@ const { OTLPMetricExporter } = require('@opentelemetry/exporter-metrics-otlp-grp
 const { PeriodicExportingMetricReader, MeterProvider } = require('@opentelemetry/sdk-metrics');
 const {metrics} = require('@opentelemetry/api')
 const { diag, DiagConsoleLogger, DiagLogLevel } = require('@opentelemetry/api');
-diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.DEBUG);
+// diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.DEBUG);
 
 
 // Configure OTLP exporters

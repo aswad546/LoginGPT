@@ -32,14 +32,18 @@ def get_top_sites_lists():
     "list_file": File(required=True)
 }, location="files", schema_name="TopSitesListFile")
 def add_top_sites_list(query_data, files_data):
+    print(f'GOING HEREEEE {query_data}')
     db = current_app.config["db"]
     list_id = query_data["list_id"]
     list_rank_index = query_data["list_rank_index"]
     list_domain_index = query_data["list_domain_index"]
     list_file = files_data["list_file"]
+    print('Got here')
 
     tmp_filepath = f"/tmp/{uuid4()}.csv"
     list_file.save(tmp_filepath)
+
+    print('now here')
 
     list_entries = []
     with open(tmp_filepath, "r") as f:
@@ -52,8 +56,9 @@ def add_top_sites_list(query_data, files_data):
                     "domain": line[list_domain_index]
                 })
             except IndexError as e:
+                print('Index Error', e)
                 return {"success": False, "error": f"Invalid top sites list file: {e}", "data": None}
-
+    print('Got here')
     db["top_sites_lists"].delete_many({"id": list_id})
     db["top_sites_lists"].insert_many(list_entries)
 
