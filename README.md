@@ -30,15 +30,17 @@ You can find more details in the [paper](https://sso-monitor.me/paper.pdf) our o
 - Host images locally in new shell
   ```
   cd worker/modules/loginpagedetection/screenshot_flows
-  python -m python -m http.server 8001
+  python -m http.server 8001
   ```
 - In a new shell run the vllm serve command for OS-ATLAS:
   ```
+  conda activate vllm3
   CUDA_VISIBLE_DEVICES=1 vllm serve "OS-Copilot/OS-Atlas-Base-7B" --max-model-len 8192 --gpu-memory-utilization 0.9 --api-key token-abc123 --port 8002
   ```
 - In another shell run the Qwen2.5VL for image classification
   ```
-  vllm serve "Qwen/Qwen2.5-VL-7B-Instruct" --max-model-len 8192 --gpu-memory-utilization 0.9 --api-key token-abc123
+  conda activate vllm3
+  CUDA_VISIBLE_DEVICES=0 vllm serve "Qwen/Qwen2.5-VL-7B-Instruct" --max-model-len 8192 --gpu-memory-utilization 0.9 --api-key token-abc123
   ```
 - Run: `docker-compose build`
 - Run: `docker-compose up`
