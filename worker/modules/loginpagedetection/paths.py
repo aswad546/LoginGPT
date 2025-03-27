@@ -6,13 +6,14 @@ from playwright.sync_api import sync_playwright, Error, TimeoutError, Page
 from modules.browser.browser import PlaywrightBrowser, PlaywrightHelper
 from modules.helper.tmp import TmpHelper
 from modules.helper.url import URLHelper
-
+import socket
+import time
+import os
 
 logger = logging.getLogger(__name__)
 
 
 class Paths:
-
 
     def __init__(self, config: dict, result: dict):
         self.config = config
@@ -27,6 +28,26 @@ class Paths:
         self.base_scheme = self.resolved_url.scheme
         self.base_domain = self.resolved_url.netloc
 
+    def classify_screenshot(self, screenshot_path: str, classification_host: str = '172.17.0.1', classification_port: int = 5060, no_save: bool = True) -> str:
+        start_time = time.time()
+        try:
+            with socket.create_connection((classification_host, classification_port), timeout=30) as sock:
+                logger.info(f"Connected to classification server for {screenshot_path}")
+                # Build the message: if no_save is True, append the flag.
+                message = screenshot_path
+                if no_save:
+                    message += " noSave"
+                # Send the message followed by a newline.
+                sock.sendall((message + "\n").encode())
+                response = sock.recv(1024).decode().strip()
+                logger.info(f"Received classification response for {screenshot_path}: {response}")
+                return response
+        except Exception as e:
+            logger.error(f"Socket error while classifying {screenshot_path}: {e}")
+            raise e
+        finally:
+            duration = time.time() - start_time
+            logger.info(f"Classification request for {screenshot_path} took {duration:.2f} seconds")
 
     def start(self):
         logger.info(f"Starting paths login page detection for: {self.base_domain}")
@@ -86,7 +107,16 @@ class Paths:
                 s = r.status if r else None
                 if s and s == 200:
                     logger.info(f"Path on '{base_url}' returned status code {s}: {path} -> {r.url}")
-                    return f"{base_url}{path}" # stop after first successful path
+                    screenshot_dir = "/app/modules/loginpagedetection/screenshot_flows/paths"
+                    os.makedirs(screenshot_dir, exist_ok=True)
+                    # Replace characters that might not be valid in filenames
+                    sanitized_base_url = base_url.replace("://", "_").replace("/", "_")
+                    screenshot_path = os.path.join(screenshot_dir, f"{sanitized_base_url}_screenshot_{uuid.uuid4()}.png")
+                    page.screenshot(path=screenshot_path)
+                    # Check to see if path is a login page or not using Qwen LLM
+                    classification_response = self.classify_screenshot(screenshot_path)
+                    if 'YES' in classification_response:
+                        return f"{base_url}{path}" # stop after first successful path
                 else:
                     logger.info(f"Path on '{base_url}' returned status code {s}: {path}")
             except TimeoutError as e:

@@ -20,7 +20,8 @@ from modules.detectors.request import RequestDetector
 from modules.detectors.lastpass_icon import LastpassIconDetector
 from modules.detectors.metadata import MetadataDetector
 from modules.detectors.navigator_credentials import NavigatorCredentialsDetector
-
+import socket
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -197,9 +198,9 @@ class LandscapeAnalyzer:
         strategy_functions = []
 
         for lps in self.login_page_strategy_scope:
-            if lps == "HOMEPAGE":
-                strategy_functions.append(self._detect_homepage)
-            elif lps == "MANUAL":
+            # if lps == "HOMEPAGE":
+            #     strategy_functions.append(self._detect_homepage)
+            if lps == "MANUAL":
                 strategy_functions.append(self._detect_manual)
             elif lps == "PATHS":
                 strategy_functions.append(self._detect_paths)

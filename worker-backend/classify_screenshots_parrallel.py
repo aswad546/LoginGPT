@@ -145,25 +145,32 @@ def handle_client(conn, addr):
         if not data:
             logger.info(f"No data received from {addr}.")
             return
-        input_path = data.decode("utf-8").strip()
-        logger.info(f"Received image path from {addr}: {input_path}")
+
+        # Expecting input in the format: "<input_path> [noSave]"
+        data_str = data.decode("utf-8").strip()
+        parts = data_str.split()
+        input_path = parts[0]
+        no_save = "noSave" in parts[1:] if len(parts) > 1 else False
+
+        logger.info(f"Received image path from {addr}: {input_path}, no_save flag: {no_save}")
         input_path = sanitize_input_path(input_path)
         final_answer, full_response = process_image(input_path)
+
         if final_answer is None:
             conn.sendall("Error: Classification failed".encode("utf-8"))
         else:
-            # If classification is YES, save the image to the output path.
-            if final_answer == "YES":
+            response_msg = f"Classification: {final_answer}"
+            # Only save the image if classification is YES and the noSave flag is not present.
+            if final_answer == "YES" and not no_save:
                 output_path = convert_input_to_output_path(input_path, True)
                 os.makedirs(os.path.dirname(output_path), exist_ok=True)
                 shutil.copy(convert_input_to_output_path(input_path, False), output_path)
-                response_msg = f"Classification: YES, image saved to {output_path}"
-                conn.sendall(response_msg.encode("utf-8"))
+                response_msg += f", image saved to {output_path}"
                 logger.info(response_msg)
             else:
-                response_msg = "Classification: NO"
-                conn.sendall(response_msg.encode("utf-8"))
                 logger.info(response_msg)
+            conn.sendall(response_msg.encode("utf-8"))
+
 
 def start_socket_server():
     HOST = "0.0.0.0"

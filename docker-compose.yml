@@ -154,6 +154,7 @@ services:
     volumes:
       - "./worker/modules/loginpagedetection/screenshot_flows:/app/modules/loginpagedetection/screenshot_flows"
       - "./worker/modules/loginpagedetection/output_images:/app/modules/loginpagedetection/output_images"
+      - "/tmp/screenshots:/tmp/screenshots"
       - type: tmpfs
         target: /tmpfs
     deploy:
