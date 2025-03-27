@@ -198,9 +198,9 @@ class LandscapeAnalyzer:
         strategy_functions = []
 
         for lps in self.login_page_strategy_scope:
-            # if lps == "HOMEPAGE":
-            #     strategy_functions.append(self._detect_homepage)
-            if lps == "MANUAL":
+            if lps == "HOMEPAGE":
+                strategy_functions.append(self._detect_homepage)
+            elif lps == "MANUAL":
                 strategy_functions.append(self._detect_manual)
             elif lps == "PATHS":
                 strategy_functions.append(self._detect_paths)

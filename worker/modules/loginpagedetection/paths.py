@@ -115,7 +115,7 @@ class Paths:
                     page.screenshot(path=screenshot_path)
                     # Check to see if path is a login page or not using Qwen LLM
                     classification_response = self.classify_screenshot(screenshot_path)
-                    if 'YES' in classification_response:
+                    if classification_response and 'YES' in classification_response:
                         return f"{base_url}{path}" # stop after first successful path
                 else:
                     logger.info(f"Path on '{base_url}' returned status code {s}: {path}")

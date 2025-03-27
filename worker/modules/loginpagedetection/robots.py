@@ -5,6 +5,13 @@ from urllib.parse import urlparse, unquote
 from modules.browser.browser import RequestsBrowser
 from modules.helper.url import URLHelper
 
+import socket
+import time
+import os
+from playwright.sync_api import sync_playwright, Error, TimeoutError, Page
+from modules.browser.browser import PlaywrightBrowser, PlaywrightHelper
+import uuid
+
 
 logger = logging.getLogger(__name__)
 
@@ -23,10 +30,46 @@ class Robots:
 
         self.resolved_url = result["resolved"]["url"]
 
+    def classify_screenshot(self, screenshot_path: str, classification_host: str = '172.17.0.1', classification_port: int = 5060, no_save: bool = True) -> str:
+        start_time = time.time()
+        try:
+            with socket.create_connection((classification_host, classification_port), timeout=30) as sock:
+                logger.info(f"Connected to classification server for {screenshot_path}")
+                # Build the message: if no_save is True, append the flag.
+                message = screenshot_path
+                if no_save:
+                    message += " noSave"
+                # Send the message followed by a newline.
+                sock.sendall((message + "\n").encode())
+                response = sock.recv(1024).decode().strip()
+                logger.info(f"Received classification response for {screenshot_path}: {response}")
+                return response
+        except Exception as e:
+            logger.error(f"Socket error while classifying {screenshot_path}: {e}")
+            raise e
+        finally:
+            duration = time.time() - start_time
+            logger.info(f"Classification request for {screenshot_path} took {duration:.2f} seconds")
+
+
+    def get_screenshot(self, page_url: str) -> str:
+        screenshot_dir = "/app/modules/loginpagedetection/screenshot_flows/robots"
+        os.makedirs(screenshot_dir, exist_ok=True)
+        # Sanitize the URL for use in a filename.
+        sanitized_url = page_url.replace("://", "_").replace("/", "_")
+        screenshot_path = os.path.join(screenshot_dir, f"{sanitized_url}_{uuid.uuid4()}.png")
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch()
+            page = browser.new_page()
+            page.goto(page_url, wait_until="networkidle")
+            page.screenshot(path=screenshot_path)
+            browser.close()
+        return screenshot_path
+
 
     def start(self):
         logger.info(f"Starting robots login page detection for: {self.resolved_url}")
-
+        checked = set()
         try:
             parsed_url = urlparse(self.resolved_url)
             robots_url = f"{parsed_url.scheme}://{parsed_url.netloc}/robots.txt"
@@ -58,18 +101,25 @@ class Robots:
 
                         # avoid duplicate robots paths
                         lpc = f"{parsed_url.scheme}://{parsed_url.netloc}{path}"
+                        if lpc in checked:
+                            continue
+                        checked.add(lpc)
                         if lpc not in [r["login_page_candidate"] for r in robots]:
-
-                            # store robots path as login page candidate
-                            robots.append({
-                                "login_page_candidate": URLHelper.normalize(lpc),
-                                "login_page_strategy": "ROBOTS",
-                                "login_page_priority": priority,
-                                "login_page_info": {
-                                    "path": path,
-                                    "stm": stm
-                                }
-                            })
+                            screenshot_path = self.get_screenshot(lpc)
+                            print('Screenshot saved at: ', screenshot_path)
+                            classification_response = self.classify_screenshot(screenshot_path)
+                            print(f'Model response: {classification_response}')
+                            if classification_response and 'YES' in classification_response:
+                                # store robots path as login page candidate
+                                robots.append({
+                                    "login_page_candidate": URLHelper.normalize(lpc),
+                                    "login_page_strategy": "ROBOTS",
+                                    "login_page_priority": priority,
+                                    "login_page_info": {
+                                        "path": path,
+                                        "stm": stm
+                                    }
+                                })
 
                 # sort robots paths by priority
                 robots = sorted(robots, key=lambda r: r["login_page_priority"]["priority"], reverse=True)

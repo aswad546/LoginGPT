@@ -15,27 +15,6 @@ class Crawling:
         self.domain = domain
         self.result = result
         pass
-
-    def classify_screenshots(self):
-        """Send the resolved URL to the host socket server on port 5050."""
-        HOST = "172.17.0.1"  # Allows connection to host from inside Docker (default host address for Docker)
-        PORT = 5050
-
-        logger.info(f"Sending URL '{self.domain}' to socket server at {HOST}:{PORT}")
-
-        # Create a socket and connect
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
-            try:
-                client_socket.connect((HOST, PORT))
-                client_socket.sendall(self.domain.encode("utf-8"))
-                
-                # Receive confirmation from server
-                response = client_socket.recv(1024).decode("utf-8")
-                logger.info(f"Received from server: {response}")
-            
-            except (ConnectionRefusedError, socket.gaierror) as e:
-                logger.error(f"Socket connection failed: {e}")
-                raise Exception("Error: Could not connect to socket server")
             
     # Screenshots are labelled page_1.png, page_4.png etc 
     # TODO: Replace with regex
@@ -120,11 +99,7 @@ class Crawling:
                 raise subprocess.CalledProcessError(proc.returncode, args)
             
             logger.info("Puppeteer script executed successfully")
-            # Continue with further processing...
-            # logger.info("Classifying pages (begin)")
-            # self.classify_screenshots()
-            # logger.info("Classifying pages (end)")
-            
+  
             logger.info('Finding valid urls')
             adjustedURL = self.domain.replace('.', '_')
             output_dir = f'/app/modules/loginpagedetection/output_images/{adjustedURL}'

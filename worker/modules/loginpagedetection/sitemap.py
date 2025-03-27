@@ -4,7 +4,12 @@ from lib.usp.tree import sitemap_tree_for_homepage
 from lib.usp.web_client.requests_client import RequestsWebClient
 from lib.usp.exceptions import SitemapException, \
     SitemapXMLParsingException, GunzipException, StripURLToHomepageException
-
+import socket
+import time
+import os
+from playwright.sync_api import sync_playwright, Error, TimeoutError, Page
+from modules.browser.browser import PlaywrightBrowser, PlaywrightHelper
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -25,12 +30,50 @@ class Sitemap:
 
         self.resolved_url = result["resolved"]["url"]
 
+    def classify_screenshot(self, screenshot_path: str, classification_host: str = '172.17.0.1', classification_port: int = 5060, no_save: bool = True) -> str:
+        start_time = time.time()
+        try:
+            with socket.create_connection((classification_host, classification_port), timeout=30) as sock:
+                logger.info(f"Connected to classification server for {screenshot_path}")
+                # Build the message: if no_save is True, append the flag.
+                message = screenshot_path
+                if no_save:
+                    message += " noSave"
+                # Send the message followed by a newline.
+                sock.sendall((message + "\n").encode())
+                response = sock.recv(1024).decode().strip()
+                logger.info(f"Received classification response for {screenshot_path}: {response}")
+                return response
+        except Exception as e:
+            logger.error(f"Socket error while classifying {screenshot_path}: {e}")
+            raise e
+        finally:
+            duration = time.time() - start_time
+            logger.info(f"Classification request for {screenshot_path} took {duration:.2f} seconds")
+
+
+    def get_screenshot(self, page_url: str) -> str:
+        screenshot_dir = "/app/modules/loginpagedetection/screenshot_flows/sitemaps"
+        os.makedirs(screenshot_dir, exist_ok=True)
+        # Sanitize the URL for use in a filename.
+        sanitized_url = page_url.replace("://", "_").replace("/", "_")
+        screenshot_path = os.path.join(screenshot_dir, f"{sanitized_url}_{uuid.uuid4()}.png")
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch()
+            page = browser.new_page()
+            page.goto(page_url, wait_until="networkidle")
+            page.screenshot(path=screenshot_path)
+            browser.close()
+        return screenshot_path
+
+
 
     def start(self):
         logger.info(f"Starting sitemap login page detection for: {self.resolved_url}")
 
         prio_sitemap = [] # list of sitemap urls w/out duplicates and prio > 0
         full_sitemap = [] # list of all sitemap urls
+        checked = set()
         try:
             # request sitemap urls
             client = RequestsWebClient()
@@ -42,7 +85,7 @@ class Sitemap:
                     max_sitemap_size=self.max_sitemap_size
                 )
             except Exception as e: # catch all library bugs
-                logger.warning(f"Error while requesting sitemap for: {self.resolved_url}")
+                logger.warning(f"Error while requesting sitemap for: {self.resolved_url}, {e}")
                 logger.debug(e)
                 return
 
@@ -74,19 +117,27 @@ class Sitemap:
                     # avoid duplicate sitemap urls
                     if page_url in [s["login_page_candidate"] for s in prio_sitemap]:
                         continue
-
-                    # store sitemap url as login page candidate
-                    prio_sitemap.append({
-                        "login_page_candidate": URLHelper.normalize(page_url),
-                        "login_page_strategy": "SITEMAP",
-                        "login_page_priority": priority,
-                        "login_page_info": {
-                            "priority": page_priority,
-                            "last_modified": page_last_modified,
-                            "change_frequency": page_change_frequency,
-                            "news_story": page_news_story
-                        }
-                    })
+                    if page_url in checked:
+                        continue
+                    checked.add(page_url)
+                
+                    screenshot_path = self.get_screenshot(page_url)
+                    print('Screenshot saved at: ', screenshot_path)
+                    classification_response = self.classify_screenshot(screenshot_path)
+                    print(f'Model response: {classification_response}')
+                    if classification_response and 'YES' in classification_response:
+                        # store sitemap url as login page candidate
+                        prio_sitemap.append({
+                            "login_page_candidate": URLHelper.normalize(page_url),
+                            "login_page_strategy": "SITEMAP",
+                            "login_page_priority": priority,
+                            "login_page_info": {
+                                "priority": page_priority,
+                                "last_modified": page_last_modified,
+                                "change_frequency": page_change_frequency,
+                                "news_story": page_news_story
+                            }
+                        })
 
         except Exception as e:
             logger.warning(f"Error while requesting sitemap for: {self.resolved_url}")

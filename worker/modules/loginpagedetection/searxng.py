@@ -3,7 +3,12 @@ import logging
 import requests
 from urllib.parse import quote
 from modules.helper.url import URLHelper
-
+import socket
+import time
+import os
+from playwright.sync_api import sync_playwright, Error, TimeoutError, Page
+from modules.browser.browser import PlaywrightBrowser, PlaywrightHelper
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +31,43 @@ class Searxng:
         self.resolved_url = result["resolved"]["url"]
         self.resolved_domain = result["resolved"]["domain"]
         self.resolved_tld = URLHelper.get_tld(self.resolved_domain)
+    
+
+    def classify_screenshot(self, screenshot_path: str, classification_host: str = '172.17.0.1', classification_port: int = 5060, no_save: bool = True) -> str:
+        start_time = time.time()
+        try:
+            with socket.create_connection((classification_host, classification_port), timeout=30) as sock:
+                logger.info(f"Connected to classification server for {screenshot_path}")
+                # Build the message: if no_save is True, append the flag.
+                message = screenshot_path
+                if no_save:
+                    message += " noSave"
+                # Send the message followed by a newline.
+                sock.sendall((message + "\n").encode())
+                response = sock.recv(1024).decode().strip()
+                logger.info(f"Received classification response for {screenshot_path}: {response}")
+                return response
+        except Exception as e:
+            logger.error(f"Socket error while classifying {screenshot_path}: {e}")
+            raise e
+        finally:
+            duration = time.time() - start_time
+            logger.info(f"Classification request for {screenshot_path} took {duration:.2f} seconds")
+
+
+    def get_screenshot(self, page_url: str) -> str:
+        screenshot_dir = "/app/modules/loginpagedetection/screenshot_flows/metasearch"
+        os.makedirs(screenshot_dir, exist_ok=True)
+        # Sanitize the URL for use in a filename.
+        sanitized_url = page_url.replace("://", "_").replace("/", "_")
+        screenshot_path = os.path.join(screenshot_dir, f"{sanitized_url}_{uuid.uuid4()}.png")
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch()
+            page = browser.new_page()
+            page.goto(page_url, wait_until="networkidle")
+            page.screenshot(path=screenshot_path)
+            browser.close()
+        return screenshot_path
 
 
     def start(self):
@@ -37,6 +79,7 @@ class Searxng:
             quote(self.search_term.replace("%s", self.resolved_tld)),
             ",".join(reversed([e.strip().lower() for e in self.search_engines]))
         )
+        checked = set()
 
         # query multiple searxng pages until we have at least search_results_number results
         page_no = 1
@@ -87,17 +130,27 @@ class Searxng:
                 # consider search result url of any priority because we searched with "login" keyword
                 priority = URLHelper.prio_of_url(r["url"], self.login_page_url_regexes)
 
-                # store search result url as login page candidate
-                searxng_candidates.append({
-                    "login_page_candidate": URLHelper.normalize(r["url"]),
-                    "login_page_strategy": "METASEARCH",
-                    "login_page_priority": priority,
-                    "login_page_info": {
-                        "result_hit": hit_ctr,
-                        "result_engines": [e.upper() for e in r["engines"]],
-                        "result_raw": r
-                    }
-                })
+
+                if r['url'] in checked:
+                    continue
+
+                checked.add(r['url'])
+                screenshot_path = self.get_screenshot(r['url'])
+                print('Screenshot saved at: ', screenshot_path)
+                classification_response = self.classify_screenshot(screenshot_path)
+                print(f'Model response: {classification_response}')
+                if classification_response and 'YES' in classification_response:
+                    # store search result url as login page candidate
+                    searxng_candidates.append({
+                        "login_page_candidate": URLHelper.normalize(r["url"]),
+                        "login_page_strategy": "METASEARCH",
+                        "login_page_priority": priority,
+                        "login_page_info": {
+                            "result_hit": hit_ctr,
+                            "result_engines": [e.upper() for e in r["engines"]],
+                            "result_raw": r
+                        }
+                    })
 
             # break if we have enough results
             if len(searxng_candidates) >= self.search_results_number:
