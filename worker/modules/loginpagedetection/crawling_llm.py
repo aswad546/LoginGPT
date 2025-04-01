@@ -54,13 +54,18 @@ class Crawling:
 
     def process_actions(self, output_dir, raw_results_dir):
         login_pages = {}
+        flows_exist = False
         for dir, _, files in os.walk(output_dir):
             if 'flow_' in dir:
+                flows_exist = True
                 url, flow = dir.split('/')[-2:]
+                print(f'Checking flow: {flow}')
                 # Preprocess and collect all clicks upto a potential login page for each flow
                 actions_file_path = os.path.join(raw_results_dir, flow,  f'click_actions_{flow}.json')
                 actions, click_sequence = self.read_action_file(actions_file_path)
                 self.find_minimum_path_to_login_urls_for_flow(files, actions, login_pages, click_sequence)
+        if flows_exist == False:
+            logger.warn(f'No flows exist for {output_dir}')
         return login_pages
 
 

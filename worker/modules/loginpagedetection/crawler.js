@@ -9,6 +9,54 @@ const sharp = require('sharp');
 const { sdk } = require('./otel-setup');
 const { trace, metrics, context } = require('@opentelemetry/api');
 
+// Global variable to hold the URL for the current crawl
+let currentCrawlUrl = "unknown";
+
+// --- New Structured Logging Functions ---
+function getTraceContext() {
+  const span = trace.getSpan(context.active());
+  const ctx = span ? span.spanContext() : {};
+  return {
+    trace_id: ctx.traceId || "",
+    span_id: ctx.spanId || ""
+  };
+}
+
+function logInfo(message, url = currentCrawlUrl) {
+  console.log(JSON.stringify({
+    system: 'login-crawler',
+    timestamp: new Date().toISOString(),
+    level: 'info',
+    url,
+    message,
+    ...getTraceContext()
+  }));
+}
+
+function logWarn(message, url = currentCrawlUrl) {
+  console.warn(JSON.stringify({
+    system: 'login-crawler',
+    timestamp: new Date().toISOString(),
+    level: 'warn',
+    url,
+    message,
+    ...getTraceContext()
+  }));
+}
+
+function logError(message, url = currentCrawlUrl, error) {
+  console.error(JSON.stringify({
+    system: 'login-crawler',
+    timestamp: new Date().toISOString(),
+    level: 'error',
+    url,
+    message,
+    error: error ? error.message : "",
+    ...getTraceContext()
+  }));
+}
+// --- End Logging Functions ---
+
 // Create tracer and meters
 const tracer = trace.getTracer('crawler-tracer');
 const meter = metrics.getMeter('crawler-metrics');
@@ -48,7 +96,7 @@ puppeteer.use(StealthPlugin());
 
 // Function to generate a valid directory name based on the URL
 function generateParentDirectoryName(url) {
-  return `${url.replace(/https?:\/\//, '').replace(/[^\w]/g, '_')}`;
+  return `${url.replace(/https?:\/\//, '').replace(/\./g, '_')}`;
 }
 
 // Function to generate a valid directory name based on the flow index
@@ -86,11 +134,11 @@ async function overlayClickPosition(inputImagePath, outputImagePath, x, y) {
         .toFile(tempImagePath);
 
       fs.renameSync(tempImagePath, outputImagePath);
-      console.log(`Updated screenshot saved with click overlay at: ${outputImagePath}`);
+      logInfo(`Updated screenshot saved with click overlay at: ${outputImagePath}`);
       
       span.setAttribute('success', true);
     } catch (error) {
-      console.error('Error overlaying click position on screenshot:', error);
+      logError('Error overlaying click position on screenshot', currentCrawlUrl, error);
       span.recordException(error);
       span.setAttribute('success', false);
     } finally {
@@ -115,7 +163,7 @@ async function classifyScreenshot(screenshotPath) {
         // Add handler to receive the response data
         socket.on('data', (data) => {
           const response = data.toString().trim();
-          console.log(`Received classification response for ${screenshotPath}: ${response}`);
+          logInfo(`Received classification response for ${screenshotPath}: ${response}`);
           span.setAttribute('classification_result', response);
           
           // Close the socket now that we have the response
@@ -126,21 +174,21 @@ async function classifyScreenshot(screenshotPath) {
         });
         
         socket.on('error', (err) => {
-          console.error(`Socket error while classifying ${screenshotPath}: ${err}`);
+          logError(`Socket error while classifying ${screenshotPath}`, currentCrawlUrl, err);
           span.recordException(err);
           reject(err);
         });
         
         // Add timeout to prevent hanging indefinitely
         socket.setTimeout(30000, () => {
-          console.warn(`Classification timeout for ${screenshotPath}`);
+          logWarn(`Classification timeout for ${screenshotPath}`);
           span.setAttribute('timeout', true);
           socket.destroy();
           reject(new Error("Classification request timed out"));
         });
         
         socket.connect(classificationPort, classificationHost, () => {
-          console.log(`Connected to classification server for ${screenshotPath}`);
+          logInfo(`Connected to classification server for ${screenshotPath}`);
           // Just send the path, but don't end the connection - wait for response
           socket.write(`${screenshotPath}\n`);
         });
@@ -163,6 +211,7 @@ async function classifyScreenshot(screenshotPath) {
     }
   });
 }
+
 // Function to get all select elements and their options
 async function getSelectOptions(page) {
   return tracer.startActiveSpan('getSelectOptions', async (span) => {
@@ -221,9 +270,6 @@ function generateOptionCombinations(optionsArray) {
 }
 
 // Helper: Deduplicate select options and build a mapping.
-// For example, if selectOptions is [A, B, A, C], then:
-//   - uniqueOptions becomes [A, B, C]
-//   - mapping becomes [[0, 2], [1], [3]]
 function deduplicateOptionsWithMapping(optionsArray) {
   return tracer.startActiveSpan('deduplicateOptionsWithMapping', (span) => {
     try {
@@ -331,7 +377,7 @@ async function detectNavigationOrNewTab(page) {
         // First promise: navigation on the same page
         navigationPromise = page.waitForNavigation({ timeout })
           .then((result) => {
-            console.log('Navigation detected.');
+            logInfo('Navigation detected');
             span.setAttribute('navigation_type', 'same_page');
             cleanup();
             mainResolve(page);
@@ -344,7 +390,7 @@ async function detectNavigationOrNewTab(page) {
           if (target.opener() === page.target()) {
             const newPage = await target.page();
             await newPage.bringToFront();
-            console.log('New tab detected.');
+            logInfo('New tab detected');
             span.setAttribute('navigation_type', 'new_tab');
             cleanup();
             mainResolve(newPage);
@@ -355,7 +401,7 @@ async function detectNavigationOrNewTab(page) {
         
         // Set the timeout to handle the case where neither navigation nor new tab occurs
         timeoutId = setTimeout(() => {
-          console.log('Navigation/tab timeout reached.');
+          logInfo('Navigation/tab timeout reached');
           span.setAttribute('navigation_type', 'none');
           cleanup();
           mainResolve(null);
@@ -373,7 +419,6 @@ async function detectNavigationOrNewTab(page) {
 }
 
 // Function to perform the flow for a given combination of select options.
-// NOTE: We now pass an additional parameter "mapping" to apply the select values to duplicate selects.
 async function performFlow(browser, url, parentDir, client, selectCombination, mapping, flowIndex, clickLimit, classificationPromisesArray) {
   return tracer.startActiveSpan(`performFlow_${flowIndex}`, async (span) => {
     const flowStartTime = Date.now();
@@ -412,7 +457,7 @@ async function performFlow(browser, url, parentDir, client, selectCombination, m
       
       await sleep(Math.floor(Math.random() * 2000) + 1000);
 
-      // Retrieve select identifiers (id, name, or fallback index) for all select elements.
+      // Retrieve select identifiers for all select elements.
       const selectIdentifiers = await page.evaluate(() => {
         return Array.from(document.querySelectorAll('select')).map((el, i) => {
           return { index: i, id: el.id || null, name: el.name || null };
@@ -421,32 +466,27 @@ async function performFlow(browser, url, parentDir, client, selectCombination, m
 
       const actions = [];
 
-      // Check if there are any select options to process.
       if (selectCombination && mapping && mapping.length > 0) {
         await tracer.startActiveSpan('apply_select_options', async (selectSpan) => {
           try {
-            // Apply the select options using the deduplicated mapping.
             const selectElements = await page.$$('select');
             selectSpan.setAttribute('select_elements_count', selectElements.length);
             selectSpan.setAttribute('mapping_length', mapping.length);
             
             for (let uniqueIndex = 0; uniqueIndex < mapping.length; uniqueIndex++) {
               const value = selectCombination[uniqueIndex];
-              // For every duplicate select element that shares the same option set:
               for (let origIdx of mapping[uniqueIndex]) {
                 const selectElement = selectElements[origIdx];
                 const selectedValues = await selectElement.select(value);
                 if (selectedValues.length === 0) {
-                  console.error(`Value "${value}" not found in select element at index ${origIdx}.`);
+                  logError(`Value "${value}" not found in select element at index ${origIdx}`);
                   selectSpan.setAttribute('error', `Value "${value}" not found in select element at index ${origIdx}`);
                   return;
                 }
-                console.log(`Set select element at index ${origIdx} to value ${value}`);
-
-                // Wait for any potential navigation
+                logInfo(`Set select element at index ${origIdx} to value ${value}`);
                 const newPage = await detectNavigationOrNewTab(page);
                 if (newPage && newPage !== page) {
-                  console.log('Navigation or new tab detected after selecting option.');
+                  logInfo('Navigation or new tab detected after selecting option');
                   await page.close();
                   page = newPage;
                   await page.bringToFront();
@@ -467,18 +507,16 @@ async function performFlow(browser, url, parentDir, client, selectCombination, m
           }
         });
       } else {
-        // No select options found: set selectOptions to null in the actions file.
-        console.log("No select options to set. Continuing flow without modifying selects.");
+        logInfo("No select options to set. Continuing flow without modifying selects.");
         actions.push({
           selectOptions: null
         });
       }
       
-      // Proceed with the rest of the flow.
       await continueFlow(page, url, client, parentDir, flowIndex, 1, 0, clickLimit, selectCombination, actions, classificationPromisesArray);
       
     } catch (error) {
-      console.error('Error during flow:', error);
+      logError('Error during flow', currentCrawlUrl, error);
       span.recordException(error);
     } finally {
       if (page && !page.isClosed()) {
@@ -496,13 +534,10 @@ async function performFlow(browser, url, parentDir, client, selectCombination, m
 function buildFullSelectMapping(mapping, uniqueCombination, selectIdentifiers) {
   return tracer.startActiveSpan('buildFullSelectMapping', (span) => {
     try {
-      // Create an array with the same length as the total number of selects
       const fullMapping = new Array(selectIdentifiers.length);
-      // For each unique group, assign the chosen value to every original select in that group.
       mapping.forEach((origIndices, uniqueIndex) => {
         origIndices.forEach((i) => {
           fullMapping[i] = {
-            // Use the element's id if available; otherwise name; otherwise fallback to a string using its index.
             identifier: selectIdentifiers[i].id || selectIdentifiers[i].name || `select_${i}`,
             value: uniqueCombination[uniqueIndex]
           };
@@ -520,15 +555,12 @@ function buildFullSelectMapping(mapping, uniqueCombination, selectIdentifiers) {
   });
 }
 
-
 const truncateString = (str, maxLength = 200) => {
   if (str.length > maxLength) {
     return str.slice(0, maxLength) + '...';
   }
   return str;
 };
-
-// This is the specific section with the fix for the infinite loop
 
 async function continueFlow(page, url, client, parentDir, flowIndex, screenshotIndex, clickCount, clickLimit, selectCombination, actions, classificationPromisesArray) {
   return tracer.startActiveSpan(`continueFlow_${flowIndex}`, async (span) => {
@@ -542,7 +574,6 @@ async function continueFlow(page, url, client, parentDir, flowIndex, screenshotI
 
       await fillInputFields(page);
 
-      // Function to take screenshots
       const takeScreenshot = async () => {
         return tracer.startActiveSpan('takeScreenshot', async (screenshotSpan) => {
           screenshotSpan.setAttribute('screenshot_index', screenshotIndex);
@@ -553,9 +584,10 @@ async function continueFlow(page, url, client, parentDir, flowIndex, screenshotI
             
             if (!fs.existsSync(flowDir)) {
               fs.mkdirSync(flowDir, { recursive: true });
+              logInfo(`Created flow directory: ${flowDir}`);
             }
             await page.screenshot({ path: screenshotPath });
-            console.log(`Screenshot saved to: ${screenshotPath}`);
+            logInfo(`Screenshot saved to: ${screenshotPath}`);
             const currentUrl = await page.url();
             screenshotIndex++;
             return { screenshotPath, currentUrl };
@@ -568,37 +600,33 @@ async function continueFlow(page, url, client, parentDir, flowIndex, screenshotI
         });
       };
       
-      console.log('Filled input fields, now taking screenshot');
+      logInfo('Filled input fields, now taking screenshot');
       let { screenshotPath, currentUrl } = await takeScreenshot();
-      console.log('Sending screenshot for classification');
+      logInfo('Sending screenshot for classification');
       
       classificationPromisesArray.push(
         classifyScreenshot(screenshotPath)
-        .then(() => console.log(`Classification sent for ${screenshotPath}`))
-        .catch(err => console.error(`Error sending screenshot ${screenshotPath}: ${err}`))
-      )
+        .then(() => logInfo(`Classification sent for ${screenshotPath}`))
+        .catch(err => logError(`Error sending screenshot ${screenshotPath}`, currentCrawlUrl, err))
+      );
 
-      // Track previously clicked positions to avoid infinite loops
       const clickedPositions = new Set();
       let previousElementHTML = null;
-      let shouldBreakLoop = false; // Flag to track if we should break the outer loop
+      let shouldBreakLoop = false;
 
-      // Main loop to interact with elements based on server response
       while (clickCount < clickLimit && !shouldBreakLoop) {
         await tracer.startActiveSpan(`click_interaction_${clickCount}`, async (clickSpan) => {
           clickSpan.setAttribute('click_number', clickCount);
           clickSpan.setAttribute('current_url', currentUrl);
           
           try {
-            // Get click position from server
             const clickPositionStartTime = Date.now();
             client.write(`${screenshotPath}\n`);
 
-            // Wait for response from the server
             let clickPosition = await new Promise((resolve) => {
               const dataListener = (data) => {
-                console.log(`Received from server: ${data}`);
-                client.removeListener('data', dataListener); // Clean up listener
+                logInfo(`Received from server: ${data}`);
+                client.removeListener('data', dataListener);
                 resolve(data.toString().trim());
               };
               client.on('data', dataListener);
@@ -611,7 +639,7 @@ async function continueFlow(page, url, client, parentDir, flowIndex, screenshotI
 
             const match = clickPosition.match(/Click Point:\s*(\d+),\s*(\d+)/);
             if (clickPosition === 'No login button detected' || clickPosition === 'Error: No relevant element detected.') {
-              console.log('No login button detected');
+              logInfo('No login button detected');
               clickSpan.setAttribute('result', 'no_login_button');
               actions.push({
                 step: actions.length,
@@ -620,33 +648,31 @@ async function continueFlow(page, url, client, parentDir, flowIndex, screenshotI
                 screenshot: screenshotPath,
                 url: currentUrl,
               });
-              shouldBreakLoop = true; // Signal to break the outer loop
-              return; // Exit the span
+              shouldBreakLoop = true;
+              return;
             } else if (clickPosition === 'No popups found') {
-              console.log('No popups found');
+              logInfo('No popups found');
               clickSpan.setAttribute('result', 'no_popups');
-              shouldBreakLoop = false; // Signal to break the outer loop
-              return; // Exit the span
+              shouldBreakLoop = false;
+              return;
             } else if (!match) {
-              console.error(`Invalid data received from socket: ${clickPosition}`);
+              logError(`Invalid data received from socket: ${clickPosition}`, currentCrawlUrl);
               clickSpan.setAttribute('result', 'invalid_data');
               clickSpan.recordException(new Error(`Invalid click position: ${clickPosition}`));
-              shouldBreakLoop = true; // Signal to break the outer loop
-              return; // Exit the span
+              shouldBreakLoop = true;
+              return;
             }
 
             const [x, y] = match.slice(1).map(Number);
             const positionKey = `${x},${y}`;
             
-            // Check if we've already clicked this position
             if (clickedPositions.has(positionKey)) {
-              console.log(`Already clicked at position (${x}, ${y}). Skipping to avoid infinite loop.`);
+              logInfo(`Already clicked at position (${x}, ${y}). Skipping to avoid infinite loop.`);
               clickSpan.setAttribute('result', 'repeated_click_position');
-              shouldBreakLoop = true; // Signal to break the outer loop
-              return; // Exit the span
+              shouldBreakLoop = true;
+              return;
             }
             
-            // Add this position to our clicked positions set
             clickedPositions.add(positionKey);
             
             clickSpan.setAttribute('click_x', x);
@@ -658,7 +684,7 @@ async function continueFlow(page, url, client, parentDir, flowIndex, screenshotI
             }, { x, y });
 
             if (currentElementHTML === null) {
-              console.log('No element found at the click position.');
+              logInfo('No element found at the click position.');
               clickSpan.setAttribute('result', 'no_element');
               actions.push({
                 step: actions.length,
@@ -667,20 +693,16 @@ async function continueFlow(page, url, client, parentDir, flowIndex, screenshotI
                 screenshot: screenshotPath,
                 url: currentUrl,
               });
-              shouldBreakLoop = true; // Signal to break the outer loop
-              return; // Exit the span
+              shouldBreakLoop = true;
+              return;
             }
 
-            // Log element found at position for debugging
-            console.log(`Element at position (${x}, ${y}): ${currentElementHTML.slice(0, 100)}...`);
+            logInfo(`Element at position (${x}, ${y}): ${currentElementHTML.slice(0, 100)}...`);
             
-            // If it's the same element as previous, we should break
             if (currentElementHTML === previousElementHTML) {
-              console.log('Same element as previous click detected. Stopping flow to avoid loop.');
+              logInfo('Same element as previous click detected. Stopping flow to avoid loop.');
               clickSpan.setAttribute('result', 'repeated_element');
               clickSpan.setAttribute('same_as_previous', true);
-              
-              // Add a final action with this click position
               actions.push({
                 step: actions.length,
                 clickPosition: { x, y },
@@ -689,9 +711,8 @@ async function continueFlow(page, url, client, parentDir, flowIndex, screenshotI
                 url: currentUrl,
                 note: "Flow stopped: same element as previous click"
               });
-              
-              shouldBreakLoop = true; // Signal to break the outer loop
-              return; // Exit the span
+              shouldBreakLoop = true;
+              return;
             }
 
             previousElementHTML = currentElementHTML;
@@ -705,7 +726,7 @@ async function continueFlow(page, url, client, parentDir, flowIndex, screenshotI
             });
 
             await overlayClickPosition(screenshotPath, screenshotPath, x, y);
-            console.log(`Clicking at position: (${x}, ${y})`);
+            logInfo(`Clicking at position: (${x}, ${y})`);
             await page.mouse.move(x - 5, y - 5);
             await sleep(Math.floor(Math.random() * 1000) + 500);
             await page.mouse.click(x, y);
@@ -713,10 +734,9 @@ async function continueFlow(page, url, client, parentDir, flowIndex, screenshotI
 
             clickCount++;
 
-            // Check for navigation or new tab
             const newPage = await detectNavigationOrNewTab(page);
             if (newPage && newPage !== page) {
-              console.log('New tab or navigation detected after click, switching to new page');
+              logInfo('New tab or navigation detected after click, switching to new page');
               await page.close();
               page = newPage;
               await page.bringToFront();
@@ -728,35 +748,30 @@ async function continueFlow(page, url, client, parentDir, flowIndex, screenshotI
             await sleep(4000);
             ({ screenshotPath, currentUrl } = await takeScreenshot());
             
-            // Use promise chaining instead of await to avoid blocking
             classificationPromisesArray.push(
               classifyScreenshot(screenshotPath)
-              .then(() => console.log(`Classification sent for ${screenshotPath}`))
-              .catch(err => console.error(`Error sending screenshot ${screenshotPath}: ${err}`))
-            )
+              .then(() => logInfo(`Classification sent for ${screenshotPath}`))
+              .catch(err => logError(`Error sending screenshot ${screenshotPath}`, currentCrawlUrl, err))
+            );
               
             clickSpan.setAttribute('result', 'success');
           } catch (error) {
             clickSpan.recordException(error);
-            shouldBreakLoop = true; // Signal to break the outer loop
+            shouldBreakLoop = true;
             throw error;
           } finally {
             clickSpan.end();
           }
         }).catch(error => {
-          // If we get an error in the active span
-          console.error(`Error during click interaction: ${error.message}`);
-          shouldBreakLoop = true; // Make sure we break the loop on errors
+          logError(`Error during click interaction: ${error.message}`, currentCrawlUrl, error);
+          shouldBreakLoop = true;
         });
 
-        // If any of the conditions that would cause an exit were met in the span,
-        // we should break the loop here
         if (shouldBreakLoop) {
           break;
         }
       }
 
-      // After the loop, if we need a final entry, add one
       if ((shouldBreakLoop || clickCount >= clickLimit) && 
           (actions.length === 0 || actions[actions.length - 1].clickPosition !== null)) {
         actions.push({
@@ -769,7 +784,6 @@ async function continueFlow(page, url, client, parentDir, flowIndex, screenshotI
         });
       }
       
-      // Write actions to JSON file for this specific flow
       await tracer.startActiveSpan('write_actions_json', async (writeSpan) => {
         writeSpan.setAttribute('flow_index', flowIndex);
         
@@ -779,7 +793,7 @@ async function continueFlow(page, url, client, parentDir, flowIndex, screenshotI
           writeSpan.setAttribute('actions_count', actions.length);
           
           fs.writeFileSync(outputJSONPath, JSON.stringify(actions, null, 2));
-          console.log(`Actions saved to: ${outputJSONPath}`);
+          logInfo(`Actions saved to: ${outputJSONPath}`);
         } catch (error) {
           writeSpan.recordException(error);
           throw error;
@@ -814,8 +828,7 @@ async function connectSocketWithRetry(host, port) {
         let timeout;
 
         const handleError = (err) => {
-          console.error(`Socket error: ${err.message}`);
-          console.log(`Retrying connection in ${retryInterval / 1000} seconds...`);
+          logError(`Socket error: ${err.message}. Retrying connection in ${retryInterval / 1000} seconds...`, currentCrawlUrl, err);
           span.setAttribute('last_error', err.message);
           clearTimeout(timeout);
           timeout = setTimeout(tryConnect, retryInterval);
@@ -829,7 +842,7 @@ async function connectSocketWithRetry(host, port) {
           
           client.connect(port, host, () => {
             client.removeListener('error', handleError);
-            console.log('Connected to socket server');
+            logInfo('Connected to socket server');
             span.setAttribute('connected', true);
             resolve();
           });
@@ -848,6 +861,7 @@ async function connectSocketWithRetry(host, port) {
   });
 }
 async function runCrawler(url) {
+  currentCrawlUrl = url;
   return tracer.startActiveSpan('runCrawler', async (span) => {
     span.setAttribute('url', url);
     
@@ -858,10 +872,8 @@ async function runCrawler(url) {
     let browser;
 
     try {
-      // Start socket connection with retry logic
       client = await connectSocketWithRetry(HOST, PORT);
 
-      // Launch browser
       browser = await tracer.startActiveSpan('browser_launch', async (browserSpan) => {
         try {
           const browser = await puppeteer.launch({
@@ -887,75 +899,64 @@ async function runCrawler(url) {
       const CLICK_LIMIT = 5;
       span.setAttribute('click_limit', CLICK_LIMIT);
 
-      // Clean up the contents of the parent directory without deleting the directory itself
       const parentDir = path.join(__dirname, '/screenshot_flows', generateParentDirectoryName(url));
       span.setAttribute('parent_dir', parentDir);
-      console.log(`Parent directory path: ${parentDir}`);
+      logInfo(`Parent directory path: ${parentDir}`);
 
       await tracer.startActiveSpan('cleanup_directory_contents', async (cleanupSpan) => {
         try {
-          // Create the directory if it doesn't exist
           if (!fs.existsSync(parentDir)) {
             fs.mkdirSync(parentDir, { recursive: true });
-            console.log(`Created parent directory: ${parentDir}`);
-            return; // New directory, nothing to clean up
+            logInfo(`Created parent directory: ${parentDir}`);
+            return;
           }
           
-          console.log(`Cleaning up contents of existing directory: ${parentDir}`);
+          logInfo(`Cleaning up contents of existing directory: ${parentDir}`);
           cleanupSpan.setAttribute('directory', parentDir);
           
-          // List all contents (for debugging and cleanup)
           const dirContents = fs.readdirSync(parentDir);
-          console.log(`Directory contents to clean: ${dirContents.length} items`);
+          logInfo(`Directory contents to clean: ${dirContents.length} items`);
           cleanupSpan.setAttribute('item_count', dirContents.length);
           
-          // Function to recursively delete directory contents without removing the root directory
           const cleanDirectoryContents = function(dirPath, isRoot = true) {
             if (fs.existsSync(dirPath)) {
-              // Process each file/directory inside
               fs.readdirSync(dirPath).forEach((file) => {
                 const curPath = path.join(dirPath, file);
                 
                 try {
                   if (fs.lstatSync(curPath).isDirectory()) {
-                    // For subdirectories: delete everything inside, then the directory itself
                     cleanDirectoryContents(curPath, false);
-                    // Only delete non-root directories
                     if (!isRoot) {
                       fs.rmdirSync(curPath);
-                      console.log(`Deleted subdirectory: ${curPath}`);
+                      logInfo(`Deleted subdirectory: ${curPath}`);
                     }
                   } else {
-                    // Delete file
                     fs.unlinkSync(curPath);
-                    console.log(`Deleted file: ${curPath}`);
+                    logInfo(`Deleted file: ${curPath}`);
                   }
                 } catch (e) {
-                  console.error(`Failed to process ${curPath}: ${e.message}`);
+                  logError(`Failed to process ${curPath}: ${e.message}`, currentCrawlUrl, e);
                   cleanupSpan.recordException(e);
                 }
               });
             }
           };
           
-          // Clean directory contents but keep the parent directory
           cleanDirectoryContents(parentDir);
-          console.log(`Completed cleaning directory contents`);
+          logInfo(`Completed cleaning directory contents`);
           
-          // Verify the contents are gone but directory remains
           const remainingItems = fs.existsSync(parentDir) ? fs.readdirSync(parentDir).length : 0;
           cleanupSpan.setAttribute('remaining_items', remainingItems);
-          console.log(`Directory cleanup complete. Remaining items: ${remainingItems}`);
+          logInfo(`Directory cleanup complete. Remaining items: ${remainingItems}`);
           
         } catch (err) {
-          console.error(`Unexpected error during directory cleanup: ${err.message}`);
+          logError(`Unexpected error during directory cleanup: ${err.message}`, currentCrawlUrl, err);
           cleanupSpan.recordException(err);
         } finally {
           cleanupSpan.end();
         }
       });
 
-      // Open a page to get the select options
       let selectOptions = [];
       await tracer.startActiveSpan('get_initial_select_options', async (selectSpan) => {
         try {
@@ -973,25 +974,20 @@ async function runCrawler(url) {
           selectSpan.end();
         }
       });
-      classificationPromises = []
+      classificationPromises = [];
 
       if (selectOptions.length === 0) {
-        console.log("No select options found. Running flow without select options.");
+        logInfo("No select options found. Running flow without select options.");
         span.setAttribute('has_select_options', false);
-        // Passing null as selectCombination and an empty array for mapping.
         await performFlow(browser, url, parentDir, client, null, [], 0, CLICK_LIMIT, classificationPromises);
       } else {
         span.setAttribute('has_select_options', true);
         
-        // Deduplicate select options and build a mapping.
         const { uniqueOptions, mapping } = deduplicateOptionsWithMapping(selectOptions);
         span.setAttribute('unique_option_groups', uniqueOptions.length);
         
-        // Define a default combination using the first option from each unique group.
         const defaultCombination = uniqueOptions.map(options => options[0]);
 
-        // Build flows: for each unique select group, try each option (if not the default)
-        // while keeping other groups at their default.
         const flows = [];
         uniqueOptions.forEach((options, groupIndex) => {
           options.forEach(option => {
@@ -1002,29 +998,28 @@ async function runCrawler(url) {
             }
           });
         });
-        console.log(`Generated ${flows.length} flows based on unique select options.`);
+        logInfo(`Generated ${flows.length} flows based on unique select options.`);
         span.setAttribute('total_flows', flows.length);
 
-        // Iterate over each flow and perform the flow
         for (let i = 0; i < flows.length; i++) {
           const selectCombination = flows[i];
-          console.log(`Starting flow ${i} with select options: ${selectCombination}`);
+          logInfo(`Starting flow ${i} with select options: ${selectCombination}`);
           await performFlow(browser, url, parentDir, client, selectCombination, mapping, i, CLICK_LIMIT, classificationPromises);
         }
       }
     } catch (error) {
-      console.error('Error:', error);
+      logError(`Error: ${error.message}`, currentCrawlUrl, error);
       span.recordException(error);
     } finally {
       if (browser) {
-        await Promise.all(classificationPromises)
+        await Promise.all(classificationPromises);
         await browser.close();
-        console.log('Browser closed');
+        logInfo('Browser closed');
       }
       if (client) {
         client.end();
-        client.destroy(); // Ensure the socket is fully closed
-        console.log('Socket connection closed');
+        client.destroy();
+        logInfo('Socket connection closed');
       }
       
       const crawlDuration = Date.now() - crawlStartTime;
@@ -1034,6 +1029,7 @@ async function runCrawler(url) {
     }
   });
 }
+
 // Function to read URLs from the file and add "http://" if not present
 function getUrlsFromFile(filePath) {
   return tracer.startActiveSpan('getUrlsFromFile', (span) => {
@@ -1050,7 +1046,7 @@ function getUrlsFromFile(filePath) {
       span.setAttribute('url_count', urls.length);
       return urls;
     } catch (error) {
-      console.error(`Error reading file: ${error.message}`);
+      logError(`Error reading file: ${error.message}`, currentCrawlUrl, error);
       span.recordException(error);
       return [];
     } finally {
@@ -1062,11 +1058,11 @@ function getUrlsFromFile(filePath) {
 async function main() {
   return tracer.startActiveSpan('crawler_execution', async (mainSpan) => {
     try {
-      const args = process.argv.slice(2); // Get arguments passed to the script
-      let url = args[0]; // Take the first argument as the URL
+      const args = process.argv.slice(2);
+      let url = args[0];
 
       if (!url) {
-        console.log('Invalid URL passed in');
+        logError('Invalid URL passed in', currentCrawlUrl);
         mainSpan.setAttribute('error', 'invalid_url');
         return;
       }
@@ -1076,22 +1072,21 @@ async function main() {
       }
 
       mainSpan.setAttribute('target_url', url);
-      console.log(`Processing single URL from arguments: ${url}`);
+      logInfo(`Processing single URL from arguments: ${url}`);
       
       try {
-        await runCrawler(url); // Call the crawler for the given URL
+        await runCrawler(url);
       } catch (error) {
-        console.error(`Error processing URL ${url}: ${error.message}`);
+        logError(`Error processing URL ${url}: ${error.message}`, url, error);
         mainSpan.recordException(error);
       }
 
-      console.log('Finished processing all URLs.');
+      logInfo('Finished processing all URLs.');
     } catch (error) {
+      logError(`Unexpected error in main function: ${error.message}`, currentCrawlUrl, error);
       mainSpan.recordException(error);
-      console.error('Unexpected error in main function:', error);
     } finally {
       mainSpan.end();
-      // Shutdown the OpenTelemetry SDK to flush any remaining spans
       await sdk.shutdown();
       process.exit(0);
     }
@@ -1099,13 +1094,15 @@ async function main() {
 }
 
 // Entry point
-main().catch(err => {
-  console.error('Fatal error:', err);
-  sdk.shutdown().finally(() => process.exit(1));
+main().finally(() => {
+  // Ensure that the SDK is properly shut down after the crawl is done
+  sdk.shutdown().finally(() => {
+    console.log("Logs flushed and OpenTelemetry SDK shut down.");
+    // Optionally exit the process (0 for success, 1 for failure)
+    process.exit(0); // Or process.exit(1) based on the result you want
+  });
+}).catch(err => {
+  // Log the error if something goes wrong
+  logError(`Fatal Error: ${err.message}`, currentCrawlUrl, err);
 });
 
-// runCrawler('www.cadencebank.com')
-/**
- * www.ucbi.com
- * www.22ndstatebank.com  
- */
