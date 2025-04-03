@@ -201,15 +201,15 @@ class RabbitHelper:
 
     def reply_data_and_ack_msg(self, channel, method, properties, data):
         logger.info(f"Reply data and acknowledge message received on queue: {self.queue}")
-        candidates = RabbitHelper.preprocess_candidates(data)
-        logger.info(f"Candidates: {candidates}")
-        success, status_code, error_detail = RabbitHelper.send_candidates_to_api(candidates, properties.correlation_id)
-        if not success:
-            data["api_status"] = status_code
-            data["api_error"] = error_detail
-        else:
-            data["api_status"] = status_code
-            data["api_error"] = None
+        # candidates = RabbitHelper.preprocess_candidates(data)
+        # logger.info(f"Candidates: {candidates}")
+        # success, status_code, error_detail = RabbitHelper.send_candidates_to_api(candidates, properties.correlation_id)
+        # if not success:
+        #     data["api_status"] = status_code
+        #     data["api_error"] = error_detail
+        # else:
+        #     data["api_status"] = status_code
+        #     data["api_error"] = None
         if properties.reply_to:
             logger.info("Replying to the PUT request at: %s", properties.reply_to)
             while True:

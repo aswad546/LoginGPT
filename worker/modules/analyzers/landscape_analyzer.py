@@ -63,7 +63,7 @@ class LandscapeAnalyzer:
         # login page detection
         if self.result["resolved"]["reachable"]:
             t = time.time()
-            self.login_page_detection_parallel()
+            self.login_page_detection()
             self.result["timings"]["login_page_detection_duration_seconds"] = time.time() - t
 
         # login page analysis
@@ -233,56 +233,74 @@ class LandscapeAnalyzer:
         for lps in self.login_page_strategy_scope:
 
             # strategy: homepage (resolved url)
-            if lps == "HOMEPAGE":
-                t = time.time()
-                lpc = self.result["resolved"]["url"]
-                self.result["login_page_candidates"].append({
-                    "login_page_candidate": URLHelper.normalize(lpc),
-                    "login_page_strategy": "HOMEPAGE",
-                    "login_page_priority": URLHelper.prio_of_url(lpc, self.login_page_url_regexes)
-                })
-                self.result["timings"]["login_page_detection_homepage_duration_seconds"] = time.time() - t
+            # if lps == "HOMEPAGE":
+            #     t = time.time()
+            #     lpc = self.result["resolved"]["url"]
+            #     self.result["login_page_candidates"].append({
+            #         "login_page_candidate": URLHelper.normalize(lpc),
+            #         "login_page_strategy": "HOMEPAGE",
+            #         "login_page_priority": URLHelper.prio_of_url(lpc, self.login_page_url_regexes)
+            #     })
+            #     self.result["timings"]["login_page_detection_homepage_duration_seconds"] = time.time() - t
 
             # strategy: manual (manually specified urls)
-            if lps == "MANUAL":
-                t = time.time()
-                for lpc in self.config["login_page_config"]["manual_strategy_config"]["login_page_candidates"]:
-                    self.result["login_page_candidates"].append({
-                        "login_page_candidate": URLHelper.normalize(lpc),
-                        "login_page_strategy": "MANUAL",
-                        "login_page_priority": URLHelper.prio_of_url(lpc, self.login_page_url_regexes)
-                    })
-                self.result["timings"]["login_page_detection_manual_duration_seconds"] = time.time() - t
+            try:
+                if lps == "MANUAL":
+                    t = time.time()
+                    for lpc in self.config["login_page_config"]["manual_strategy_config"]["login_page_candidates"]:
+                        self.result["login_page_candidates"].append({
+                            "login_page_candidate": URLHelper.normalize(lpc),
+                            "login_page_strategy": "MANUAL",
+                            "login_page_priority": URLHelper.prio_of_url(lpc, self.login_page_url_regexes)
+                        })
+                    self.result["timings"]["login_page_detection_manual_duration_seconds"] = time.time() - t
+            except Exception as e:
+                logger.error(f"Error in detection strategy manual: {self.domain} {e}")
 
             # strategy: paths (well-known paths and subdomains)
-            if lps == "PATHS":
-                t = time.time()
-                Paths(self.config, self.result).start()
-                self.result["timings"]["login_page_detection_paths_duration_seconds"] = time.time() - t
+            try:
+                if lps == "PATHS":
+                    t = time.time()
+                    Paths(self.config, self.result).start()
+                    self.result["timings"]["login_page_detection_paths_duration_seconds"] = time.time() - t
+            except Exception as e:
+                logger.error(f"Error in detection strategy paths: {self.domain} {e}")
 
             # strategy: crawling (crawls on homepage)
-            if lps == "CRAWLING":
-                t = time.time()
-                Crawling(self.config, self.result, self.domain).start()
-                self.result["timings"]["login_page_detection_crawling_duration_seconds"] = time.time() - t
+            try:
+                if lps == "CRAWLING":
+                    t = time.time()
+                    Crawling(self.config, self.result, self.domain).start()
+                    self.result["timings"]["login_page_detection_crawling_duration_seconds"] = time.time() - t
+            except Exception as e:
+                logger.error(f"Error in detection strategy crawling: {self.domain} {e}")
 
             # strategy: sitemap (sitemap.xml)
-            if lps == "SITEMAP":
-                t = time.time()
-                Sitemap(self.config, self.result).start()
-                self.result["timings"]["login_page_detection_sitemap_duration_seconds"] = time.time() - t
+            try:
+                if lps == "SITEMAP":
+                    t = time.time()
+                    Sitemap(self.config, self.result).start()
+                    self.result["timings"]["login_page_detection_sitemap_duration_seconds"] = time.time() - t
+            except Exception as e:
+                logger.error(f"Error in detection strategy sitemap: {self.domain} {e}")
 
             # strategy: robots (robots.txt)
-            if lps == "ROBOTS":
-                t = time.time()
-                Robots(self.config, self.result).start()
-                self.result["timings"]["login_page_detection_robots_duration_seconds"] = time.time() - t
+            try:
+                if lps == "ROBOTS":
+                    t = time.time()
+                    Robots(self.config, self.result).start()
+                    self.result["timings"]["login_page_detection_robots_duration_seconds"] = time.time() - t
+            except Exception as e:
+                logger.error(f"Error in detection strategy robots: {self.domain} {e}")
 
             # strategy: metasearch (searxng)
-            if lps == "METASEARCH":
-                t = time.time()
-                Searxng(self.config, self.result).start()
-                self.result["timings"]["login_page_detection_metasearch_duration_seconds"] = time.time() - t
+            try:
+                if lps == "METASEARCH":
+                    t = time.time()
+                    Searxng(self.config, self.result).start()
+                    self.result["timings"]["login_page_detection_metasearch_duration_seconds"] = time.time() - t
+            except Exception as e:
+                logger.error(f"Error in detection strategy metasearch: {self.domain} {e}")
 
 
     def login_page_analysis(self):

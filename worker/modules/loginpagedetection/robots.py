@@ -135,6 +135,9 @@ class Robots:
         except RequestException as e:
             logger.info(f"Error while requesting robots.txt on: {robots_url}")
             logger.debug(e)
+        except Exception as e:
+            logger.error(f"Error while doing robots.txt on: {robots_url}, {e}")
+            logger.debug(e)
 
 
     @staticmethod

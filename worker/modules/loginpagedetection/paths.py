@@ -73,10 +73,13 @@ class Paths:
                         break # stop after first successful path
                 PlaywrightHelper.close_context(context)
             except TimeoutError as e:
-                logger.warning(f"Timeout while checking paths: {self.base_domain}")
+                logger.warning(f"Timeout while checking paths: {self.base_domain}, {e}")
                 logger.debug(e)
             except Error as e:
-                logger.warning(f"Error while checking paths: {self.base_domain}")
+                logger.warning(f"Error while checking paths: {self.base_domain}, {e}")
+                logger.debug(e)
+            except Exception as e:
+                logger.error(f"Exception while checking paths: {self.base_domain} {e}")
                 logger.debug(e)
 
 
@@ -125,3 +128,4 @@ class Paths:
             except Error as e:
                 logger.info(f"Error while checking path: {base_url}{path}")
                 logger.debug(e)
+                

@@ -105,6 +105,9 @@ class Searxng:
                 logger.info(f"Error while requesting searxng results")
                 logger.debug(c)
                 break # stop search
+            except Exception as e:
+                logger.error(f"Error while running searxng: {e}")
+                logger.debug(e)
 
             # number of results on this page
             logger.info(f"Received #{len(results)} results from searxng on page #{page_no}")
@@ -135,22 +138,26 @@ class Searxng:
                     continue
 
                 checked.add(r['url'])
-                screenshot_path = self.get_screenshot(r['url'])
-                print('Screenshot saved at: ', screenshot_path)
-                classification_response = self.classify_screenshot(screenshot_path)
-                print(f'Model response: {classification_response}')
-                if classification_response and 'YES' in classification_response:
-                    # store search result url as login page candidate
-                    searxng_candidates.append({
-                        "login_page_candidate": URLHelper.normalize(r["url"]),
-                        "login_page_strategy": "METASEARCH",
-                        "login_page_priority": priority,
-                        "login_page_info": {
-                            "result_hit": hit_ctr,
-                            "result_engines": [e.upper() for e in r["engines"]],
-                            "result_raw": r
-                        }
-                    })
+                try:
+                    screenshot_path = self.get_screenshot(r['url'])
+                    print('Screenshot saved at: ', screenshot_path)
+                    classification_response = self.classify_screenshot(screenshot_path)
+                    print(f'Model response: {classification_response}')
+                    if classification_response and 'YES' in classification_response:
+                        # store search result url as login page candidate
+                        searxng_candidates.append({
+                            "login_page_candidate": URLHelper.normalize(r["url"]),
+                            "login_page_strategy": "METASEARCH",
+                            "login_page_priority": priority,
+                            "login_page_info": {
+                                "result_hit": hit_ctr,
+                                "result_engines": [e.upper() for e in r["engines"]],
+                                "result_raw": r
+                            }
+                        })
+                except Exception as e:
+                    logger.warn(f"Error taking screenshot for {r['url']}, {e}")
+                    logger.debug(e)
 
             # break if we have enough results
             if len(searxng_candidates) >= self.search_results_number:

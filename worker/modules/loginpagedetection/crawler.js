@@ -862,6 +862,7 @@ async function connectSocketWithRetry(host, port) {
 }
 async function runCrawler(url) {
   currentCrawlUrl = url;
+  let classificationPromises = [];
   return tracer.startActiveSpan('runCrawler', async (span) => {
     span.setAttribute('url', url);
     
@@ -974,7 +975,7 @@ async function runCrawler(url) {
           selectSpan.end();
         }
       });
-      classificationPromises = [];
+      
 
       if (selectOptions.length === 0) {
         logInfo("No select options found. Running flow without select options.");
@@ -1001,7 +1002,7 @@ async function runCrawler(url) {
         logInfo(`Generated ${flows.length} flows based on unique select options.`);
         span.setAttribute('total_flows', flows.length);
 
-        for (let i = 0; i < flows.length; i++) {
+        for (let i = 0; i < flows.length && i < 20; i++) {
           const selectCombination = flows[i];
           logInfo(`Starting flow ${i} with select options: ${selectCombination}`);
           await performFlow(browser, url, parentDir, client, selectCombination, mapping, i, CLICK_LIMIT, classificationPromises);
@@ -1024,7 +1025,7 @@ async function runCrawler(url) {
       
       const crawlDuration = Date.now() - crawlStartTime;
       crawlDurationHistogram.record(crawlDuration);
-      span.setAttribute('duration_ms', crawlDuration);
+      span.setAttribute('duration_ms' , crawlDuration);
       span.end();
     }
   });

@@ -159,7 +159,7 @@ services:
         target: /tmpfs
     deploy:
       mode: replicated
-      replicas: 10
+      replicas: 25
     environment:
       - HF_HOME=/root/.cache/huggingface
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
@@ -257,6 +257,7 @@ services:
       - db:/data/db
 
   mongo-express:
+    container_name: mongo-express-new
     image: mongo-express:0.54.0
     restart: unless-stopped
     depends_on:
