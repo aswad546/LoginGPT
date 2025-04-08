@@ -2,35 +2,40 @@
 # Bash script to POST candidate data using curl
 
 # Define JSON payload using a here-document
+# Define JSON payload using a here-document
 read -r -d '' JSON_DATA <<'EOF'
 {
-   "candidates":[
-      {
-         "id":1,
-         "url":"https://cadencebank.com/",
-         "actions":[
-            {
-               "selectOptions":"None"
-            }
-         ],
-         "scan_domain":"www.cadencebank.com"
-      },
-      {
-         "id":2,
-         "url":"https://cadencebank.com/log-in",
-         "actions":"None",
-         "scan_domain":"www.cadencebank.com"
-      },
-      {
-         "id":3,
-         "url":"https://cadencebank.com/personal/digital-banking/online-banking",
-         "actions":"None",
-         "scan_domain":"www.cadencebank.com"
-      }
-   ]
+  "task_id": 101,
+  "candidates": [
+    {
+      "id": 1,
+      "url": "https://streetscape.envestnet.com/secure/app.jsp?",
+      "actions": [
+         {
+            "selectOptions": [
+                  {
+                     "identifier": "m97etoj6o5cw37qdle",
+                     "value": "Mortgage"
+                  }
+            ]
+         },
+         {
+            "step": 1,
+            "clickPosition": {
+                  "x": 997,
+                  "y": 595
+            },
+            "elementHTML": "<button class=\"button button--primary js-sso-submit-action\" type=\"submit\">\n <i aria-hidden=\"true\"></i> Log in\n </button>",
+            "screenshot": "/app/modules/loginpagedetection/screenshot_flows/www_firsthorizon_com/flow_1/page_1.png",
+            "url": "https://www.firsthorizon.com/"
+         }
+      ],
+      "scan_domain": "www.firsthorizon.com"
+    }
+  ]
 }
-
 EOF
+
 
 # Execute the curl POST request
 curl -X POST "http://127.0.0.1:4050/api/login_candidates" \

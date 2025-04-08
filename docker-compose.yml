@@ -80,7 +80,7 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
-      mongodb-new:
+      mongodb:
         condition: service_healthy
       minio:
         condition: service_healthy
@@ -122,7 +122,7 @@ services:
       - RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
       - RABBITMQ_PORT_API=${RABBITMQ_PORT_API:-15672}
       # mongodb
-      - MONGODB_HOST=${MONGODB_HOST:-mongodb-new}
+      - MONGODB_HOST=${MONGODB_HOST:-mongodb}
       - MONGODB_PORT=${MONGODB_PORT:-27017}
       # minio
       - MINIO_HOST=${MINIO_HOST:-minio}
@@ -238,16 +238,16 @@ services:
   #     - otel-collector
 
 
-  mongodb-new:
+  mongodb:
     image: mongo:4.4.6
-    container_name: sso-monitor-mongodb-new
+    container_name: sso-monitor-mongodb
     restart: unless-stopped
     networks:
       - sso-monitor-network
     expose:
       - 27017
     ports:
-      - 127.0.0.1:27018:27017
+      - 127.0.0.1:27019:27017
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongo localhost:27017/test --quiet
       interval: 10s
@@ -261,7 +261,7 @@ services:
     image: mongo-express:0.54.0
     restart: unless-stopped
     depends_on:
-      mongodb-new:
+      mongodb:
         condition: service_healthy
     networks:
       - sso-monitor-network
@@ -282,9 +282,16 @@ services:
       timeout: 10s
       retries: 15
     environment:
-      - ME_CONFIG_MONGODB_SERVER=${ME_CONFIG_MONGODB_SERVER:-mongodb-new}
+      - ME_CONFIG_MONGODB_SERVER=${ME_CONFIG_MONGODB_SERVER:-mongodb}
 
-  
+  # Promtail to scrape Docker container logs
+  promtail:
+    image: grafana/promtail:3.4.1
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - promtail_home:/mnt/config
+    command: -config.file=/mnt/config/promtail-config.yaml
 
   minio:
     image: minio/minio:RELEASE.2023-12-14T18-51-57Z-cpuv1
@@ -359,14 +366,14 @@ services:
       - ./searxng/settings.yml:/etc/searxng/settings.yml
       - ./searxng/uwsgi.ini:/etc/searxng/uwsgi.ini
 
-  jupyter-new:
-    container_name: sso-monitor-jupyter-new
+  jupyter:
+    container_name: sso-monitor-jupyter
     build:
       context: ./jupyter
       dockerfile: Dockerfile
     restart: unless-stopped
     depends_on:
-      mongodb-new:
+      mongodb:
         condition: service_healthy
       minio:
         condition: service_healthy
@@ -375,7 +382,7 @@ services:
     expose:
       - 8888
     ports:
-      - 127.0.0.1:53832:8888
+      - 127.0.0.1:53833:8888
     deploy:
       resources:
         limits:
@@ -387,16 +394,16 @@ services:
       retries: 15
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.jupyter-new.entrypoints=web,websecure"
-      - "traefik.http.routers.jupyter-new.rule=Host(`${JUPYTER_EXTERNAL_DOMAIN:-jupyter.docker.localhost}`)"
-      - "traefik.http.routers.jupyter-new.tls.certresolver=letsencrypt"
-      - "traefik.http.services.jupyter-new.loadbalancer.server.port=8888"
+      - "traefik.http.routers.jupyter.entrypoints=web,websecure"
+      - "traefik.http.routers.jupyter.rule=Host(`${JUPYTER_EXTERNAL_DOMAIN:-jupyter.docker.localhost}`)"
+      - "traefik.http.routers.jupyter.tls.certresolver=letsencrypt"
+      - "traefik.http.services.jupyter.loadbalancer.server.port=8888"
     volumes:
       - jupyter-home-new:/home/jovyan
     environment:
       - ADMIN_USER=${ADMIN_USER:-admin}
       - ADMIN_PASS=${ADMIN_PASS:-changeme}
-      - MONGODB_HOST=${MONGODB_HOST:-mongodb-new}
+      - MONGODB_HOST=${MONGODB_HOST:-mongodb}
       - MONGODB_PORT=${MONGODB_PORT:-27017}
       - MINIO_HOST=${MINIO_HOST:-minio}
       - MINIO_PORT=${MINIO_PORT:-9000}
@@ -414,3 +421,9 @@ volumes:
   traefik-logs:
   traefik-acme:
   jupyter-home-new:
+  promtail_home:
+    driver: local
+    driver_opts:
+      type: nfs
+      o: addr=192.168.152.3,rw
+      device: ":/u1/a8tariq/SSO-Monitor/promtail"
