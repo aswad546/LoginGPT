@@ -40,7 +40,7 @@ You can find more details in the [paper](https://sso-monitor.me/paper.pdf) our o
 - In another shell run the Qwen2.5VL for image classification
   ```
   conda activate vllm3
-  CUDA_VISIBLE_DEVICES=0 vllm serve "Qwen/Qwen2.5-VL-7B-Instruct" --max-model-len 8192 --gpu-memory-utilization 0.82 --api-key token-abc123 --mm-processor-kwargs '{"min_pixels": 200704, "max_pixels": 401408}' --max-num-seqs 8
+  CUDA_VISIBLE_DEVICE=0 vllm serve "Qwen/Qwen2.5-VL-7B-Instruct"   --max-model-len 8192   --gpu-memory-utilization 0.93   --api-key token-abc123   --max-num-seqs 35   --max-num-batched-tokens 20480   --block-size 32   --swap-space 8   --enforce-eager   --disable-custom-all-reduce
   ```
 - Run: `docker-compose build`
 - Run: `docker-compose up`
