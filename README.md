@@ -1,4 +1,4 @@
-<p align="center"><img src="logo_black.png" width="300"></p>
+<p align="center"><img src="logingpt.png" width="300"></p>
 
 # SSO-Monitor.Me: The First Reproducible and Reliable SSO-Archive for Single Sign-On Landscape and Security Measurements
 
