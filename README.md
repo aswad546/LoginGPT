@@ -12,7 +12,7 @@ You can find more details in the [paper](https://sso-monitor.me/paper.pdf) our o
 
 - Use [Ubuntu 22.04](https://releases.ubuntu.com/jammy/) (or similar)
 - Install [Docker](https://docs.docker.com/get-docker/) and [Docker-Compose](https://docs.docker.com/compose/install/)
-- Make sure ports `80`, `443`, `5672`, `8080`, `27017`, `8081`, `9000`, `9090`, `6379`, `8082`, and `8888` are free on your host
+- Make sure ports `80`, `443`, `5672`, `8084`, `27017`, `8085`, `9000`, `9090`, `6379`, `8082`, and `8888` are free on your host
 - Clone this repo: `git clone https://github.com/RUB-NDS/SSO-Monitor.git`
 - Go into this directory: `cd ./SSO-Monitor`
 - Go to the worker backend directory and run the worker backend
