@@ -10,26 +10,12 @@ import threading
 # Import OpenAI client for vLLM Serve style connection.
 from openai import OpenAI
 
-# Transformers for prompt processing and summarization
-from transformers import AutoProcessor, pipeline, AutoModelForSeq2SeqLM
-
 # Logging setup
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 logging.basicConfig(level=logging.INFO)
 
 logger.info("Loading the crawler_backend")
-
-# Use GPU 0
-device = torch.device("cuda:0")
-
-# Load the processor (for prompt formatting, etc.)
-processor = AutoProcessor.from_pretrained("OS-Copilot/OS-Atlas-Base-7B")
-logger.info("Successfully loaded model crawler_backend")
-
-# Load summarization pipeline (runs on GPU)
-summarizer = pipeline("summarization", model="sshleifer/distilbart-cnn-12-6", device=0)
-attention_model = AutoModelForSeq2SeqLM.from_pretrained("facebook/bart-large-cnn").to(device)
 
 # ---- vLLM Serve / OpenAI Setup ----
 API_KEY = "token-abc123"
@@ -41,11 +27,6 @@ client = OpenAI(
 # Socket server configuration
 HOST = '0.0.0.0'
 PORT = 5000
-
-# Dictionaries to maintain conversation history and task states per client
-conversation_histories = {}
-task_states = {}  # Tracks the current task state for each client
-last_image = {}   # Tracks the latest image for each client
 
 def convert_path_to_url(path: str) -> str:
     """
@@ -62,24 +43,16 @@ def convert_path_to_url(path: str) -> str:
     url = f"http://localhost:8001/{relative_part}"
     return url
 
-def summarize_conversation(history, max_length=100):
-    conversation_text = " ".join([msg['content'] for msg in history])
-    summary = summarizer(conversation_text, max_length=max_length, min_length=30, do_sample=False)
-    return summary[0]['summary_text']
-
 def handle_client(conn, addr):
     """
     Handle the socket connection with a client.
     This function runs in a separate thread per client.
     """
+    # Local task state for this specific connection
+    current_task_state = "check_popups"
+
     with conn:
         logger.info(f"Connected by {addr}")
-
-        # Initialize conversation history and state if not already set.
-        if addr not in conversation_histories:
-            conversation_histories[addr] = []
-            task_states[addr] = "check_popups"  # Starting state.
-            last_image[addr] = None
 
         while True:
             try:
@@ -112,11 +85,8 @@ def handle_client(conn, addr):
             width, height = img.size
             logger.info(f"Image dimensions from {addr}: {width} x {height}")
 
-            # Save the last image for this client.
-            last_image[addr] = img
-
             # Determine the prompt text based on task state.
-            if task_states[addr] == "check_popups":
+            if current_task_state == "check_popups":
                 prompt_text = (
                     """
 Analyze the provided image and determine if there are any visible popups or cookie banners.
@@ -133,9 +103,9 @@ Guidelines:
 - Provide precise bounding box coordinates.
 """
                 )
-                # Move to the next state.
-                task_states[addr] = "find_login"
-            elif task_states[addr] == "find_login":
+                # Change task state to find login on next iteration
+                current_task_state = "find_login"
+            elif current_task_state == "find_login":
                 prompt_text = (
                     """
 Analyze the provided image and identify where do I click to access the login page. 
@@ -150,15 +120,6 @@ Guidelines:
 - Provide precise bounding box coordinates.
 """
                 )
-
-            # Add user's prompt to conversation history.
-            user_message = {"role": "user", "content": prompt_text}
-            conversation_histories[addr].append(user_message)
-
-            # Optionally summarize conversation if history gets too long.
-            if len(conversation_histories[addr]) > 5:
-                summary = summarize_conversation(conversation_histories[addr])
-                conversation_histories[addr] = [{"role": "system", "content": summary}]
 
             # Convert image path to a URL.
             image_url = convert_path_to_url(img_path)
@@ -194,10 +155,6 @@ Guidelines:
             end_time = time.time()
             logger.info(f"Model Output for {addr}: {output_text}")
             logger.info(f"Time elapsed: {end_time - start_time}")
-
-            # Append the model's response to conversation history.
-            model_response = {"role": "assistant", "content": output_text}
-            conversation_histories[addr].append(model_response)
 
             # Extract bounding box coordinates using regex.
             pattern = r'Bounding Box Coordinates:\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)'

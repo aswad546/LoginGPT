@@ -94,6 +94,10 @@ const clickCounter = meter.createCounter('total_clicks', {
 // Add stealth plugin to puppeteer
 puppeteer.use(StealthPlugin());
 
+// await page.evaluateOnNewDocument(() => {
+//   delete navigator.__proto__.webdriver;
+// });
+
 // Function to generate a valid directory name based on the URL
 function generateParentDirectoryName(url) {
   return `${url.replace(/https?:\/\//, '').replace(/\./g, '_')}`;
@@ -180,7 +184,7 @@ async function classifyScreenshot(screenshotPath) {
         });
         
         // Add timeout to prevent hanging indefinitely
-        socket.setTimeout(30000, () => {
+        socket.setTimeout(120000, () => {
           logWarn(`Classification timeout for ${screenshotPath}`);
           span.setAttribute('timeout', true);
           socket.destroy();

@@ -31,7 +31,7 @@ class Paths:
     def classify_screenshot(self, screenshot_path: str, classification_host: str = '172.17.0.1', classification_port: int = 5060, no_save: bool = True) -> str:
         start_time = time.time()
         try:
-            with socket.create_connection((classification_host, classification_port), timeout=60) as sock:
+            with socket.create_connection((classification_host, classification_port), timeout=120) as sock:
                 logger.info(f"Connected to classification server for {screenshot_path}")
                 # Build the message: if no_save is True, append the flag.
                 message = screenshot_path

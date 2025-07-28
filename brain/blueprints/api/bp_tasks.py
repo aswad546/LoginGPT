@@ -258,6 +258,15 @@ def dispatch_landscape_analysis_task_request():
         limit = reqdata["scan_config"]["limit"]
         list_items = db["top_sites_lists"].find({"id": list_id, "rank": {"$gte": offset, "$lt": offset + limit}})
         logger.info(f"List items are: {list_items}")
+        # Convert the cursor to a list to check if it's empty
+        
+        # Check if list_items is empty
+        if not list(list_items):
+            logger.warning(f"No items found for list_id={list_id}, offset={offset}, limit={limit}")
+            return {"success": False, "error": "No items found in the specified range", "data": None}
+        
+        logger.info(f"Found {len(list(list_items))} items in the range")
+
         for gt in list_items:
             logger.info(f"Element at the id is: {gt}, {gt['domain']}")
             treq = deepcopy(reqdata)

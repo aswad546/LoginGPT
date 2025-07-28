@@ -125,7 +125,7 @@ def main():
     parser.add_argument('--mongo-host', default='localhost', help='MongoDB host')
     parser.add_argument('--mongo-port', type=int, default=27019, help='MongoDB port')
     parser.add_argument('--db-name', default='sso-monitor', help='MongoDB database name')
-    parser.add_argument('--collection-name', default='landscape_analysis_tres', help='MongoDB collection name')
+    parser.add_argument('--collection-name', default='banks_1000_results', help='MongoDB collection name')
     parser.add_argument('--api-url', default='http://localhost:4050/api/login_candidates', help='API endpoint URL')
     parser.add_argument('--batch-size', type=int, default=10, help='Number of documents to process in each batch for logging')
     parser.add_argument('--delay', type=float, default=0.5, help='Delay between processing each document (seconds)')

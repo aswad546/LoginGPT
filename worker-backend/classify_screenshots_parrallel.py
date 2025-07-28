@@ -104,7 +104,12 @@ def classify_image(image_url: str) -> (str, str):
         {
             "role": "user",
             "content": [
-                {"type": "image_url", "image_url": {"url": image_url}},
+                {
+                    "type": "image_url", 
+                    "image_url": {"url": image_url},
+                    "min_pixels": 200704,   # 256*28*28
+                    "max_pixels": 401408,   # 512*28*28
+                },
                 {"type": "text", "text": PROMPT_TEXT},
             ]
         }
@@ -191,8 +196,9 @@ if __name__ == "__main__":
     base_output_dir ="../worker/modules/loginpagedetection/output_images"
     # Instead of deleting the directory, clear its contents
     if os.path.exists(base_output_dir):
-        clear_directory(base_output_dir)
-        logger.info(f"Cleared contents of {base_output_dir}")
+        # clear_directory(base_output_dir)
+        # logger.info(f"Cleared contents of {base_output_dir}")
+        pass
     else:
         os.makedirs(base_output_dir, exist_ok=True)
     # Ensure the base output directory has proper permissions
